@@ -1,0 +1,83 @@
+@import 'tailwindcss';
+
+:root {
+  /* Design Token: Backgrounds */
+  --color-background: #ffffff;
+  --color-navbar-bg: #8ea3fa;
+
+  /* Design Token: Typography */
+  --color-heading: #041b4b;
+  --color-text-primary: #000000;
+  --color-tab-heading: #1b56cc;
+
+  /* Design Token: Status */
+  --color-status-success: #16a34a;
+  --color-status-failed: #d9261c;
+  --color-status-warning: #ffa601;
+
+  /* Design Token: Interactive */
+  /* Primary Button */
+  --color-btn-primary-bg: #1b56cc;
+  --color-btn-primary-text: #f7f8ff;
+
+  /* Variant/Secondary Button */
+  --color-btn-variant-bg: #f2f4fe;
+  --color-btn-variant-text: #041b4b;
+
+  /* Lovable Design System Colors */
+  --foreground: #6b6b6e;
+  /* Dark Slate #1E293B */
+  --muted-foreground: #6b6b6e;
+  /* Medium Slate #475569 */
+  --primary: #2563eb;
+  /* Royal Blue #2563EB */
+}
+
+@theme inline {
+  --color-background: var(--color-background);
+  --color-navbar-bg: var(--color-navbar-bg);
+
+  --color-heading: var(--color-heading);
+  --color-text-primary: var(--color-text-primary);
+  --color-tab-heading: var(--color-tab-heading);
+
+  --color-success: var(--color-status-success);
+  --color-failed: var(--color-status-failed);
+  --color-warning: var(--color-status-warning);
+
+  --color-btn-primary: var(--color-btn-primary-bg);
+  --color-btn-primary-text: var(--color-btn-primary-text);
+
+  --color-btn-variant: var(--color-btn-variant-bg);
+  --color-btn-variant-text: var(--color-btn-variant-text);
+
+  --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-primary: var(--primary);
+}
+
+body {
+  background-color: var(--color-background);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  color: var(--color-text-primary);
+  overflow-x: hidden;
+  width: 100%;
+  position: relative;
+  touch-action: pan-y;
+}
+
+.ant-select-selector {
+  height: 48px !important;
+  padding: 0 14px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.ant-select-selection-search-input {
+  height: 48px !important;
+}
+
+.rdp-months {
+  margin: 0 auto;
+}
