@@ -8,11 +8,10 @@ import {
   useCallback,
   useEffect,
   useRef,
-  useState,
 } from 'react';
 import { cookieService } from '@/lib/services/cookie.service';
 import { useRouter } from 'next/navigation';
-import {  User } from '@/types';
+import { User } from '@/types';
 import { authApi } from '@/lib/services/api/auth.api';
 import { storage } from '@/lib/services/storage';
 
@@ -70,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     storage.removeToken();
     dispatch({ type: 'LOGOUT' });
     router.replace('/');
-  },[]);
+  }, [router]);
 
   const hydrateUser = useCallback(async () => {
     if (hydratedRef.current) return;
@@ -105,7 +104,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     hydrateUser();
   }, [hydrateUser]);
-
 
   return (
     <AuthContext.Provider
