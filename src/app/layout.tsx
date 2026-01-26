@@ -11,8 +11,8 @@ import { antdTheme } from '@/lib/theme/antd.theme';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Rent-O-Infra',
-  description: 'Rent-O-Infra Researcher Portal',
+  title: 'Zam Zam',
+  description: 'Zam Zam Web App',
 };
 
 export default function RootLayout({
