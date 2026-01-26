@@ -87,7 +87,7 @@ export default function LandingPage() {
             <Button type='text' className='font-medium text-[#5D4037]'>
               Login
             </Button>
-            <Link href='/qrform/1'>
+            <Link href='/create-cake'>
               <Button
                 type='primary'
                 size='large'
@@ -144,14 +144,14 @@ export default function LandingPage() {
               Pricing
             </button>
             <div className='h-px bg-gray-100 my-2'></div>
-            <Link href='/qrform/1' className='w-full'>
+            <Link href='/create-cake' className='w-full'>
               <Button
                 type='primary'
                 block
                 size='large'
                 className='bg-[#5D4037] hover:bg-[#4a322c]'
               >
-                Order Now
+                Create Cake
               </Button>
             </Link>
             <Link href='/qrform/1' className='w-full'>
@@ -741,6 +741,7 @@ export default function LandingPage() {
                 <img
                   src='https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=500'
                   className='w-full h-full object-cover'
+                  alt='App Preview'
                 />
               </div>
             </div>
