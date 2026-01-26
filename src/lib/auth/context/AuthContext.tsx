@@ -32,7 +32,6 @@ type AuthContextType = {
   hydrateUser: () => void;
   isHydrating: boolean;
   logout: () => void;
-  unreadMessage: number;
 };
 
 const initialState: AuthState = {
@@ -58,7 +57,6 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [unreadMessage, setUnreadMessage] = useState<number>(0);
   const [state, dispatch] = useReducer(authReducer, initialState);
   const router = useRouter();
   const hydratedRef = useRef(false);
@@ -72,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     storage.removeToken();
     dispatch({ type: 'LOGOUT' });
     router.replace('/');
-  }, []);
+  },[]);
 
   const hydrateUser = useCallback(async () => {
     if (hydratedRef.current) return;
@@ -116,7 +114,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isHydrating: state.isHydrating,
         hydrateUser,
         logout,
-        unreadMessage,
       }}
     >
       {children}
