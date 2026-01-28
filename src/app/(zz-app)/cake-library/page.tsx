@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import type { StaticImageData } from 'next/image';
+import { useState } from 'react';
 import { ArrowLeftOutlined, SearchOutlined } from '@ant-design/icons';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -93,7 +94,7 @@ function CakeItem({
   name,
   price,
 }: {
-  image: any;
+  image: StaticImageData;
   name: string;
   price: string;
 }) {

@@ -1,3 +1,4 @@
+import type { StaticImageData } from 'next/image';
 import Cake1 from '../__mocks__/Cake1.png';
 import Cake2 from '../__mocks__/Cake2.png';
 import Cake3 from '../__mocks__/Cake3.png';
@@ -16,7 +17,7 @@ export interface CakeOptions {
 export interface Cake {
   id: string;
   name: string;
-  image: any;
+  image: StaticImageData;
   category: CakeCategory;
   basePrice: number;
   customizable: boolean;
