@@ -73,7 +73,6 @@ const SugarRose = ({ position, scale = 1 }: any) => (
 export default function CreateCakePage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('upload');
-  // const [cakeDesign, setCakeDesign] = useState<any>(null);
   const [selectedShape, setSelectedShape] = useState('round');
 
   
@@ -148,64 +147,6 @@ export default function CreateCakePage() {
     }
     router.push(`/payment?${params.toString()}`);
   };
-
-  // const handleUploadChange = (info: any) => {
-  //   const { status } = info.file;
-  //   if (status === 'done') {
-  //     setCakeDesign({ type: 'upload', file: info.file });
-  //   } else if (status === 'error') {
-  //     message.error(`${info.file.name} file upload failed.`);
-  //   }
-  // };
-
-  // const handleCustomSubmit = (values: any) => {
-  //   setCakeDesign({ type: 'custom', ...values });
-  // };
-
-  // const handleOrderNow = () => {
-  //   if (!cakeDesign) {
-  //     // If active tab is custom, try to submit form
-  //     if (activeTab === 'custom') {
-  //       form.submit();
-  //       return; // form.onFinish will trigger handleCustomSubmit then we need to proceed.
-  //       // Actually better to just check if form is valid or use current form values
-  //     }
-  //     if (activeTab === 'upload' && !cakeDesign) {
-  //       return;
-  //     }
-  //   }
-
-    // For simplicity, if we are in custom tab, let's grab values directly or assume they are in cakeDesign if saved.
-    // Let's force a save if actively editing
-    // let orderData = cakeDesign;
-    // if (activeTab === 'custom') {
-    //   const values = form.getFieldsValue();
-    //   // Basic validation check
-    //   if (!values.flavor || !values.shape) {
-    //     message.error('Please select at least flavor and shape.');
-    //     return;
-    //   }
-    //   orderData = { type: 'custom', ...values };
-    // } else if (activeTab === 'upload') {
-    //   // Validate upload
-    //   // In a real app we'd check if file exists.
-    //   // For this mock, we assume if they are on tab upload they want to order from upload.
-    // }
-
-  //   // Construct query params
-  //   const params = new URLSearchParams();
-  //   params.append('type', orderData.type);
-  //   if (orderData.type === 'custom') {
-  //     params.append('flavor', orderData.flavor);
-  //     params.append('shape', orderData.shape);
-  //     params.append('size', orderData.size);
-  //     if (orderData.message) params.append('message', orderData.message);
-  //   } else {
-  //     params.append('fileName', 'Uploaded Image'); // In real app, upload ID
-  //   }
-
-  //   router.push(`/payment?${params.toString()}`);
-  // };
 
   return (
     <div className='min-h-screen bg-[#FFF8F0] pb-20'>
