@@ -1,7 +1,18 @@
 'use client';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState } from 'react';
+import React, { useState,useMemo } from 'react';
+import * as THREE from 'three' ;
+import { Canvas } from '@react-three/fiber';
+import {
+  OrbitControls,
+  Stage,
+  Center,
+  Sphere,
+  TorusKnot,
+  Text,
+  Extrude,
+} from '@react-three/drei';
 import {
   Tabs,
   Upload,
@@ -25,68 +36,115 @@ import { useRouter } from 'next/navigation';
 const { Dragger } = Upload;
 const { TextArea } = Input;
 
+const FLAVORS = [
+  { name: 'Vanilla Cream', color: '#f9f5e7' },
+  { name: 'Rich Chocolate', color: '#4b2c20' },
+  { name: 'Fresh Strawberry', color: '#ffb7b7' },
+  { name: 'Red Velvet', color: '#a70000' },
+  { name: 'Lemon Zest', color: '#ffeb3b' },
+  { name: 'Salted Caramel', color: '#e3c08d' },
+];
+
+const DECORATIONS_LIST = [
+  { id: 'roses', name: 'Sugar Roses', price: 30 },
+  { id: 'pearls', name: 'Edible Pearls', price: 15 },
+  { id: 'gold', name: 'Gold Leaf', price: 45 },
+  { id: 'berries', name: 'Fresh Berries', price: 20 },
+  { id: 'macarons', name: 'Mini Macarons', price: 35 },
+  { id: 'drip', name: 'Chocolate Drip', price: 25 },
+];
+
+const SugarRose = ({ position, scale = 1 }: any) => (
+  <group position={position} scale={scale}>
+    <TorusKnot args={[0.1, 0.05, 128, 16, 2, 3]} rotation={[Math.PI / 2, 0, 0]}>
+      <meshStandardMaterial color='#ffacc5' roughness={0.7} />
+    </TorusKnot>
+    <Sphere
+      args={[0.12, 16, 16]}
+      scale={[1.2, 0.5, 1.2]}
+      position={[0, -0.05, 0]}
+    >
+      <meshStandardMaterial color='#ff92b1' roughness={0.8} />
+    </Sphere>
+  </group>
+);
+
+
 export default function CreateCakePage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('upload');
-  const [cakeDesign, setCakeDesign] = useState<any>(null);
+  const [selectedShape, setSelectedShape] = useState('round');
 
+  
+  const [layers, setLayers] = useState([
+    { id: 'base-layer', color: '#4b2c20', name: 'Rich Chocolate' },
+  ]);
+
+  const [selectedDecorations, setSelectedDecorations] = useState<string[]>([]);
+  const [inputValue, setInputValue] = useState('');
   const [form] = Form.useForm();
 
-  const handleUploadChange = (info: any) => {
-    const { status } = info.file;
-    if (status === 'done') {
-      setCakeDesign({ type: 'upload', file: info.file });
-    } else if (status === 'error') {
-      message.error(`${info.file.name} file upload failed.`);
+   const toggleDecoration = (id: string) => {
+    setSelectedDecorations((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const addLayer = () => {
+    if (layers.length < 8) {
+      setLayers([
+        ...layers,
+        { id: `layer-${Date.now()}`, color: '#f9f5e7', name: 'Vanilla Cream' },
+      ]);
     }
   };
 
-  const handleCustomSubmit = (values: any) => {
-    setCakeDesign({ type: 'custom', ...values });
+  const updateLayerColor = (
+    id: string,
+    flavor: { name: string; color: string }
+  ) => {
+    setLayers(
+      layers.map((l) =>
+        l.id === id ? { ...l, color: flavor.color, name: flavor.name } : l
+      )
+    );
   };
+
+  const heartShape = useMemo(() => {
+    const s = new THREE.Shape();
+    s.moveTo(0, -0.4);
+    s.bezierCurveTo(0.1, -0.45, 0.8, -0.1, 0.8, 0.4);
+    s.bezierCurveTo(0.8, 0.9, 0.1, 1, 0, 0.5);
+    s.bezierCurveTo(-0.1, 1, -0.8, 0.9, -0.8, 0.4);
+    s.bezierCurveTo(-0.8, -0.1, -0.1, -0.45, 0, -0.4);
+    return s;
+  }, []);
+
+  const totalPrice = useMemo(() => {
+    const basePrice = 43;
+    const layersPrice = (layers.length - 1) * 20;
+    const decoPrice = selectedDecorations.reduce((sum, id) => {
+      const deco = DECORATIONS_LIST.find((d) => d.id === id);
+      return sum + (deco ? deco.price : 0);
+    }, 0);
+    return (
+      basePrice +
+      layersPrice +
+      decoPrice +
+      (inputValue.trim().length > 0 ? 10 : 0)
+    );
+  }, [layers, selectedDecorations, inputValue]);
 
   const handleOrderNow = () => {
-    if (!cakeDesign) {
-      // If active tab is custom, try to submit form
-      if (activeTab === 'custom') {
-        form.submit();
-        return; // form.onFinish will trigger handleCustomSubmit then we need to proceed.
-        // Actually better to just check if form is valid or use current form values
-      }
-      if (activeTab === 'upload' && !cakeDesign) {
-        return;
-      }
-    }
-
-    // For simplicity, if we are in custom tab, let's grab values directly or assume they are in cakeDesign if saved.
-    // Let's force a save if actively editing
-    let orderData = cakeDesign;
-    if (activeTab === 'custom') {
-      const values = form.getFieldsValue();
-      // Basic validation check
-      if (!values.flavor || !values.shape) {
-        message.error('Please select at least flavor and shape.');
-        return;
-      }
-      orderData = { type: 'custom', ...values };
-    } else if (activeTab === 'upload') {
-      // Validate upload
-      // In a real app we'd check if file exists.
-      // For this mock, we assume if they are on tab upload they want to order from upload.
-    }
-
-    // Construct query params
     const params = new URLSearchParams();
-    params.append('type', orderData.type);
-    if (orderData.type === 'custom') {
-      params.append('flavor', orderData.flavor);
-      params.append('shape', orderData.shape);
-      params.append('size', orderData.size);
-      if (orderData.message) params.append('message', orderData.message);
+    if (activeTab === 'custom') {
+      params.append('type', 'custom');
+      params.append('flavor', layers[0].name);
+      params.append('shape', selectedShape);
+      params.append('price', totalPrice.toString());
     } else {
-      params.append('fileName', 'Uploaded Image'); // In real app, upload ID
+      params.append('type', 'upload');
     }
-
     router.push(`/payment?${params.toString()}`);
   };
 
@@ -142,7 +200,6 @@ export default function CreateCakePage() {
                         name='file'
                         multiple={false}
                         action='https://run.mocky.io/v3/435e224c-44fb-4773-9faf-380c5e6a2188'
-                        onChange={handleUploadChange}
                         className='bg-gray-50 border-2 border-dashed border-[#D4AF37]/30 hover:border-[#D4AF37] rounded-3xl p-10'
                       >
                         <div className='ant-upload-drag-icon flex justify-center mb-4'>
@@ -179,122 +236,258 @@ export default function CreateCakePage() {
                   </span>
                 ),
                 children: (
-                  <div className='p-8 grid md:grid-cols-2 gap-12'>
-                    {/* Form Side */}
-                    <div>
-                      <h2 className='text-2xl font-bold text-[#5D4037] mb-6'>
-                        Customize Details
+                  <div className='flex flex-col gap-6 p-4 md:p-8 bg-[#fffcf9]'>
+                    {/* 1. Shape Selection */}
+                    <section className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100'>
+                      <h2 className='text-xl font-bold mb-6 text-[#5D4037]'>
+                        1. Choose Shape
                       </h2>
-                      <Form
-                        form={form}
-                        layout='vertical'
-                        onFinish={handleCustomSubmit}
-                        initialValues={{
-                          shape: 'round',
-                          size: '1kg',
-                          flavor: 'chocolate',
-                        }}
-                      >
-                        <Form.Item name='shape' label='Shape'>
-                          <Radio.Group
-                            buttonStyle='solid'
-                            className='w-full grid grid-cols-3 gap-2'
+                      <div className='grid grid-cols-3 gap-4'>
+                        {['round', 'square', 'heart'].map((shape) => (
+                          <button
+                            key={shape}
+                            onClick={() => setSelectedShape(shape)}
+                            className={`p-4 border-2 rounded-2xl capitalize font-bold transition-all flex flex-col items-center gap-3 ${selectedShape === shape ? 'border-pink-300 bg-pink-50 text-pink-600 shadow-md scale-105' : 'bg-white border-gray-100'}`}
                           >
-                            <Radio.Button value='round' className='text-center'>
-                              Round
-                            </Radio.Button>
-                            <Radio.Button
-                              value='square'
-                              className='text-center'
+                            <div
+                              className={`w-6 h-6 ${selectedShape === shape ? 'bg-pink-400' : 'bg-gray-200'} ${shape === 'round' ? 'rounded-full' : shape === 'heart' ? 'clip-heart' : 'rounded-sm'}`}
+                            />
+                            {shape}
+                          </button>
+                        ))}
+                      </div>
+                    </section>
+
+                    {/* 2. Layers */}
+                    <section className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100'>
+                      <div className='flex justify-between items-center mb-6'>
+                        <h2 className='text-xl font-bold text-[#5D4037]'>
+                          2. Layers ({layers.length}/8)
+                        </h2>
+                        <Button
+                          type='primary'
+                          className='bg-pink-500'
+                          onClick={addLayer}
+                          disabled={layers.length >= 8}
+                        >
+                          + Add Layer
+                        </Button>
+                      </div>
+                      <div className='space-y-4'>
+                        {layers.map((layer, index) => (
+                          <div
+                            key={layer.id}
+                            className='bg-gray-50 p-4 rounded-xl border border-gray-100'
+                          >
+                            <div className='flex justify-between mb-3'>
+                              <span className='text-xs font-black text-gray-400 uppercase'>
+                                Layer {index + 1}
+                              </span>
+                              {layers.length > 1 && (
+                                <button
+                                  onClick={() =>
+                                    setLayers(
+                                      layers.filter((l) => l.id !== layer.id)
+                                    )
+                                  }
+                                  className='text-red-400 text-[10px] font-bold uppercase'
+                                >
+                                  Remove
+                                </button>
+                              )}
+                            </div>
+                            <div className='grid grid-cols-3 md:grid-cols-6 gap-2'>
+                              {FLAVORS.map((f) => (
+                                <button
+                                  key={f.name}
+                                  onClick={() => updateLayerColor(layer.id, f)}
+                                  className={`flex flex-col items-center p-2 rounded-lg border-2 bg-white ${layer.color === f.color ? 'border-pink-400 bg-pink-50' : 'border-transparent'}`}
+                                >
+                                  <div
+                                    className='w-4 h-4 rounded-full mb-1 shadow-sm'
+                                    style={{ backgroundColor: f.color }}
+                                  />
+                                  <span className='text-[8px] font-bold uppercase'>
+                                    {f.name}
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+
+                    {/* 3. Decorations */}
+                    <section className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100'>
+                      <h2 className='text-xl font-bold text-[#5D4037] mb-6'>
+                        3. Decorations
+                      </h2>
+                      <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
+                        {DECORATIONS_LIST.map((deco) => (
+                          <button
+                            key={deco.id}
+                            onClick={() => toggleDecoration(deco.id)}
+                            className={`flex justify-between items-center p-4 rounded-xl border-2 transition-all ${selectedDecorations.includes(deco.id) ? 'border-pink-300 bg-pink-50 text-pink-700' : 'bg-gray-50 border-transparent'}`}
+                          >
+                            <span className='font-bold text-sm'>
+                              {deco.name}
+                            </span>
+                            <span
+                              className={`font-bold ${selectedDecorations.includes(deco.id) ? 'text-pink-600' : 'text-gray-400'}`}
                             >
-                              Square
-                            </Radio.Button>
-                            <Radio.Button value='heart' className='text-center'>
-                              Heart
-                            </Radio.Button>
-                          </Radio.Group>
-                        </Form.Item>
-
-                        <Form.Item name='flavor' label='Flavor'>
-                          <Select
-                            size='large'
-                            options={[
-                              {
-                                value: 'chocolate',
-                                label: 'Belgian Chocolate',
-                              },
-                              { value: 'vanilla', label: 'Classic Vanilla' },
-                              { value: 'redvelvet', label: 'Red Velvet' },
-                              { value: 'butterscotch', label: 'Butterscotch' },
-                              { value: 'fruit', label: 'Fresh Fruit' },
-                            ]}
-                          />
-                        </Form.Item>
-
-                        <Form.Item name='size' label='Size (Weight)'>
-                          <Select
-                            size='large'
-                            options={[
-                              { value: '0.5kg', label: '0.5 kg (Serves 4-6)' },
-                              { value: '1kg', label: '1 kg (Serves 8-10)' },
-                              { value: '2kg', label: '2 kg (Serves 15-20)' },
-                              { value: '3kg', label: '3 kg (Party Size)' },
-                            ]}
-                          />
-                        </Form.Item>
-
-                        <Form.Item name='message' label='Message on Cake'>
-                          <Input
-                            size='large'
-                            placeholder='Happy Birthday...'
-                            maxLength={30}
-                            showCount
-                          />
-                        </Form.Item>
-                      </Form>
-                    </div>
-
-                    {/* Preview Side */}
-                    <div className='bg-[#fffbf2] rounded-3xl p-6 flex flex-col items-center justify-center border border-[#D4AF37]/10 relative min-h-[400px]'>
-                      <span className='absolute top-4 right-4 text-xs font-bold text-[#D4AF37] uppercase tracking-widest'>
-                        Preview
-                      </span>
-
-                      {/* Dynamic Cake Visual (Simplified CSS approach) */}
-                      <div className='relative w-64 h-64 mb-8 transition-all'>
-                        {/* Base */}
-                        <div className='absolute bottom-0 w-full h-32 bg-[#8B4513] rounded-2xl shadow-2xl transform rotate-x-12 translate-y-4'></div>
-                        {/* Design Overlay Placeholders */}
-                        <div className='w-full h-full bg-linear-to-b from-[#b3866c] to-[#8B4513] rounded-full shadow-inner flex items-center justify-center relative z-10'>
-                          <span className='font-handwriting text-white text-xl font-bold rotate-[-5deg] drop-shadow-md'>
-                            {/* We could bind active form message here if we watched form values */}
-                            Your Cake
-                          </span>
-                        </div>
+                              +${deco.price}
+                            </span>
+                          </button>
+                        ))}
                       </div>
+                    </section>
 
-                      <div className='space-y-2 w-full'>
-                        <div className='flex justify-between text-sm'>
-                          <span className='text-gray-500'>
-                            Base Price (1kg)
-                          </span>
-                          <span className='font-bold text-[#5D4037]'>
-                            $35.00
-                          </span>
-                        </div>
-                        <div className='flex justify-between text-sm'>
-                          <span className='text-gray-500'>Customization</span>
-                          <span className='font-bold text-[#5D4037]'>
-                            $10.00
-                          </span>
-                        </div>
-                        <Divider className='my-2' />
-                        <div className='flex justify-between text-lg font-bold'>
-                          <span className='text-[#5D4037]'>Total Est.</span>
-                          <span className='text-[#D4AF37]'>$45.00</span>
-                        </div>
+                    {/* 4. Text Topper */}
+                    <section className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100'>
+                      <h2 className='text-xl font-bold text-[#5D4037] mb-6'>
+                        4. Text Topper
+                      </h2>
+                      <Input
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        maxLength={20}
+                        className='rounded-xl h-12 bg-gray-50 border-gray-100'
+                        placeholder='Happy Birthday'
+                      />
+                    </section>
+
+                    {/* 5. PREVIEW SECTION */}
+                    <section className='bg-white p-6 rounded-3xl shadow-xl border border-gray-100'>
+                      <h2 className='text-xl font-bold text-[#5D4037] mb-6'>
+                        5. Your Cake
+                      </h2>
+                      <div className='h-[500px] w-full bg-[#fdfbf9] rounded-2xl overflow-hidden relative border border-orange-50'>
+                        <Canvas
+                          shadows
+                          camera={{ position: [8, 8, 8], fov: 35 }}
+                        >
+                          <Stage environment='city' intensity={0.5}>
+                            <group position={[0, -1, 0]}>
+                              {layers.map((layer, index) => {
+                                const tierHeight = 0.5;
+                                const yPos = index * tierHeight;
+                                const scale = 1 - index * 0.12;
+                                const isTopLayer = index === layers.length - 1;
+
+                                return (
+                                  <group key={layer.id} position={[0, yPos, 0]}>
+                                    <mesh castShadow receiveShadow>
+                                      {selectedShape === 'round' && (
+                                        <cylinderGeometry
+                                          args={[
+                                            2.5 * scale,
+                                            2.5 * scale,
+                                            tierHeight,
+                                            64,
+                                          ]}
+                                        />
+                                      )}
+                                      {selectedShape === 'square' && (
+                                        <boxGeometry
+                                          args={[
+                                            4 * scale,
+                                            tierHeight,
+                                            4 * scale,
+                                          ]}
+                                        />
+                                      )}
+                                      {selectedShape === 'heart' && (
+                                        <Center top>
+                                          <Extrude
+                                            args={[
+                                              heartShape,
+                                              {
+                                                depth: tierHeight,
+                                                bevelEnabled: true,
+                                                bevelThickness: 0.05,
+                                                bevelSize: 0.02,
+                                              },
+                                            ]}
+                                            rotation={[-Math.PI / 2, 0, 0]}
+                                            scale={2.5 * scale}
+                                          >
+                                            <meshStandardMaterial
+                                              color={layer.color}
+                                              roughness={0.4}
+                                            />
+                                          </Extrude>
+                                        </Center>
+                                      )}
+                                      <meshStandardMaterial
+                                        color={layer.color}
+                                        roughness={0.5}
+                                      />
+                                    </mesh>
+
+                                    {isTopLayer && (
+                                      <group
+                                        position={[0, tierHeight / 2 + 0.01, 0]}
+                                      >
+                                        {selectedDecorations.includes(
+                                          'roses'
+                                        ) && (
+                                          <>
+                                            <SugarRose
+                                              position={[0, 0.1, 0]}
+                                              scale={1.8}
+                                            />
+                                            <SugarRose
+                                              position={[0.4, 0.05, 0.3]}
+                                              scale={1.2}
+                                            />
+                                            <SugarRose
+                                              position={[-0.4, 0.05, -0.3]}
+                                              scale={1.2}
+                                            />
+                                          </>
+                                        )}
+                                        <Text
+                                          fontSize={0.3 * scale}
+                                          color='#f472b6'
+                                          rotation={[-Math.PI / 2, 0, 0]}
+                                          textAlign='center'
+                                          maxWidth={4 * scale}
+                                        >
+                                          {inputValue}
+                                        </Text>
+                                      </group>
+                                    )}
+
+                                    {selectedDecorations.includes('pearls') &&
+                                      Array.from({ length: 16 }).map((_, i) => (
+                                        <Sphere
+                                          key={i}
+                                          args={[0.06]}
+                                          position={[
+                                            Math.cos((i / 16) * Math.PI * 2) *
+                                              (2.5 * scale),
+                                            tierHeight / 2,
+                                            Math.sin((i / 16) * Math.PI * 2) *
+                                              (2.5 * scale),
+                                          ]}
+                                        >
+                                          <meshStandardMaterial
+                                            color='white'
+                                            metalness={0.9}
+                                            roughness={0.1}
+                                          />
+                                        </Sphere>
+                                      ))}
+                                  </group>
+                                );
+                              })}
+                            </group>
+                          </Stage>
+                          <OrbitControls makeDefault />
+                        </Canvas>
                       </div>
-                    </div>
+                    </section>
                   </div>
                 ),
               },
