@@ -1,7 +1,4 @@
-<<<<<<< HEAD
 import type { StaticImageData } from 'next/image';
-=======
->>>>>>> 0c939bd (feature: created zam-zam-app ui)
 import Cake1 from '../__mocks__/Cake1.png';
 import Cake2 from '../__mocks__/Cake2.png';
 import Cake3 from '../__mocks__/Cake3.png';
@@ -20,11 +17,7 @@ export interface CakeOptions {
 export interface Cake {
   id: string;
   name: string;
-<<<<<<< HEAD
   image: StaticImageData;
-=======
-  image: any;
->>>>>>> 0c939bd (feature: created zam-zam-app ui)
   category: CakeCategory;
   basePrice: number;
   customizable: boolean;

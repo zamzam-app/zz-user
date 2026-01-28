@@ -1,11 +1,7 @@
 'use client';
 
-<<<<<<< HEAD
 import type { StaticImageData } from 'next/image';
 import { useState } from 'react';
-=======
-import React, { useState } from 'react';
->>>>>>> 0c939bd (feature: created zam-zam-app ui)
 import { ArrowLeftOutlined, SearchOutlined } from '@ant-design/icons';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -34,12 +30,8 @@ export default function LibraryPage() {
     <div className='bg-white min-h-screen pb-28'>
       {/* Header */}
       <header className='relative flex items-center justify-center px-6 py-4'>
-<<<<<<< HEAD
         <Link href='/LandingPage' className='absolute left-6'>
-=======
-        <Link href='/Home' className='absolute left-6'>
->>>>>>> 0c939bd (feature: created zam-zam-app ui)
-          <ArrowLeftOutlined className='text-xl hover:text-[#751414]' />
+        <ArrowLeftOutlined className='text-xl hover:text-[#751414]' />
         </Link>
 
         <h1 className="font-['Epilogue'] font-extrabold tracking-tight text-gray-900 text-base sm:text-xl md:text-2xl lg:text-3xl truncate max-w-[70%] text-center translate-y-1 md:translate-y-2">
@@ -102,11 +94,7 @@ function CakeItem({
   name,
   price,
 }: {
-<<<<<<< HEAD
   image: StaticImageData;
-=======
-  image: any;
->>>>>>> 0c939bd (feature: created zam-zam-app ui)
   name: string;
   price: string;
 }) {
