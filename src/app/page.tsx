@@ -105,7 +105,7 @@ export default function LandingPage() {
                 <MessageSquare size={16} /> Write Review
               </Button>
             </Link>
-            <Link href='/Home'>
+            <Link href='/LandingPage'>
               <Button
                 type='default'
                 size='large'
