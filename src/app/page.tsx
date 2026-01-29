@@ -105,27 +105,19 @@ export default function LandingPage() {
                 <MessageSquare size={16} /> Write Review
               </Button>
             </Link>
-<<<<<<< HEAD
             <Link href='/LandingPage'>
-=======
-            <Link href='/Home'>
->>>>>>> 0c939bd (feature: created zam-zam-app ui)
               <Button
                 type='default'
                 size='large'
                 className='bg-[#5D4037] hover:bg-[#4a322c] border-none shadow-xl shadow-[#5D4037]/20 flex items-center gap-2'
-<<<<<<< HEAD
               >
                 {' '}
                 Zam Zam App
               </Button>
             </Link>
-=======
-              > Zam Zam App
-              </Button>
-              </Link>
 
->>>>>>> 0c939bd (feature: created zam-zam-app ui)
+             
+
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -175,7 +167,7 @@ export default function LandingPage() {
                 Create Cake
               </Button>
             </Link>
-            <Link href='/qrform/1' className='w-full'>
+            <Link href='/feedback-form' className='w-full'>
               <Button
                 type='primary'
                 block
@@ -185,7 +177,6 @@ export default function LandingPage() {
                 Write Review
               </Button>
             </Link>
-<<<<<<< HEAD
             <Link href='/LandingPage'>
               <Button
                 type='primary'
@@ -197,16 +188,7 @@ export default function LandingPage() {
                 Zam Zam App
               </Button>
             </Link>
-=======
-            <Link href='/Home'>
-              <Button
-                type='default'
-                size='large'
-                className='bg-[#5D4037] hover:bg-[#4a322c] border-none shadow-xl shadow-[#5D4037]/20 flex items-center gap-2'
-              > Zam Zam App
-              </Button>
-              </Link>
->>>>>>> 0c939bd (feature: created zam-zam-app ui)
+           
           </div>
         )}
       </header>
