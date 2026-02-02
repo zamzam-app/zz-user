@@ -110,10 +110,11 @@ export default function LandingPage() {
                 type='default'
                 size='large'
                 className='bg-[#5D4037] hover:bg-[#4a322c] border-none shadow-xl shadow-[#5D4037]/20 flex items-center gap-2'
-              > Zam Zam App
+              >
+                {' '}
+                Zam Zam App
               </Button>
-              </Link>
-
+            </Link>
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -173,14 +174,17 @@ export default function LandingPage() {
                 Write Review
               </Button>
             </Link>
-            <Link href='/Home'>
+            <Link href='/LandingPage'>
               <Button
-                type='default'
+                type='primary'
+                block
                 size='large'
-                className='bg-[#5D4037] hover:bg-[#4a322c] border-none shadow-xl shadow-[#5D4037]/20 flex items-center gap-2'
-              > Zam Zam App
+                className='bg-[#5D4037] hover:bg-[#4a322c]'
+              >
+                {' '}
+                Zam Zam App
               </Button>
-              </Link>
+            </Link>
           </div>
         )}
       </header>
