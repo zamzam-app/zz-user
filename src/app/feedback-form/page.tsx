@@ -49,7 +49,7 @@ export default function FeedbackPage() {
         {/* Main Card */}
         <div className='bg-white rounded-3xl shadow-xl border border-[#D4AF37]/10 p-6 md:p-10'>
           <div className='text-center mb-10'>
-            <h2 className='text-2xl font-bold text-[#5D4037] font-serif mb-2'>
+            <h2 className='text-2xl font-bold text-[#5D4037] mb-2'>
               How was your experience?
             </h2>
             <p className='text-gray-500'>
@@ -66,11 +66,11 @@ export default function FeedbackPage() {
           >
             {/* STEP 1 */}
             <section className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100'>
-              <h2 className='text-xl font-bold text-[#5D4037] mb-4'>
-                1. Overall Rating
+              <h2 className='text-lg text-[#5D4037] mb-4'>
+              Overall Rating
               </h2>
 
-              <div className='flex justify-center'>
+              <div className='mt-5'>
                 <Form.Item
                   name='rating'
                   rules={[{ required: true }]}
@@ -86,8 +86,8 @@ export default function FeedbackPage() {
 
             {/* STEP 2 */}
             <section className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100'>
-              <h2 className='text-xl font-bold text-[#5D4037] mb-4'>
-                2. Upload Photos
+              <h2 className='text-lg text-[#5D4037] mb-4'>
+                Upload Photos
               </h2>
 
               <Form.Item
@@ -117,8 +117,8 @@ export default function FeedbackPage() {
 
             {/* STEP 3 */}
             <section className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100'>
-              <h2 className='text-xl font-bold text-[#5D4037] mb-4'>
-                3. Write a Review
+              <h2 className='text-lg text-[#5D4037] mb-4'>
+              Write a Review
               </h2>
 
               <Form.Item
