@@ -146,7 +146,7 @@ export default function FeedbackPage() {
             onClick={() => form.submit()}
             className='bg-[#5D4037] hover:bg-[#4a322c] h-12 text-lg shadow-lg shadow-orange-900/10 flex items-center gap-2 min-w-[280px] border-none'
           >
-            <Send size={20} className='-rotate-12' />
+            <Send size={20} />
             Submit Feedback
           </Button>
         </div>
