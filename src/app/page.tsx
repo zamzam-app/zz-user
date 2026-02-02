@@ -105,6 +105,16 @@ export default function LandingPage() {
                 <MessageSquare size={16} /> Write Review
               </Button>
             </Link>
+            <Link href='/LandingPage'>
+              <Button
+                type='default'
+                size='large'
+                className='bg-[#5D4037] hover:bg-[#4a322c] border-none shadow-xl shadow-[#5D4037]/20 flex items-center gap-2'
+              >
+                {' '}
+                Zam Zam App
+              </Button>
+            </Link>
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -162,6 +172,17 @@ export default function LandingPage() {
                 className='bg-[#5D4037] hover:bg-[#4a322c]'
               >
                 Write Review
+              </Button>
+            </Link>
+            <Link href='/LandingPage'>
+              <Button
+                type='primary'
+                block
+                size='large'
+                className='bg-[#5D4037] hover:bg-[#4a322c]'
+              >
+                {' '}
+                Zam Zam App
               </Button>
             </Link>
           </div>
