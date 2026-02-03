@@ -168,7 +168,6 @@ export default function LandingPage() {
               </Button>
             </Link>
             <Link href='/feedback-form' className='w-full'>
-            <Link href='/feedback-form' className='w-full'>
               <Button
                 type='primary'
                 block
@@ -179,10 +178,7 @@ export default function LandingPage() {
               </Button>
             </Link>
             <Link href='/LandingPage'>
-            <Link href='/LandingPage'>
               <Button
-                type='primary'
-                block
                 type='primary'
                 block
                 size='large'
