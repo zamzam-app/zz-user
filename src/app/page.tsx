@@ -96,7 +96,7 @@ export default function LandingPage() {
                 <Edit2Icon size={16} /> Create Cake
               </Button>
             </Link>
-            <Link href='/qrform/1'>
+            <Link href='/feedback-form'>
               <Button
                 type='default'
                 size='large'
@@ -115,6 +115,9 @@ export default function LandingPage() {
                 Zam Zam App
               </Button>
             </Link>
+
+             
+
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -164,7 +167,7 @@ export default function LandingPage() {
                 Create Cake
               </Button>
             </Link>
-            <Link href='/qrform/1' className='w-full'>
+            <Link href='/feedback-form' className='w-full'>
               <Button
                 type='primary'
                 block
@@ -179,12 +182,11 @@ export default function LandingPage() {
                 type='primary'
                 block
                 size='large'
-                className='bg-[#5D4037] hover:bg-[#4a322c]'
-              >
-                {' '}
-                Zam Zam App
+                className='bg-[#5D4037] hover:bg-[#4a322c] '
+              > Zam Zam App
               </Button>
             </Link>
+           
           </div>
         )}
       </header>

@@ -31,7 +31,7 @@ export default function LibraryPage() {
       {/* Header */}
       <header className='relative flex items-center justify-center px-6 py-4'>
         <Link href='/LandingPage' className='absolute left-6'>
-          <ArrowLeftOutlined className='text-xl hover:text-[#751414]' />
+        <ArrowLeftOutlined className='text-xl hover:text-[#751414]' />
         </Link>
 
         <h1 className="font-['Epilogue'] font-extrabold tracking-tight text-gray-900 text-base sm:text-xl md:text-2xl lg:text-3xl truncate max-w-[70%] text-center translate-y-1 md:translate-y-2">
