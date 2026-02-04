@@ -30,7 +30,7 @@ export default function LibraryPage() {
     <div className='bg-white min-h-screen pb-28'>
       {/* Header */}
       <header className='relative flex items-center justify-center px-6 py-4'>
-        <Link href='/LandingPage' className='absolute left-6'>
+        <Link href='/' className='absolute left-6'>
         <ArrowLeftOutlined className='text-xl hover:text-[#751414]' />
         </Link>
 
