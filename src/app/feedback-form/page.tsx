@@ -3,12 +3,7 @@
 import { Form, Input, Rate, Button, Upload, message } from 'antd';
 import type { UploadChangeParam } from 'antd/es/upload';
 import type { UploadFile } from 'antd/es/upload/interface';
-import {
-  Upload as UploadIcon,
-  ChevronLeft,
-  Send,
-  Star,
-} from 'lucide-react';
+import { Upload as UploadIcon, ChevronLeft, Send, Star } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 const { Dragger } = Upload;
@@ -18,7 +13,7 @@ export default function FeedbackPage() {
   const router = useRouter();
   const [form] = Form.useForm();
 
-  const normFile = (e:  UploadChangeParam<UploadFile>) => {
+  const normFile = (e: UploadChangeParam<UploadFile>) => {
     if (Array.isArray(e)) return e;
     return e?.fileList;
   };
@@ -66,9 +61,7 @@ export default function FeedbackPage() {
           >
             {/* STEP 1 */}
             <section className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100'>
-              <h2 className='text-lg text-[#5D4037] mb-4'>
-              Overall Rating
-              </h2>
+              <h2 className='text-lg text-[#5D4037] mb-4'>Overall Rating</h2>
 
               <div className='mt-5'>
                 <Form.Item
@@ -86,9 +79,7 @@ export default function FeedbackPage() {
 
             {/* STEP 2 */}
             <section className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100'>
-              <h2 className='text-lg text-[#5D4037] mb-4'>
-                Upload Photos
-              </h2>
+              <h2 className='text-lg text-[#5D4037] mb-4'>Upload Photos</h2>
 
               <Form.Item
                 name='photos'
@@ -117,9 +108,7 @@ export default function FeedbackPage() {
 
             {/* STEP 3 */}
             <section className='bg-white p-6 rounded-2xl shadow-sm border border-gray-100'>
-              <h2 className='text-lg text-[#5D4037] mb-4'>
-              Write a Review
-              </h2>
+              <h2 className='text-lg text-[#5D4037] mb-4'>Write a Review</h2>
 
               <Form.Item
                 name='comment'

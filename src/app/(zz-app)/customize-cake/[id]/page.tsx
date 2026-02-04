@@ -19,9 +19,7 @@ export default function CustomizeCakePage() {
 
   const toggleDecoration = (item: string) => {
     setSelectedDecorations((prev) =>
-      prev.includes(item)
-        ? prev.filter((d) => d !== item)
-        : [...prev, item]
+      prev.includes(item) ? prev.filter((d) => d !== item) : [...prev, item]
     );
   };
 
@@ -41,7 +39,12 @@ export default function CustomizeCakePage() {
       <main className='px-6 space-y-6'>
         {/* Product Image */}
         <div className='relative w-full aspect-16/10 rounded-2xl overflow-hidden shadow-sm'>
-          <Image src={cake.image} alt={cake.name} fill className='object-cover' />
+          <Image
+            src={cake.image}
+            alt={cake.name}
+            fill
+            className='object-cover'
+          />
         </div>
 
         {/* Cake Text */}

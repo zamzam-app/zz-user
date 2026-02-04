@@ -1,8 +1,7 @@
 'use client';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState,useMemo } from 'react';
-import * as THREE from 'three' ;
+import { useState, useMemo } from 'react';
+import * as THREE from 'three';
 import { Canvas } from '@react-three/fiber';
 import {
   OrbitControls,
@@ -13,17 +12,7 @@ import {
   Text,
   Extrude,
 } from '@react-three/drei';
-import {
-  Tabs,
-  Upload,
-  Button,
-  Form,
-  Select,
-  Input,
-  Radio,
-  message,
-  Divider,
-} from 'antd';
+import { Tabs, Upload, Button, Input } from 'antd';
 import {
   Upload as UploadIcon,
   Download,
@@ -35,6 +24,11 @@ import { useRouter } from 'next/navigation';
 
 const { Dragger } = Upload;
 const { TextArea } = Input;
+
+export type SugarRoseProps = {
+  position: [number, number, number];
+  scale?: number;
+};
 
 const FLAVORS = [
   { name: 'Vanilla Cream', color: '#f9f5e7' },
@@ -54,7 +48,7 @@ const DECORATIONS_LIST = [
   { id: 'drip', name: 'Chocolate Drip', price: 25 },
 ];
 
-const SugarRose = ({ position, scale = 1 }: any) => (
+const SugarRose = ({ position, scale = 1 }: SugarRoseProps) => (
   <group position={position} scale={scale}>
     <TorusKnot args={[0.1, 0.05, 128, 16, 2, 3]} rotation={[Math.PI / 2, 0, 0]}>
       <meshStandardMaterial color='#ffacc5' roughness={0.7} />
@@ -69,22 +63,19 @@ const SugarRose = ({ position, scale = 1 }: any) => (
   </group>
 );
 
-
 export default function CreateCakePage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('upload');
   const [selectedShape, setSelectedShape] = useState('round');
 
-  
   const [layers, setLayers] = useState([
     { id: 'base-layer', color: '#4b2c20', name: 'Rich Chocolate' },
   ]);
 
   const [selectedDecorations, setSelectedDecorations] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState('');
-  const [form] = Form.useForm();
 
-   const toggleDecoration = (id: string) => {
+  const toggleDecoration = (id: string) => {
     setSelectedDecorations((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
@@ -362,7 +353,7 @@ export default function CreateCakePage() {
                       <h2 className='text-xl font-bold text-[#5D4037] mb-6'>
                         5. Your Cake
                       </h2>
-                      <div className='h-[500px] w-full bg-[#fdfbf9] rounded-2xl overflow-hidden relative border border-orange-50'>
+                      <div className='h-125 w-full bg-[#fdfbf9] rounded-2xl overflow-hidden relative border border-orange-50'>
                         <Canvas
                           shadows
                           camera={{ position: [8, 8, 8], fov: 35 }}

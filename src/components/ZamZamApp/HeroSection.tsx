@@ -3,10 +3,10 @@ import Link from 'next/link';
 
 const HeroSection = () => {
   return (
-    <section className="relative h-150 md:h-187.5 w-full overflow-hidden flex flex-col items-center justify-center">
+    <section className='relative h-150 md:h-187.5 w-full overflow-hidden flex flex-col items-center justify-center'>
       {/* 1. Background Image Container */}
       <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-1000 ease-out"
+        className='absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-1000 ease-out'
         style={{
           backgroundImage: `url(${BakeryImg.src})`,
           backgroundColor: '#4a3728',
@@ -28,9 +28,9 @@ const HeroSection = () => {
         </p>
 
         {/* 3. Action Button */}
-        <Link href="cake-library">
+        <Link href='cake-library'>
           <button className="mt-16 md:mt-24 rounded-full bg-[#923a3a] px-10 py-4 font-['Epilogue'] text-lg font-bold text-[#FDF5E6]! shadow-2xl transition-all duration-300 ease-in-out hover:bg-white hover:text-[#923a3a]! hover:-translate-y-2 active:scale-95">
-          Explore Cake Studio
+            Explore Cake Studio
           </button>
         </Link>
       </div>

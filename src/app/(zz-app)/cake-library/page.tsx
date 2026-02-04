@@ -13,13 +13,11 @@ import {
 } from '../../../../public/__mocks__/cakes';
 
 export default function LibraryPage() {
-  const categories: Array<'All' | CakeCategory> = [
-    'All',
-    ...cakeCategories,
-  ];
+  const categories: Array<'All' | CakeCategory> = ['All', ...cakeCategories];
 
-  const [activeCategory, setActiveCategory] =
-    useState<'All' | CakeCategory>('All');
+  const [activeCategory, setActiveCategory] = useState<'All' | CakeCategory>(
+    'All'
+  );
 
   const filteredCakes =
     activeCategory === 'All'
@@ -31,7 +29,7 @@ export default function LibraryPage() {
       {/* Header */}
       <header className='relative flex items-center justify-center px-6 py-4'>
         <Link href='/' className='absolute left-6'>
-        <ArrowLeftOutlined className='text-xl hover:text-[#751414]' />
+          <ArrowLeftOutlined className='text-xl hover:text-[#751414]' />
         </Link>
 
         <h1 className="font-['Epilogue'] font-extrabold tracking-tight text-gray-900 text-base sm:text-xl md:text-2xl lg:text-3xl truncate max-w-[70%] text-center translate-y-1 md:translate-y-2">
@@ -53,9 +51,7 @@ export default function LibraryPage() {
               key={cat}
               onClick={() => setActiveCategory(cat)}
               className={`px-5 py-2 rounded-xl font-bold text-sm whitespace-nowrap transition-all ${
-                isActive
-                  ? 'bg-[#923a3a] text-white!'
-                  : 'bg-[#F0F2F5]'
+                isActive ? 'bg-[#923a3a] text-white!' : 'bg-[#F0F2F5]'
               }`}
             >
               {cat}
