@@ -21,10 +21,14 @@ import {
   ChevronLeft,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { SugarRoseProps } from '../(zz-app)/custom-cake/page';
 
 const { Dragger } = Upload;
 const { TextArea } = Input;
+
+export type SugarRoseProps = {
+  position: [number, number, number];
+  scale?: number;
+};
 
 const FLAVORS = [
   { name: 'Vanilla Cream', color: '#f9f5e7' },

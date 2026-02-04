@@ -1,7 +1,4 @@
-import {
-  SignInPayload,
-  AuthResponse
-} from '@/types';
+import { SignInPayload, AuthResponse } from '@/types';
 import { authEndpoints } from './endpoints';
 import { request } from './axios.config';
 
@@ -19,5 +16,5 @@ export const authApi = {
       method: 'POST',
       url: authEndpoints.logout,
     });
-  }
+  },
 };
