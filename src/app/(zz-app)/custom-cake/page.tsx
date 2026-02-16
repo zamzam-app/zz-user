@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo,useRef  } from 'react';
+import { useState, useMemo } from 'react';
 import * as THREE from 'three';
 import { Canvas } from '@react-three/fiber';
 import {
@@ -116,21 +116,6 @@ export default function CreateCakePage() {
       (inputValue.trim().length > 0 ? 10 : 0)
     );
   }, [layers, selectedDecorations, inputValue]);
-
-  const handleOrderNow = () => {
-    const params = new URLSearchParams();
-    if (activeTab === 'custom') {
-      params.append('type', 'custom');
-      params.append('flavor', layers[0].name);
-      params.append('shape', selectedShape);
-      params.append('price', totalPrice.toString());
-    } else {
-      params.append('type', 'upload');
-    }
-    router.push(`/payment?${params.toString()}`);
-  };
-
-  
 
   return (
     <div className='min-h-screen '>
