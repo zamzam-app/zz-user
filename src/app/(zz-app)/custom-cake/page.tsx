@@ -102,21 +102,6 @@ export default function CreateCakePage() {
     return s;
   }, []);
 
-  const totalPrice = useMemo(() => {
-    const basePrice = 43;
-    const layersPrice = (layers.length - 1) * 20;
-    const decoPrice = selectedDecorations.reduce((sum, id) => {
-      const deco = DECORATIONS_LIST.find((d) => d.id === id);
-      return sum + (deco ? deco.price : 0);
-    }, 0);
-    return (
-      basePrice +
-      layersPrice +
-      decoPrice +
-      (inputValue.trim().length > 0 ? 10 : 0)
-    );
-  }, [layers, selectedDecorations, inputValue]);
-
   return (
     <div className='min-h-screen '>
       {/* Header */}
