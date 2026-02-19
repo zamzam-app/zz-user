@@ -5,7 +5,7 @@ import { ArrowLeftOutlined } from '@ant-design/icons';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { cakes } from '../../../../../public/__mocks__/cakes';
+import { cakes } from '../../../../public/__mocks__/cakes';
 
 export default function CustomizeCakePage() {
   const { id } = useParams<{ id: string }>();

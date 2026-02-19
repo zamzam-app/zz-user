@@ -10,7 +10,7 @@ import {
   cakes,
   cakeCategories,
   CakeCategory,
-} from '../../../../public/__mocks__/cakes';
+} from '../../../public/__mocks__/cakes';
 
 export default function LibraryPage() {
   const categories: Array<'All' | CakeCategory> = ['All', ...cakeCategories];
