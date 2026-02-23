@@ -4,17 +4,21 @@ import { request } from './axios.config';
 
 export const authApi = {
   login: async (payload: SignInPayload): Promise<AuthResponse> => {
-    return request<AuthResponse>({
+    const response = await request<AuthResponse>({
       method: 'POST',
       url: authEndpoints.login,
       data: payload,
     });
+
+    return response.data;
   },
 
   logout: async () => {
-    return request({
+    const response = await request({
       method: 'POST',
       url: authEndpoints.logout,
     });
+
+    return response.data;
   },
 };
