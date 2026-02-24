@@ -4,16 +4,12 @@ import { useEffect, useState } from 'react';
 import { ArrowLeftOutlined, SearchOutlined } from '@ant-design/icons';
 import Image from 'next/image';
 import Link from 'next/link';
+import Button from '@/components/common/Button';
 
 import { productApi } from '../../lib/services/api/product.api';
 import { Product } from '../../types/product';
 
-const cakeCategories = [
-  'Anniversary',
-  'Birthday',
-  'Wedding',
-  
-];
+const cakeCategories = ['Anniversary', 'Birthday', 'Wedding'];
 
 export default function LibraryPage() {
   const categories = ['All', ...cakeCategories];
@@ -89,12 +85,10 @@ export default function LibraryPage() {
       </div>
 
       {/* Bottom Fixed Button */}
-      <div className='fixed bottom-0 left-0 right-0 px-6 py-4 z-5'>
-        <Link href='/custom-cake'>
-          <button className='w-full bg-[#923a3a] text-white! py-4 rounded-2xl font-bold shadow-lg transition-all active:scale-[0.98]'>
-            Upload your design
-          </button>
-        </Link>
+      <div className='fixed bottom-0 left-0 right-0 p-6 z-50'>
+        <Button href='/custom-cake' fullWidth>
+          Upload your design
+        </Button>
       </div>
     </div>
   );
@@ -113,12 +107,7 @@ function CakeItem({
     <div className='flex flex-col gap-2 cursor-pointer'>
       <div className='relative aspect-4/5 rounded-4xl overflow-hidden'>
         {image && (
-          <Image
-            src={image}
-            alt={name}
-            fill
-            className='object-cover'
-          />
+          <Image src={image} alt={name} fill className='object-cover' />
         )}
       </div>
 
@@ -130,4 +119,3 @@ function CakeItem({
     </div>
   );
 }
-
