@@ -1,37 +1,41 @@
-import { request } from './axios.config';
+import { request, fileUploadRequest } from './axios.config';
 import { ProductListResponse } from '../../../types/product';
 
 export const productApi = {
   getAll: async (): Promise<ProductListResponse> => {
-    const response = await request.get<ProductListResponse>('/product');
-    return response.data;
+    return request<ProductListResponse>({
+      method: 'GET',
+      url: '/product',
+    });
   },
 
   getById: async (id: string) => {
-    const response = await request.get(`/product/${id}`);
-    return response.data;
+    return request({
+      method: 'GET',
+      url: `/product/${id}`,
+    });
   },
 
   create: async (payload: FormData) => {
-    const response = await request.post('/product', payload, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+    return fileUploadRequest({
+      method: 'POST',
+      url: '/product',
+      data: payload,
     });
-    return response.data;
   },
 
   update: async (id: string, payload: FormData) => {
-    const response = await request.put(`/product/${id}`, payload, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+    return fileUploadRequest({
+      method: 'PUT',
+      url: `/product/${id}`,
+      data: payload,
     });
-    return response.data;
   },
 
   delete: async (id: string) => {
-    const response = await request.delete(`/product/${id}`);
-    return response.data;
+    return request({
+      method: 'DELETE',
+      url: `/product/${id}`,
+    });
   },
 };
