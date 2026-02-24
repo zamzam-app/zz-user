@@ -11,7 +11,7 @@ export const authApi = {
     });
   },
 
-  logout: async () => {
+  logout: async (): Promise<{ message: string }> => {
     return request({
       method: 'POST',
       url: authEndpoints.logout,

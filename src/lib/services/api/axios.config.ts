@@ -32,8 +32,8 @@ const onSuccess = (response: AxiosResponse): unknown => {
 };
 
 const onError = (error: AxiosError<ApiError>): never => {
-  if (error?.status === 401 || error?.response?.status === 401) {
-    window.location.href = `/login`;
+  if (error?.response?.status === 401) {
+    window.location.href = '/login';
     localStorage.clear();
   }
 
@@ -44,6 +44,7 @@ const onError = (error: AxiosError<ApiError>): never => {
       errors: null,
     } satisfies ApiError;
   }
+
   throw (
     error?.response?.data ?? {
       message: 'Unexpected error',
@@ -67,6 +68,7 @@ export async function apiRequest<T = unknown>({
   ...options
 }: ApiOptions): Promise<T> {
   const token = cookieService.getAccessToken() ?? '';
+
   const client = createClient(
     token ? { Authorization: `Bearer ${token}` } : undefined
   );
@@ -78,6 +80,7 @@ export async function withoutToken<T = unknown>({
   ...options
 }: ApiOptions): Promise<T> {
   const client = createClient();
+
   return client(options).then(onSuccess).catch(onError) as Promise<T>;
 }
 
@@ -109,14 +112,15 @@ export async function uploadToPresignedUrl(
     },
     onUploadProgress: (progressEvent: AxiosProgressEvent) => {
       if (!onProgress || !progressEvent.total) return;
+
       const percent = Math.round(
         (progressEvent.loaded * 100) / progressEvent.total
       );
+
       onProgress(percent);
     },
   });
 }
 
 export const request = apiRequest;
-
 export { baseURL };
