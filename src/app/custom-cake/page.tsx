@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import * as THREE from 'three';
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useThree } from '@react-three/fiber';
 import {
   OrbitControls,
   Stage,
@@ -12,9 +12,10 @@ import {
   Text,
   Extrude,
 } from '@react-three/drei';
-import { Tabs, Button, Input } from 'antd';
+import { Tabs, Button, Input, ConfigProvider } from 'antd';
 import { useRouter } from 'next/navigation';
-import { ArrowLeftOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, WhatsAppOutlined } from '@ant-design/icons';
+import { Download } from 'lucide-react';
 
 export type SugarRoseProps = {
   position: [number, number, number];
@@ -54,10 +55,33 @@ const SugarRose = ({ position, scale = 1 }: SugarRoseProps) => (
   </group>
 );
 
+function ScreenshotBridge({
+  onReady,
+}: {
+  onReady: (fn: () => string) => void;
+}) {
+  const { gl } = useThree();
+
+  useEffect(() => {
+    onReady(() => {
+      // Just extract the buffer. gl.render here interrupts R3F's loop causing flickering.
+      return gl.domElement.toDataURL('image/png');
+    });
+  }, [gl, onReady]);
+
+  return null;
+}
+
 export default function CreateCakePage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('upload');
   const [selectedShape, setSelectedShape] = useState('round');
+  const [captureImage, setCaptureImage] = useState<null | (() => string)>(null);
+
+  // Helper to safely store a function in state
+  const handleSetCaptureImage = useCallback((fn: () => string) => {
+    setCaptureImage(() => fn);
+  }, []);
 
   const [layers, setLayers] = useState([
     { id: 'base-layer', color: '#4b2c20', name: 'Rich Chocolate' },
@@ -102,6 +126,61 @@ export default function CreateCakePage() {
     return s;
   }, []);
 
+  const totalPrice = useMemo(() => {
+    const basePrice = 43;
+    const layersPrice = (layers.length - 1) * 20;
+    const decoPrice = selectedDecorations.reduce((sum, id) => {
+      const deco = DECORATIONS_LIST.find((d) => d.id === id);
+      return sum + (deco ? deco.price : 0);
+    }, 0);
+    return (
+      basePrice +
+      layersPrice +
+      decoPrice +
+      (inputValue.trim().length > 0 ? 10 : 0)
+    );
+  }, [layers, selectedDecorations, inputValue]);
+
+  const handleOrderNow = () => {
+    let message = '';
+
+    if (activeTab === 'custom') {
+      const layerDetails = layers
+        .map((l, i) => `  - Layer ${i + 1}: ${l.name}`)
+        .join('\n');
+      const decoNames = selectedDecorations
+        .map((id) => DECORATIONS_LIST.find((d) => d.id === id)?.name)
+        .filter(Boolean)
+        .join(', ');
+
+      message =
+        `Hi! I would like to order a Custom Cake.\n\n` +
+        `*Cake Details:*\n` +
+        `• Shape: ${selectedShape.charAt(0).toUpperCase() + selectedShape.slice(1)}\n` +
+        `• Layers (${layers.length}):\n${layerDetails}\n` +
+        `• Decorations: ${decoNames || 'None'}\n` +
+        `• Text on Cake: ${inputValue.trim() || 'None'}\n\n` +
+        `*Estimated Price:* $${totalPrice}`;
+    } else {
+      message = `Hi! I would like to order a custom cake. I have a reference image to share for a quote.`;
+    }
+
+    // 91 added for country code (India), assuming 10-digit number
+    const whatsappUrl = `https://wa.me/917204094741?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
+  const handleDownload = () => {
+    if (!captureImage) return;
+
+    const url = captureImage();
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `custom-cake-${Date.now()}.png`;
+    link.click();
+  };
+
   return (
     <div className='min-h-screen '>
       {/* Header */}
@@ -116,24 +195,46 @@ export default function CreateCakePage() {
 
         {/* Tabs */}
         <div className='w-full max-w-md pointer-events-auto'>
-          <Tabs
-            activeKey={activeTab}
-            onChange={setActiveTab}
-            centered
-            type='card'
-            size='middle'
-            tabBarStyle={{ marginBottom: 0 }}
-            items={[
-              {
-                key: 'upload',
-                label: 'Upload Reference',
+          <ConfigProvider
+            theme={{
+              token: {
+                colorPrimary: '#7A2D2A',
+                fontWeightStrong: 600,
               },
-              {
-                key: 'custom',
-                label: 'Build Custom',
+              components: {
+                Tabs: {
+                  itemActiveColor: '#7A2D2A',
+                  itemHoverColor: '#923a3a', // Lighter shade for hover micro-interaction
+                  itemSelectedColor: '#7A2D2A',
+                  inkBarColor: '#7A2D2A',
+                  titleFontSize: 16,
+                },
               },
-            ]}
-          />
+            }}
+          >
+            <Tabs
+              activeKey={activeTab}
+              onChange={setActiveTab}
+              centered
+              type='card'
+              size='middle'
+              tabBarStyle={{ marginBottom: 0 }}
+              items={[
+                {
+                  key: 'upload',
+                  label: (
+                    <span style={{ fontWeight: 'bold' }}>Upload Reference</span>
+                  ),
+                },
+                {
+                  key: 'custom',
+                  label: (
+                    <span style={{ fontWeight: 'bold' }}>Build Custom</span>
+                  ),
+                },
+              ]}
+            />
+          </ConfigProvider>
         </div>
       </header>
 
@@ -186,10 +287,10 @@ export default function CreateCakePage() {
                   <button
                     key={shape}
                     onClick={() => setSelectedShape(shape)}
-                    className={`p-4 border-2 rounded-2xl capitalize font-bold transition-all flex flex-col items-center gap-3 ${selectedShape === shape ? 'border-pink-300 bg-pink-50 text-pink-600 shadow-md scale-105' : 'bg-white border-gray-100'}`}
+                    className={`p-4 border-2 rounded-2xl capitalize font-bold transition-all flex flex-col items-center gap-3 ${selectedShape === shape ? 'border-[#C9A3A1] bg-[#F5E9E8] text-[#7A2D2A] shadow-md scale-105' : 'bg-white border-gray-100'}`}
                   >
                     <div
-                      className={`w-6 h-6 ${selectedShape === shape ? 'bg-pink-400' : 'bg-gray-200'} ${shape === 'round' ? 'rounded-full' : shape === 'heart' ? 'clip-heart' : 'rounded-sm'}`}
+                      className={`w-6 h-6 ${selectedShape === shape ? 'bg-[#7A2D2A]' : 'bg-gray-200'} ${shape === 'round' ? 'rounded-full' : shape === 'heart' ? 'clip-heart' : 'rounded-sm'}`}
                     />
                     {shape}
                   </button>
@@ -203,14 +304,13 @@ export default function CreateCakePage() {
                 <h2 className='text-xl font-bold text-[#5D4037]'>
                   2. Layers ({layers.length}/8)
                 </h2>
-                <Button
-                  type='primary'
-                  className='bg-pink-500'
+                <button
                   onClick={addLayer}
                   disabled={layers.length >= 8}
+                  className="bg-[#923a3a] text-white! px-4 py-2 rounded-2xl font-['Epilogue'] font-bold text-sm active:scale-[0.98] transition-transform shadow-md disabled:opacity-50 disabled:active:scale-100 disabled:cursor-not-allowed hover:bg-[#a64848] hover:cursor-pointer"
                 >
                   + Add Layer
-                </Button>
+                </button>
               </div>
               <div className='space-y-4'>
                 {layers.map((layer, index) => (
@@ -227,7 +327,7 @@ export default function CreateCakePage() {
                           onClick={() =>
                             setLayers(layers.filter((l) => l.id !== layer.id))
                           }
-                          className='text-red-400 text-[10px] font-bold uppercase'
+                          className='text-red-400 text-[10px] font-bold uppercase cursor-pointer hover:text-red-600'
                         >
                           Remove
                         </button>
@@ -238,7 +338,7 @@ export default function CreateCakePage() {
                         <button
                           key={f.name}
                           onClick={() => updateLayerColor(layer.id, f)}
-                          className={`flex flex-col items-center p-2 rounded-lg border-2 bg-white ${layer.color === f.color ? 'border-pink-400 bg-pink-50' : 'border-transparent'}`}
+                          className={`flex flex-col items-center p-2 rounded-lg border-2 bg-white ${layer.color === f.color ? 'border-[#C9A3A1] bg-[#F5E9E8]' : 'border-transparent'}`}
                         >
                           <div
                             className='w-4 h-4 rounded-full mb-1 shadow-sm'
@@ -265,11 +365,11 @@ export default function CreateCakePage() {
                   <button
                     key={deco.id}
                     onClick={() => toggleDecoration(deco.id)}
-                    className={`flex justify-between items-center p-4 rounded-xl border-2 transition-all ${selectedDecorations.includes(deco.id) ? 'border-pink-300 bg-pink-50 text-pink-700' : 'bg-gray-50 border-transparent'}`}
+                    className={`flex justify-between items-center p-4 rounded-xl border-2 transition-all ${selectedDecorations.includes(deco.id) ? 'border-[#C9A3A1] bg-[#F5E9E8] text-[#7A2D2A]' : 'bg-gray-50 border-transparent'}`}
                   >
                     <span className='font-bold text-sm'>{deco.name}</span>
                     <span
-                      className={`font-bold ${selectedDecorations.includes(deco.id) ? 'text-pink-600' : 'text-gray-400'}`}
+                      className={`font-bold ${selectedDecorations.includes(deco.id) ? 'text-[#7A2D2A]' : 'text-gray-400'}`}
                     >
                       +${deco.price}
                     </span>
@@ -283,12 +383,13 @@ export default function CreateCakePage() {
               <h2 className='text-xl font-bold text-[#5D4037] mb-6'>
                 4. Text Topper
               </h2>
-              <Input
+              <textarea
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 maxLength={20}
-                className='rounded-xl h-12 bg-gray-50 border-gray-100'
-                placeholder='Happy Birthday'
+                className='w-full p-5 rounded-xl bg-[#FFF9F0] text-sm text-gray-900 border-2 border-gray-300'
+                placeholder='E.g., "Happy Birthday Sarah!"'
+                rows={2}
               />
             </section>
 
@@ -298,7 +399,13 @@ export default function CreateCakePage() {
                 5. Your Cake
               </h2>
               <div className='h-125 w-full bg-[#fdfbf9] rounded-2xl overflow-hidden relative border border-orange-50'>
-                <Canvas shadows camera={{ position: [8, 8, 8], fov: 35 }}>
+                <Canvas
+                  shadows
+                  camera={{ position: [8, 8, 8], fov: 35 }}
+                  gl={{ preserveDrawingBuffer: true }}
+                >
+                  <ScreenshotBridge onReady={handleSetCaptureImage} />
+                  <color attach='background' args={['#fdfbf9']} />
                   <Stage environment='city' intensity={0.5}>
                     <group position={[0, -1, 0]}>
                       {layers.map((layer, index) => {
@@ -410,6 +517,51 @@ export default function CreateCakePage() {
                   </Stage>
                   <OrbitControls makeDefault />
                 </Canvas>
+              </div>
+            </section>
+
+            {/* ACTION BUTTONS */}
+            <section className='py-12'>
+              <div className='container mx-auto max-w-4xl flex justify-center items-center gap-4'>
+                <ConfigProvider
+                  theme={{
+                    token: {
+                      colorPrimary: '#7A2D2A',
+                      fontWeightStrong: 600,
+                    },
+                  }}
+                >
+                  <Button
+                    size='large'
+                    icon={<Download size={18} />}
+                    className='hidden md:flex'
+                    onClick={handleDownload}
+                  >
+                    Download Design
+                  </Button>
+                </ConfigProvider>
+
+                <div className='flex-1 md:flex-none flex gap-4 w-full md:w-auto'>
+                  <ConfigProvider
+                    theme={{
+                      token: {
+                        colorPrimary: '#25D366',
+                        fontWeightStrong: 600,
+                      },
+                    }}
+                  >
+                    <Button
+                      size='large'
+                      type='primary'
+                      block
+                      className='bg-[#5D4037] hover:bg-[#4a322c] h-12 text-lg shadow-lg shadow-orange-900/10 flex items-center justify-center gap-2'
+                      onClick={handleOrderNow}
+                      style={{ backgroundColor: '#25D366 !important' }}
+                    >
+                      <WhatsAppOutlined size={20} /> Order Now
+                    </Button>
+                  </ConfigProvider>
+                </div>
               </div>
             </section>
           </div>
