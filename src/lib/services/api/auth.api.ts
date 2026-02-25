@@ -28,6 +28,7 @@ export const authApi = {
       method: 'POST',
       url: authEndpoints.verifyOtp,
       data: payload,
+      skipAuthRedirect: true,
     });
   },
 };

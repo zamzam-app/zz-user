@@ -83,6 +83,8 @@ export default function ReviewFormPage() {
   const [pendingRatingSubmit, setPendingRatingSubmit] = useState<{
     values: Record<string, unknown>;
     formData: FormData;
+    /** Set after OTP when we have the user from authResponse (context may not have updated yet). */
+    userId?: string | null;
   } | null>(null);
 
   const {
@@ -128,26 +130,42 @@ export default function ReviewFormPage() {
       storage.setUser(authResponse.user);
       await hydrateUser();
 
-      setPendingRatingSubmit({ values: pendingValues, formData });
+      const responseUserId =
+        authResponse.user?.id ??
+        (authResponse.user as { _id?: string })?._id ??
+        null;
+      setPendingRatingSubmit({
+        values: pendingValues,
+        formData,
+        userId: responseUserId,
+      });
       setOtpModalOpen(false);
       setOtp('');
       setPendingValues(null);
     } catch (err) {
+      const status =
+        err && typeof err === 'object' && 'status' in err
+          ? (err as { status?: number }).status
+          : undefined;
       const msg =
         err && typeof err === 'object' && 'message' in err
           ? String((err as { message: string }).message)
           : 'Failed to submit review. Please try again.';
-      message.error(msg);
+      message.error(status === 401 ? 'Incorrect OTP' : msg);
     } finally {
       setSubmitting(false);
     }
   }, [otp, pendingValues, formData, hydrateUser]);
 
-  const userId = user?.id ?? (user as { _id?: string } | null)?._id ?? null;
+  const contextUserId =
+    user?.id ?? (user as { _id?: string } | null)?._id ?? null;
 
   useEffect(() => {
-    if (!userId || !pendingRatingSubmit) return;
-    const { values, formData: fd } = pendingRatingSubmit;
+    if (!pendingRatingSubmit) return;
+    const { values, formData: fd, userId: pendingUserId } = pendingRatingSubmit;
+    const userId = pendingUserId ?? contextUserId;
+    if (!userId) return;
+
     setPendingRatingSubmit(null);
 
     const outletId = fd.outletId ?? searchParams.get('outletId') ?? formId;
@@ -164,7 +182,7 @@ export default function ReviewFormPage() {
         message.error(msg);
       })
       .finally(() => setSubmitting(false));
-  }, [userId, pendingRatingSubmit, formId, searchParams]);
+  }, [contextUserId, pendingRatingSubmit, formId, searchParams]);
 
   const handleOtpResend = useCallback(() => {
     // TODO: call backend to resend OTP
