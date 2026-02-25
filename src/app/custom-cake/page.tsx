@@ -204,7 +204,7 @@ export default function CreateCakePage() {
               components: {
                 Tabs: {
                   itemActiveColor: '#7A2D2A',
-                  itemHoverColor: '#923a3a', // Lighter shade for hover micro-interaction
+                  itemHoverColor: '#923a3a', 
                   itemSelectedColor: '#7A2D2A',
                   inkBarColor: '#7A2D2A',
                   titleFontSize: 16,
@@ -255,7 +255,7 @@ export default function CreateCakePage() {
                 Tap to upload an image of your cake design
               </p>
 
-<Button>Upload</Button>                
+              <Button>Upload</Button>
             </div>
 
             {/* Textarea */}
@@ -265,11 +265,9 @@ export default function CreateCakePage() {
               rows={4}
             />
             {/* Bottom fixed button */}
-            <div className="fixed bottom-0 left-0 right-0 p-6 z-50">
-  <Button fullWidth>
-    Get Quote
-  </Button>
-</div>
+            <div className='fixed bottom-0 left-0 right-0 p-6 z-50'>
+              <Button fullWidth>Get Quote</Button>
+            </div>
           </div>
         )}
 
@@ -302,10 +300,7 @@ export default function CreateCakePage() {
                 <h2 className='text-xl font-bold text-[#5D4037]'>
                   2. Layers ({layers.length}/8)
                 </h2>
-                <Button
-                  onClick={addLayer}
-                  disabled={layers.length >= 8}
-                >
+                <Button onClick={addLayer} disabled={layers.length >= 8}>
                   + Add Layer
                 </Button>
               </div>
@@ -546,9 +541,7 @@ export default function CreateCakePage() {
                       },
                     }}
                   >
-                    <Button
-                      onClick={handleOrderNow}
-                    >
+                    <Button onClick={handleOrderNow}>
                       <WhatsAppOutlined size={20} /> Order Now
                     </Button>
                   </ConfigProvider>

@@ -23,4 +23,3 @@ export interface ProductListResponse {
   data: Product[];
   meta: ProductMeta;
 }
-
