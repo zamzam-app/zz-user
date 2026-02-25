@@ -10,10 +10,12 @@ import { ApiError } from '@/types';
 
 const baseURL = process.env.NEXT_PUBLIC_BASE_URL || '/api';
 
-interface ApiOptions extends AxiosRequestConfig {
+export interface ApiOptions extends AxiosRequestConfig {
   url?: string;
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
   data?: unknown;
+  /** When true, 401 responses do not redirect to /login (e.g. for OTP verify). */
+  skipAuthRedirect?: boolean;
 }
 
 const onSuccess = (response: AxiosResponse): unknown => {
@@ -32,8 +34,9 @@ const onSuccess = (response: AxiosResponse): unknown => {
 };
 
 const onError = (error: AxiosError<ApiError>): never => {
-  if (error?.status === 401 || error?.response?.status === 401) {
-    window.location.href = `/login`;
+  const skipRedirect = (error?.config as ApiOptions)?.skipAuthRedirect;
+  if (error?.response?.status === 401 && !skipRedirect) {
+    window.location.href = '/login';
     localStorage.clear();
   }
 
@@ -44,6 +47,7 @@ const onError = (error: AxiosError<ApiError>): never => {
       errors: null,
     } satisfies ApiError;
   }
+
   throw (
     error?.response?.data ?? {
       message: 'Unexpected error',
@@ -67,6 +71,7 @@ export async function apiRequest<T = unknown>({
   ...options
 }: ApiOptions): Promise<T> {
   const token = cookieService.getAccessToken() ?? '';
+
   const client = createClient(
     token ? { Authorization: `Bearer ${token}` } : undefined
   );
@@ -78,6 +83,7 @@ export async function withoutToken<T = unknown>({
   ...options
 }: ApiOptions): Promise<T> {
   const client = createClient();
+
   return client(options).then(onSuccess).catch(onError) as Promise<T>;
 }
 
@@ -109,14 +115,15 @@ export async function uploadToPresignedUrl(
     },
     onUploadProgress: (progressEvent: AxiosProgressEvent) => {
       if (!onProgress || !progressEvent.total) return;
+
       const percent = Math.round(
         (progressEvent.loaded * 100) / progressEvent.total
       );
+
       onProgress(percent);
     },
   });
 }
 
 export const request = apiRequest;
-
 export { baseURL };

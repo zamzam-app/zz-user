@@ -1,28 +1,38 @@
 'use client';
 
-import type { StaticImageData } from 'next/image';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowLeftOutlined, SearchOutlined } from '@ant-design/icons';
 import Image from 'next/image';
 import Link from 'next/link';
 
-import {
-  cakes,
-  cakeCategories,
-  CakeCategory,
-} from '../../../../public/__mocks__/cakes';
+import { productApi } from '../../lib/services/api/product.api';
+import { Product } from '../../types/product';
+
+const cakeCategories = ['Anniversary', 'Birthday', 'Wedding'];
 
 export default function LibraryPage() {
-  const categories: Array<'All' | CakeCategory> = ['All', ...cakeCategories];
+  const categories = ['All', ...cakeCategories];
 
-  const [activeCategory, setActiveCategory] = useState<'All' | CakeCategory>(
-    'All'
-  );
+  const [products, setProducts] = useState<Product[]>([]);
+  const [activeCategory, setActiveCategory] = useState<string>('All');
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await productApi.getAll();
+        setProducts(res.data);
+      } catch (error) {
+        console.error('Failed to fetch products:', error);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   const filteredCakes =
     activeCategory === 'All'
-      ? cakes
-      : cakes.filter((cake) => cake.category === activeCategory);
+      ? products
+      : products.filter((cake) => cake.category === activeCategory);
 
   return (
     <div className='bg-white min-h-screen pb-28'>
@@ -63,11 +73,11 @@ export default function LibraryPage() {
       {/* Cake Grid */}
       <div className='grid grid-cols-2 gap-4 px-6 mt-4'>
         {filteredCakes.map((cake) => (
-          <Link href={`/customize-cake/${cake.id}`} key={cake.id}>
+          <Link href={`/customize-cake/${cake._id}`} key={cake._id}>
             <CakeItem
-              image={cake.image}
+              image={cake.images?.[0]}
               name={cake.name}
-              price={`$${cake.basePrice}`}
+              price={`₹${cake.price}`}
             />
           </Link>
         ))}
@@ -90,14 +100,16 @@ function CakeItem({
   name,
   price,
 }: {
-  image: StaticImageData;
+  image: string | undefined;
   name: string;
   price: string;
 }) {
   return (
     <div className='flex flex-col gap-2 cursor-pointer'>
       <div className='relative aspect-4/5 rounded-4xl overflow-hidden'>
-        <Image src={image} alt={name} fill className='object-cover' />
+        {image && (
+          <Image src={image} alt={name} fill className='object-cover' />
+        )}
       </div>
 
       <h3 className="font-['Epilogue'] font-bold text-sm">{name}</h3>
