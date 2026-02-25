@@ -9,7 +9,8 @@
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md,mdx,css,yaml,yml}\"",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
     "check-types": "tsc --noEmit",
-    "prepare": "husky"
+    "prepare": "husky",
+    "do": "pnpm format && pnpm lint && pnpm build && git add ."
   },
   "dependencies": {
     "@ant-design/cssinjs": "^2.0.3",

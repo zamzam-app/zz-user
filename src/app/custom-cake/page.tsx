@@ -12,7 +12,7 @@ import {
   Text,
   Extrude,
 } from '@react-three/drei';
-import { Tabs, Button, Input, ConfigProvider } from 'antd';
+import { Tabs, Button, ConfigProvider } from 'antd';
 import { useRouter } from 'next/navigation';
 import { ArrowLeftOutlined, WhatsAppOutlined } from '@ant-design/icons';
 import { Download } from 'lucide-react';

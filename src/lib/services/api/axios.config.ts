@@ -10,10 +10,12 @@ import { ApiError } from '@/types';
 
 const baseURL = process.env.NEXT_PUBLIC_BASE_URL || '/api';
 
-interface ApiOptions extends AxiosRequestConfig {
+export interface ApiOptions extends AxiosRequestConfig {
   url?: string;
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
   data?: unknown;
+  /** When true, 401 responses do not redirect to /login (e.g. for OTP verify). */
+  skipAuthRedirect?: boolean;
 }
 
 const onSuccess = (response: AxiosResponse): unknown => {
@@ -32,7 +34,8 @@ const onSuccess = (response: AxiosResponse): unknown => {
 };
 
 const onError = (error: AxiosError<ApiError>): never => {
-  if (error?.response?.status === 401) {
+  const skipRedirect = (error?.config as ApiOptions)?.skipAuthRedirect;
+  if (error?.response?.status === 401 && !skipRedirect) {
     window.location.href = '/login';
     localStorage.clear();
   }
