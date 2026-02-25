@@ -22,7 +22,7 @@ const SERVICE_CATEGORIES = [
 export default function QRFormPage() {
   const params = useParams();
   const router = useRouter();
-  const [currentStep, setCurrentStep] = useState<0 | 1 | 2 | 3>(0); // 0: Phone, 1: OTP, 2: Form, 3: Success
+  const [currentStep, setCurrentStep] = useState<0 | 1 | 2 | 3>(0);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otp, setOtp] = useState('');
   const [form] = Form.useForm();
@@ -31,7 +31,7 @@ export default function QRFormPage() {
   const storeId = params?.id as string;
 
   // Mock store data fetch
-  const storeName = `Outlet #${storeId}`; // Placeholder
+  const storeName = `Outlet #${storeId}`;
 
   const handlePhoneSubmit = async () => {
     if (!phoneNumber || phoneNumber.length < 10) {
