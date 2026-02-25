@@ -2,8 +2,8 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { Form, message } from 'antd';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useState } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
+import { useCallback, useEffect, useState } from 'react';
 import { DynamicReviewForm } from '@/components/review/DynamicReviewForm';
 import { OtpStep } from '@/components/review/OtpStep';
 import { SuccessStep } from '@/components/review/SuccessStep';
@@ -67,9 +67,8 @@ function buildCreateRatingDto(
 
 export default function ReviewFormPage() {
   const params = useParams();
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const { hydrateUser } = useAuth();
+  const { user, hydrateUser } = useAuth();
   const formId = params?.id as string;
 
   const [form] = Form.useForm();
@@ -81,6 +80,10 @@ export default function ReviewFormPage() {
     string,
     unknown
   > | null>(null);
+  const [pendingRatingSubmit, setPendingRatingSubmit] = useState<{
+    values: Record<string, unknown>;
+    formData: FormData;
+  } | null>(null);
 
   const {
     data: formData,
@@ -125,21 +128,10 @@ export default function ReviewFormPage() {
       storage.setUser(authResponse.user);
       await hydrateUser();
 
-      const userId = authResponse.user.id;
-      const outletId =
-        formData.outletId ?? searchParams.get('outletId') ?? formId;
-      const payload = buildCreateRatingDto(
-        formId,
-        outletId,
-        userId,
-        pendingValues,
-        formData
-      );
-      await ratingApi.create(payload);
+      setPendingRatingSubmit({ values: pendingValues, formData });
       setOtpModalOpen(false);
       setOtp('');
       setPendingValues(null);
-      setShowSuccess(true);
     } catch (err) {
       const msg =
         err && typeof err === 'object' && 'message' in err
@@ -149,7 +141,30 @@ export default function ReviewFormPage() {
     } finally {
       setSubmitting(false);
     }
-  }, [otp, pendingValues, formData, formId, searchParams, hydrateUser]);
+  }, [otp, pendingValues, formData, hydrateUser]);
+
+  const userId = user?.id ?? (user as { _id?: string } | null)?._id ?? null;
+
+  useEffect(() => {
+    if (!userId || !pendingRatingSubmit) return;
+    const { values, formData: fd } = pendingRatingSubmit;
+    setPendingRatingSubmit(null);
+
+    const outletId = fd.outletId ?? searchParams.get('outletId') ?? formId;
+    const payload = buildCreateRatingDto(formId, outletId, userId, values, fd);
+    setSubmitting(true);
+    ratingApi
+      .create(payload)
+      .then(() => setShowSuccess(true))
+      .catch((err) => {
+        const msg =
+          err && typeof err === 'object' && 'message' in err
+            ? String((err as { message: string }).message)
+            : 'Failed to submit review. Please try again.';
+        message.error(msg);
+      })
+      .finally(() => setSubmitting(false));
+  }, [userId, pendingRatingSubmit, formId, searchParams]);
 
   const handleOtpResend = useCallback(() => {
     // TODO: call backend to resend OTP
@@ -196,7 +211,7 @@ export default function ReviewFormPage() {
     return (
       <div className='min-h-screen bg-white'>
         <div className='max-w-md mx-auto h-full min-h-screen'>
-          <SuccessStep onBackToHome={() => router.push('/')} />
+          <SuccessStep />
         </div>
       </div>
     );
@@ -221,7 +236,6 @@ export default function ReviewFormPage() {
           onSubmit={handleSubmit}
           onFinishFailed={handleFinishFailed}
           loading={false}
-          onBack={() => router.back()}
         />
         <OtpStep
           open={otpModalOpen}

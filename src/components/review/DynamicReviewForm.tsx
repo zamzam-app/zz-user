@@ -2,7 +2,6 @@
 
 import type { FormInstance } from 'antd';
 import { Button, Checkbox, DatePicker, Form, Input, Rate, Radio } from 'antd';
-import { ChevronLeft } from 'lucide-react';
 import { useEffect, useMemo } from 'react';
 import type { FormQuestion } from '@/types/form';
 
@@ -13,7 +12,6 @@ export type DynamicReviewFormProps = {
   onSubmit: (values: Record<string, unknown>) => void;
   onFinishFailed?: (info: { errorFields: Array<{ errors: string[] }> }) => void;
   loading: boolean;
-  onBack?: () => void;
 };
 
 const activeQuestions = (questions: FormQuestion[]) =>
@@ -53,7 +51,6 @@ export function DynamicReviewForm({
   onSubmit,
   onFinishFailed,
   loading,
-  onBack,
 }: DynamicReviewFormProps) {
   const questionsToShow = activeQuestions(questions);
 
@@ -86,20 +83,6 @@ export function DynamicReviewForm({
 
   return (
     <div className='pb-24 pt-4'>
-      <div className='px-4 py-3 flex items-center border-b border-gray-100 mb-4'>
-        {onBack && (
-          <button
-            onClick={onBack}
-            className='p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors mr-2'
-          >
-            <ChevronLeft size={24} className='text-gray-700' />
-          </button>
-        )}
-        <h1 className='text-lg font-semibold text-gray-800 flex-1'>
-          Give Feedback
-        </h1>
-      </div>
-
       <div className='px-6 mb-6'>
         <h2 className='text-2xl font-serif font-medium text-gray-800 text-center'>
           {formTitle}

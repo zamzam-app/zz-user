@@ -1,12 +1,6 @@
 'use client';
 
-import { Button } from 'antd';
-
-export type SuccessStepProps = {
-  onBackToHome: () => void;
-};
-
-export function SuccessStep({ onBackToHome }: SuccessStepProps) {
+export function SuccessStep() {
   return (
     <div className='flex flex-col items-center justify-center min-h-[80vh] px-6 text-center'>
       <div className='w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mb-6 animate-bounce'>
@@ -34,9 +28,6 @@ export function SuccessStep({ onBackToHome }: SuccessStepProps) {
           Restaurant Image
         </div>
       </div>
-      <Button size='large' onClick={onBackToHome} className='min-w-[160px]'>
-        Back to Home
-      </Button>
     </div>
   );
 }
