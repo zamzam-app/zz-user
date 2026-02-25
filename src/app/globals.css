@@ -82,3 +82,30 @@ body {
 .rdp-months {
   margin: 0 auto;
 }
+
+/* Review form: show only first error in Ant Design message, hide inline errors */
+.review-form-no-inline-errors .ant-form-item-explain {
+  display: none;
+}
+
+/* OTP modal: bottom sheet, no scrollbar */
+.otp-modal-wrap-bottom {
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+}
+.otp-modal-wrap-bottom .ant-modal,
+.otp-modal-wrap-bottom .ant-modal-content {
+  margin: 0 !important;
+  margin-bottom: 70px !important;
+  max-width: 100% !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: hidden !important;
+  padding-bottom: env(safe-area-inset-bottom, 0) !important;
+}
+.otp-modal-wrap-bottom .ant-modal-body,
+.otp-modal-no-scroll.ant-modal .ant-modal-body {
+  overflow: hidden !important;
+}
