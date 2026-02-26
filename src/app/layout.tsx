@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import { ConfigProvider, App } from 'antd'; 
+import { ConfigProvider } from 'antd';
 import Providers from './query-providers';
 import 'antd/dist/reset.css';
 
@@ -24,13 +24,9 @@ export default function RootLayout({
     <html lang='en'>
       <body className={`${inter.className} antialiased`}>
         <ConfigProvider theme={antdTheme}>
-          <App> 
-            <Providers>
-              <AuthProvider>
-                {children}
-              </AuthProvider>
-            </Providers>
-          </App>
+          <Providers>
+            <AuthProvider>{children}</AuthProvider>
+          </Providers>
         </ConfigProvider>
       </body>
     </html>

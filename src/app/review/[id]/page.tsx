@@ -1,9 +1,9 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { Form, App } from 'antd'; // ✅ FIXED
+import { Form, message } from 'antd';
 import { useParams, useSearchParams } from 'next/navigation';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { DynamicReviewForm } from '@/components/review/DynamicReviewForm';
 import { OtpStep } from '@/components/review/OtpStep';
 import { SuccessStep } from '@/components/review/SuccessStep';
@@ -13,14 +13,59 @@ import { storage } from '@/lib/services/storage';
 import { formApi } from '@/lib/services/api/form.api';
 import { ratingApi } from '@/lib/services/api/rating.api';
 import { authApi } from '@/lib/services/api/auth.api';
+import type { CreateRatingDto, ResponseDto } from '@/types/rating';
 import type { FormData, FormQuestion } from '@/types/form';
 
 const activeQuestions = (questions: FormQuestion[]) =>
   questions.filter((q) => q.isActive && !q.isDeleted);
 
-export default function ReviewFormPage() {
-  const { message } = App.useApp(); // ✅ REQUIRED
+function buildCreateRatingDto(
+  formId: string,
+  outletId: string,
+  userId: string,
+  values: Record<string, unknown>,
+  formData: FormData
+): CreateRatingDto {
+  const answers = (values.answers as Record<string, unknown>) ?? {};
+  const complaints = (values.complaints as Record<string, boolean>) ?? {};
+  const questions = activeQuestions(formData.questions);
+  const response: ResponseDto[] = questions.map((q) => ({
+    questionId: q._id,
+    answer:
+      (answers[q._id] as string | string[] | number) ??
+      (q.type === 'checkbox' ? [] : q.type === 'rating' ? 0 : ''),
+    isComplaint: Boolean(complaints[q._id]),
+  }));
+  const ratingQuestionIds = questions
+    .filter((q) => q.type === 'rating')
+    .map((q) => q._id);
+  const ratingValues = ratingQuestionIds
+    .map((id) => answers[id])
+    .filter((v): v is number => typeof v === 'number');
+  const overallRating =
+    ratingValues.length > 0
+      ? Math.min(
+          5,
+          Math.max(
+            1,
+            Math.round(
+              (ratingValues.reduce((a, b) => a + b, 0) / ratingValues.length) *
+                10
+            ) / 10
+          )
+        )
+      : undefined;
+  return {
+    formId,
+    userId,
+    outletId,
+    response,
+    ...(overallRating !== undefined && { overallRating }),
+    type: 'review',
+  };
+}
 
+export default function ReviewFormPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const { user, hydrateUser } = useAuth();
@@ -38,7 +83,8 @@ export default function ReviewFormPage() {
   const [pendingRatingSubmit, setPendingRatingSubmit] = useState<{
     values: Record<string, unknown>;
     formData: FormData;
-    userId: string | null;
+    /** Set after OTP when we have the user from authResponse (context may not have updated yet). */
+    userId?: string | null;
   } | null>(null);
 
   const {
@@ -51,104 +97,156 @@ export default function ReviewFormPage() {
     enabled: !!formId,
   });
 
-  const handleSubmit = useCallback(
-    (values: Record<string, unknown>) => {
-      const phone = values.phone as string;
-      if (!phone || phone.length !== 10) {
-        message.error('Please enter a valid 10-digit phone number');
-        return;
-      }
-      setPendingValues(values);
-      setOtpModalOpen(true);
-    },
-    [message]
-  );
+  const handleSubmit = useCallback((values: Record<string, unknown>) => {
+    const phone = values.phone as string;
+    if (!phone || phone.length !== 10) {
+      message.error('Please enter a valid 10-digit phone number');
+      return;
+    }
+    setPendingValues(values);
+    setOtpModalOpen(true);
+  }, []);
 
-  const handleOtpVerify = async () => {
+  const handleOtpVerify = useCallback(async () => {
     if (!otp || otp.length !== 6) {
       message.error('Please enter the 6-digit verification code');
       return;
     }
-
     if (!pendingValues || !formData) {
       message.error('Form data missing. Please try again.');
       return;
     }
-
     const phone = String(pendingValues.phone ?? '').trim();
     if (!phone || phone.length !== 10) {
       message.error('Invalid phone number.');
       return;
     }
-
     setSubmitting(true);
-
     try {
       const phoneNumber = `+91${phone}`;
       const authResponse = await authApi.verifyOtp({ phoneNumber, otp });
-
       cookieService.setAccessToken(authResponse.accessToken);
       storage.setToken(authResponse.accessToken);
       storage.setUser(authResponse.user);
       await hydrateUser();
 
-      const userId =
+      const responseUserId =
         authResponse.user?.id ??
         (authResponse.user as { _id?: string })?._id ??
         null;
-
-      const outletId =
-        formData.outletId ?? searchParams.get('outletId') ?? formId;
-
-      await ratingApi.create({
-        formId,
-        userId,
-        outletId,
-        response: [],
-        type: 'review',
+      setPendingRatingSubmit({
+        values: pendingValues,
+        formData,
+        userId: responseUserId,
       });
-
-      setShowSuccess(true);
       setOtpModalOpen(false);
       setOtp('');
       setPendingValues(null);
-    } catch (err: unknown) {
-      if (
-        typeof err === 'object' &&
-        err !== null &&
-        'status' in err &&
-        (err as { status?: number }).status === 401
-      ) {
-        message.error('Incorrect OTP');
-      } else if (typeof err === 'object' && err !== null && 'message' in err) {
-        message.error(String((err as { message?: string }).message));
-      } else {
-        message.error('Something went wrong. Please try again.');
-      }
+    } catch (err) {
+      const status =
+        err && typeof err === 'object' && 'status' in err
+          ? (err as { status?: number }).status
+          : undefined;
+      const msg =
+        err && typeof err === 'object' && 'message' in err
+          ? String((err as { message: string }).message)
+          : 'Failed to submit review. Please try again.';
+      message.error(status === 401 ? 'Incorrect OTP' : msg);
     } finally {
       setSubmitting(false);
     }
-  };
+  }, [otp, pendingValues, formData, hydrateUser]);
+
+  const contextUserId =
+    user?.id ?? (user as { _id?: string } | null)?._id ?? null;
+
+  useEffect(() => {
+    if (!pendingRatingSubmit) return;
+    const { values, formData: fd, userId: pendingUserId } = pendingRatingSubmit;
+    const userId = pendingUserId ?? contextUserId;
+    if (!userId) return;
+
+    setPendingRatingSubmit(null);
+
+    const outletId = fd.outletId ?? searchParams.get('outletId') ?? formId;
+    const payload = buildCreateRatingDto(formId, outletId, userId, values, fd);
+    setSubmitting(true);
+    ratingApi
+      .create(payload)
+      .then(() => setShowSuccess(true))
+      .catch((err) => {
+        const msg =
+          err && typeof err === 'object' && 'message' in err
+            ? String((err as { message: string }).message)
+            : 'Failed to submit review. Please try again.';
+        message.error(msg);
+      })
+      .finally(() => setSubmitting(false));
+  }, [contextUserId, pendingRatingSubmit, formId, searchParams]);
+
   const handleOtpResend = useCallback(() => {
+    // TODO: call backend to resend OTP
     message.info('OTP resent');
-  }, [message]);
+  }, []);
 
   const handleFinishFailed = useCallback(
     (info: { errorFields: { errors: string[] }[] }) => {
       const firstError = info.errorFields?.[0]?.errors?.[0];
       message.error(firstError ?? 'Please fill all required fields');
     },
-    [message]
+    []
   );
 
-  if (!formId) return <div>Invalid form link.</div>;
-  if (isLoading) return <div>Loading form...</div>;
-  if (error || !formData) return <div>Failed to load form.</div>;
-  if (showSuccess) return <SuccessStep />;
+  if (!formId) {
+    return (
+      <div className='min-h-screen bg-white flex items-center justify-center'>
+        <p className='text-gray-500'>Invalid form link.</p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className='min-h-screen bg-white flex items-center justify-center'>
+        <div className='text-gray-500'>Loading form...</div>
+      </div>
+    );
+  }
+
+  if (error || !formData) {
+    return (
+      <div className='min-h-screen bg-white flex items-center justify-center px-6'>
+        <p className='text-gray-500 text-center'>
+          {error && typeof error === 'object' && 'message' in error
+            ? String((error as { message: string }).message)
+            : 'Failed to load form. Please try again later.'}
+        </p>
+      </div>
+    );
+  }
+
+  if (showSuccess) {
+    return (
+      <div className='min-h-screen bg-white'>
+        <div className='max-w-md mx-auto h-full min-h-screen'>
+          <SuccessStep />
+        </div>
+      </div>
+    );
+  }
+
+  const activeForm = formData.isActive && !formData.isDeleted;
+  if (!activeForm) {
+    return (
+      <div className='min-h-screen bg-white flex items-center justify-center'>
+        <p className='text-gray-500'>This form is not available.</p>
+      </div>
+    );
+  }
 
   return (
     <div className='min-h-screen bg-white'>
-      <div className='max-w-md mx-auto min-h-screen'>
+      <div className='max-w-md mx-auto h-full min-h-screen'>
         <DynamicReviewForm
           form={form}
           questions={formData.questions}
@@ -157,7 +255,6 @@ export default function ReviewFormPage() {
           onFinishFailed={handleFinishFailed}
           loading={false}
         />
-
         <OtpStep
           open={otpModalOpen}
           onClose={() => {
