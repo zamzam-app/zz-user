@@ -76,6 +76,7 @@ export default function ReviewFormPage() {
   const [otp, setOtp] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [submittedRating, setSubmittedRating] = useState<number | undefined>();
   const [pendingValues, setPendingValues] = useState<Record<
     string,
     unknown
@@ -170,6 +171,7 @@ export default function ReviewFormPage() {
 
     const outletId = fd.outletId ?? searchParams.get('outletId') ?? formId;
     const payload = buildCreateRatingDto(formId, outletId, userId, values, fd);
+    setSubmittedRating(payload.overallRating);
     setSubmitting(true);
     ratingApi
       .create(payload)
@@ -229,7 +231,7 @@ export default function ReviewFormPage() {
     return (
       <div className='min-h-screen bg-white'>
         <div className='max-w-md mx-auto h-full min-h-screen'>
-          <SuccessStep />
+          <SuccessStep rating={submittedRating} />
         </div>
       </div>
     );
