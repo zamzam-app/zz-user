@@ -4,6 +4,9 @@ import type { FormInstance } from 'antd';
 import { Button, Checkbox, DatePicker, Form, Input, Rate, Radio } from 'antd';
 import { useEffect, useMemo } from 'react';
 import type { FormQuestion } from '@/types/form';
+import Link from 'next/link';
+import { ArrowLeftOutlined } from '@ant-design/icons';
+import { StarOutlined, StarFilled } from '@ant-design/icons';
 
 export type DynamicReviewFormProps = {
   form: FormInstance;
@@ -23,27 +26,38 @@ function RateField({
   count = 5,
   allowHalf,
   disabled,
+  character,
+  style,
 }: {
   value?: number;
   onChange?: (value: number) => void;
   count?: number;
   allowHalf?: boolean;
   disabled?: boolean;
+  character?: (props: { index?: number; value?: number }) => React.ReactNode;
+  style?: React.CSSProperties;
 }) {
   return (
-    <div className='flex justify-center py-2 bg-gray-50 rounded-xl border border-gray-100 border-dashed'>
+    <div className='flex justify-center'>
       <Rate
         value={value}
         onChange={onChange}
         count={count}
-        className='text-amber-400 text-3xl'
         allowHalf={allowHalf}
         disabled={disabled}
+        style={{ fontSize: 48 }}
+        character={({ index = 0, value = 0 }) => {
+          const selected = index + 1 <= value;
+          return selected ? (
+            <StarFilled style={{ margin: '0 8px', color: '#3DCA84' }} />
+          ) : (
+            <StarOutlined style={{ margin: '0 8px', color: '#3DCA84' }} />
+          );
+        }}
       />
     </div>
   );
 }
-
 export function DynamicReviewForm({
   form,
   questions,
@@ -67,50 +81,93 @@ export function DynamicReviewForm({
   );
 
   useEffect(() => {
+    if (!isMultipleRatings) return;
     if (!firstRatingId) return;
+
     const currentAnswers = form.getFieldValue('answers') ?? {};
+
     const values = ratingQuestionIds
+      .slice(1) // exclude overall
       .map((id) => currentAnswers[id])
       .filter((v): v is number => typeof v === 'number');
+
     if (values.length === 0) return;
+
     const avg = values.reduce((a, b) => a + b, 0) / values.length;
     const rounded = Math.round(avg * 10) / 10;
+
     const current = currentAnswers[firstRatingId];
-    if (typeof current !== 'number' || Math.abs(rounded - current) > 0.01) {
+
+    if (current !== rounded) {
       form.setFieldValue(['answers', firstRatingId], rounded);
     }
-  }, [ratingValuesKey, form, firstRatingId, ratingQuestionIds]);
+  }, [
+    ratingValuesKey,
+    isMultipleRatings,
+    form,
+    firstRatingId,
+    ratingQuestionIds,
+  ]);
 
   return (
     <div className='pb-24 pt-4'>
-      <div className='px-6 mb-6'>
-        <h2 className='text-2xl font-serif font-medium text-gray-800 text-center'>
+      {/* Header */}
+      <header className='relative flex items-center justify-center px-6 py-4'>
+        <Link href='/' className='absolute left-6'>
+          <ArrowLeftOutlined className='text-xl text-black!' />
+        </Link>
+
+        <h1 className="font-['Epilogue'] font-extrabold tracking-tight text-gray-900 text-base sm:text-xl md:text-2xl lg:text-3xl truncate max-w-[70%] text-center translate-y-1 md:translate-y-2">
+          Feedback Form
+        </h1>
+      </header>
+      <div className='px-6 mb-8 pt-2'>
+        <h2 className="font-['Epilogue'] font-semibold text-[22px] text-gray-900 text-center">
           {formTitle}
         </h2>
-        <p className='text-center text-gray-500 text-sm mt-1'>
-          We value your feedback
-        </p>
       </div>
 
-      <div className='px-6 review-form-no-inline-errors'>
+      <div className=' px-6 review-form-no-inline-errors'>
         <Form
           form={form}
           layout='vertical'
           onFinish={onSubmit}
           onFinishFailed={onFinishFailed}
           size='large'
+          className='space-y-5 '
         >
+          {/* NAME */}
           <Form.Item
             name='name'
-            label='Name'
+            label={
+              <span className="font-['Epilogue'] text-gray-700 font-medium">
+                Name
+              </span>
+            }
             rules={[{ required: true, message: 'Please enter your name' }]}
           >
-            <Input placeholder='Enter your name' />
+            <Input
+              placeholder='Enter your name'
+              className='w-full rounded-xl px-4 py-4 h-12
+             border-none! 
+             bg-[#F1F5F3]! 
+             text-[#4A6D5F]! 
+             placeholder-[#8FA39B]! 
+             transition-all
+             focus:ring-2! 
+             focus:ring-[#3DCA84]! 
+             focus:outline-none!'
+            />
           </Form.Item>
 
+          {/* PHONE */}
           <Form.Item
             name='phone'
-            label='Phone Number'
+            label={
+              <span className="font-['Epilogue'] text-gray-700 font-medium">
+                Phone Number
+              </span>
+            }
             rules={[
               { required: true, message: 'Please enter your phone number' },
               {
@@ -121,39 +178,111 @@ export function DynamicReviewForm({
           >
             <Input
               placeholder='Enter your phone number'
-              prefix={<span className='text-gray-400'>+91</span>}
+              prefix={
+                <span className='text-[#4A6D5F] font-medium mr-1'>+91</span>
+              }
               maxLength={10}
+              className='w-full rounded-xl px-4 py-4 h-12
+                         border-none! 
+                         border-transparent!
+                         shadow-none!
+                         bg-[#F1F5F3]! 
+                         text-[#4A6D5F]! 
+                         placeholder-[#8FA39B]! 
+                         transition-all
+                         /* no borders appear on hover */
+                         [&.ant-input-affix-wrapper]:border-none!
+                         [&.ant-input-affix-wrapper]:border-transparent!
+                         [&.ant-input-affix-wrapper]:shadow-none!
+                         [&.ant-input-affix-wrapper]:bg-[#F1F5F3]!
+                         [&.ant-input-affix-wrapper:hover]:border-none!
+                         [&.ant-input-affix-wrapper:hover]:border-transparent!
+
+                         /*  Green Ring*/
+                         [&.ant-input-affix-wrapper-focused]:border-none!
+                         [&.ant-input-affix-wrapper-focused]:border-transparent!
+                         [&.ant-input-affix-wrapper-focused]:shadow-none!
+                         [&.ant-input-affix-wrapper-focused]:ring-2!
+                         [&.ant-input-affix-wrapper-focused]:ring-[#3DCA84]!
+                         focus:outline-none!
+                         focus:border-none!'
               onChange={(e) => {
                 const val = e.target.value.replace(/\D/g, '');
                 form.setFieldValue('phone', val);
               }}
             />
           </Form.Item>
-
-          <Form.Item name='email' label='Email (optional)'>
-            <Input type='email' placeholder='Enter your email' />
-          </Form.Item>
-
-          <Form.Item name='dob' label='Date of Birth (optional)'>
-            <DatePicker
-              className='w-full'
-              placeholder='Select date of birth'
-              format='DD/MM/YYYY'
+          {/* EMAIL */}
+          <Form.Item
+            name='email'
+            label={
+              <span className="font-['Epilogue'] text-gray-700 font-medium">
+                Email (optional)
+              </span>
+            }
+          >
+            <Input
+              type='email'
+              placeholder='Enter your email'
+              className='w-full rounded-xl px-4 py-4 h-12
+             border-none! 
+             bg-[#F1F5F3]! 
+             text-[#4A6D5F]! 
+             placeholder-[#8FA39B]! 
+             transition-all
+             focus:ring-2! 
+             focus:ring-[#3DCA84]! 
+             focus:outline-none!'
             />
           </Form.Item>
 
+          {/* DOB */}
+          <Form.Item
+            name='dob'
+            label={
+              <span className="font-['Epilogue'] text-gray-700 font-medium">
+                Date of Birth (optional)
+              </span>
+            }
+          >
+            <DatePicker
+              placeholder='Select date of birth'
+              format='DD/MM/YYYY'
+              className='w-full rounded-xl px-4 py-4 h-12
+              border-none! 
+              bg-[#F1F5F3]! 
+              text-[#4A6D5F]! 
+              [&.ant-picker]:border-none!
+              [&.ant-picker]:shadow-none!
+              [&.ant-picker]:bg-[#F1F5F3]!
+              [&.ant-picker:hover]:border-none!
+              [&.ant-picker:hover]:bg-[#F1F5F3]!
+              /*Focus State - Green Ring */
+              [&.ant-picker-focused]:ring-2!
+              [&.ant-picker-focused]:ring-[#3DCA84]!
+              [&.ant-picker-focused]:shadow-none!
+              transition-all'
+            />
+          </Form.Item>
+
+          {/* DYNAMIC QUESTIONS */}
           {questionsToShow.map((question) => {
             const isOverallRating =
               question.type === 'rating' &&
               firstRatingId === question._id &&
               isMultipleRatings;
+
             return (
-              <div key={question._id} className='mb-4'>
+              <div key={question._id} className='space-y-2'>
                 <Form.Item
                   name={['answers', question._id]}
-                  label={question.title}
+                  label={
+                    <span className="font-['Epilogue'] text-gray-800 font-semibold">
+                      {question.title}
+                    </span>
+                  }
                   rules={
-                    question.isRequired
+                    question.isRequired && !isOverallRating
                       ? [
                           {
                             required: true,
@@ -164,44 +293,84 @@ export function DynamicReviewForm({
                   }
                   extra={
                     question.hint ? (
-                      <span className='text-gray-500 text-sm'>
+                      <span className='text-gray-400 text-sm'>
                         {question.hint}
                       </span>
                     ) : undefined
                   }
                 >
                   {question.type === 'rating' && (
-                    <RateField
-                      count={question.maxRatings ?? 5}
-                      allowHalf={question.starStep === 0.5}
-                      disabled={isOverallRating}
+                    <div className='rounded-2xl py-6 flex flex-col items-center justify-center gap-3'>
+                      <RateField
+                        value={form.getFieldValue(['answers', question._id])}
+                        onChange={(val) =>
+                          form.setFieldValue(['answers', question._id], val)
+                        }
+                        count={question.maxRatings ?? 5}
+                        allowHalf={question.starStep === 0.5}
+                        disabled={isOverallRating}
+                      />
+                    </div>
+                  )}
+
+                  {question.type === 'short_answer' && (
+                    <Input
+                      placeholder='Your answer'
+                      className='w-full rounded-xl px-4 py-4 h-12
+                                 border-none! 
+                               bg-[#F1F5F3]! 
+                               text-[#4A6D5F]! 
+                               placeholder-[#8FA39B]! 
+                                 transition-all
+                                 focus:ring-2! 
+                                 focus:ring-[#3DCA84]! 
+                                 focus:outline-none!'
                     />
                   )}
-                  {question.type === 'short_answer' && (
-                    <Input placeholder='Your answer' />
-                  )}
+
                   {question.type === 'paragraph' && (
                     <Input.TextArea
                       rows={4}
                       placeholder='Your answer'
-                      className='resize-none'
+                      className='w-full rounded-xl px-4 py-4 h-12
+                                 border-none! 
+                               bg-[#F1F5F3]! 
+                               text-[#32403B]! 
+                               placeholder-[#8FA39B]! 
+                                 transition-all
+                                 focus:ring-2! 
+                               focus:ring-[#4A6D5F]! 
+                                 focus:outline-none!'
                     />
                   )}
                   {question.type === 'multiple_choice' && (
-                    <Radio.Group className='w-full'>
-                      {(question.options ?? []).map((opt, idx) => (
-                        <Radio
-                          key={idx}
-                          value={opt.text}
-                          className='block my-1'
-                        >
-                          {opt.text}
-                        </Radio>
-                      ))}
-                    </Radio.Group>
+                    <Form.Item
+                      name={['answers', question._id]}
+                      noStyle // This removes the wrapper that causes the extra outline
+                    >
+                      <Radio.Group className='flex flex-col gap-3 mt-2 mb-4'>
+                        {(question.options ?? []).map((opt, idx) => (
+                          <Radio
+                            key={idx}
+                            value={opt.text}
+                            className="text-gray-700 font-medium font-['Epilogue'] border-none! outline-none!
+                             [&.ant-radio-wrapper:hover_.ant-radio-inner]:border-[#3DCA84]!
+                             [&_.ant-radio-checked_.ant-radio-inner]:border-[#3DCA84]!
+                             [&_.ant-radio-checked_.ant-radio-inner]:bg-white!
+                             [&_.ant-radio-inner:after]:bg-[#3DCA84]!
+                             [&_.ant-radio-input:focus+.ant-radio-inner]:shadow-none!
+                             [&.ant-radio-wrapper:hover]:bg-transparent!
+                             "
+                          >
+                            {opt.text}
+                          </Radio>
+                        ))}
+                      </Radio.Group>
+                    </Form.Item>
                   )}
+
                   {question.type === 'checkbox' && (
-                    <Checkbox.Group className='w-full flex flex-col gap-1'>
+                    <Checkbox.Group className='flex flex-col gap-2'>
                       {(question.options ?? []).map((opt, idx) => (
                         <Checkbox key={idx} value={opt.text}>
                           {opt.text}
@@ -210,12 +379,35 @@ export function DynamicReviewForm({
                     </Checkbox.Group>
                   )}
                 </Form.Item>
+
                 <Form.Item
                   name={['complaints', question._id]}
                   valuePropName='checked'
-                  className='mb-0'
+                  noStyle
                 >
-                  <Checkbox>Mark as complaint</Checkbox>
+                  <div className='flex items-center mt-2 mb-4'>
+                    <Checkbox
+                      className="
+        text-sm text-gray-600 font-medium font-['Epilogue']
+        /* Hover State */
+        [&.ant-checkbox-wrapper:hover_.ant-checkbox-inner]:border-[#3DCA84]!
+        
+        /* Checked State: Green Background */
+        [&_.ant-checkbox-checked_.ant-checkbox-inner]:bg-[#3DCA84]!
+        [&_.ant-checkbox-checked_.ant-checkbox-inner]:border-[#3DCA84]!
+        
+        /* Remove the Blue Halo and Box Shadow */
+        [&_.ant-checkbox-input:focus+.ant-checkbox-inner]:shadow-none!
+        [&_.ant-checkbox-wrapper:hover_.ant-checkbox-inner]:shadow-none!
+        [&_.ant-checkbox-inner]:shadow-none!
+
+        /* White Tick */
+        [&_.ant-checkbox-inner:after]:border-white!
+      "
+                    >
+                      Mark as complaint
+                    </Checkbox>
+                  </div>
                 </Form.Item>
               </div>
             );
@@ -223,16 +415,22 @@ export function DynamicReviewForm({
         </Form>
       </div>
 
-      <div className='fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-10'>
+      <div className='fixed bottom-0 left-0 right-0 p-4  z-10'>
         <Button
           type='primary'
           block
           size='large'
           onClick={() => form.submit()}
           loading={loading}
-          className='bg-emerald-600 hover:bg-emerald-700 h-12 text-lg font-medium'
+          className=" font-['Epilogue']! text-gray-700! font-medium
+      h-14 rounded-2xl text-lg border-none! transition-all
+      bg-[#3DCA84]! 
+      hover:bg-[#34b375]! 
+      hover:text-[#1C2B25]!
+      active:scale-[0.98]!
+    "
         >
-          Submit
+          Submit Feedback
         </Button>
       </div>
     </div>

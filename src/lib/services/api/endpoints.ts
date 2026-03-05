@@ -3,10 +3,6 @@ export const authEndpoints = {
   logout: '/auth/logout',
   verifyOtp: '/auth/verify-otp',
 };
-export const productEndpoints = {
-  getAll: '/product',
-  getById: (id: string) => `/product/${id}`,
-};
 
 export const formEndpoints = {
   getById: (id: string) => `/forms/${id}`,
@@ -14,4 +10,8 @@ export const formEndpoints = {
 
 export const ratingEndpoints = {
   create: '/rating',
+};
+export const productEndpoints = {
+  getAll: '/product',
+  getById: (id: string) => `/product/${id}`,
 };

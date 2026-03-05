@@ -63,8 +63,15 @@ const Testimonials = () => {
           </div>
         </div>
 
-        {/* 🔥 Horizontal Scroll (RESTORED) */}
-        <div className='flex gap-6 overflow-x-auto scrollbar-hide pb-4'>
+        {/* 🔥 Horizontal Scroll  */}
+        <div
+          className='flex gap-6 overflow-x-auto pb-4'
+          style={{
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+          }}
+        >
+          {' '}
           {/* Card 1 */}
           <div className='min-w-[320px] bg-white rounded-2xl overflow-hidden shadow-sm'>
             <div className='relative w-full h-56'>
@@ -91,7 +98,6 @@ const Testimonials = () => {
               </p>
             </div>
           </div>
-
           {/* Card 2 */}
           <div className='min-w-[320px] bg-white rounded-2xl overflow-hidden shadow-sm'>
             <div className='relative w-full h-56'>
@@ -118,7 +124,6 @@ const Testimonials = () => {
               </p>
             </div>
           </div>
-
           {/* Card 3 */}
           <div className='min-w-[320px] bg-white rounded-2xl overflow-hidden shadow-sm'>
             <div className='relative w-full h-56'>

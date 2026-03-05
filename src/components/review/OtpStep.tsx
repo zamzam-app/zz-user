@@ -52,8 +52,10 @@ export function OtpStep({
       }}
     >
       <div className='text-center'>
-        <h2 className='text-lg font-bold text-gray-800 mb-0.5'>Verification</h2>
-        <p className='text-gray-500 text-sm mb-3'>
+        <h2 className='font-[Epilogue]! text-lg font-bold text-gray-800 mb-0.5'>
+          Verification
+        </h2>
+        <p className='font-[Epilogue]! text-gray-500 text-sm mb-3'>
           Enter the 6-digit code sent to +91 {phoneNumber}
         </p>
         <div className='flex justify-center mb-4'>
@@ -70,7 +72,7 @@ export function OtpStep({
           size='large'
           onClick={onVerify}
           loading={loading}
-          className='bg-emerald-600 hover:bg-emerald-700 h-11 text-base font-medium mb-2'
+          className='  font-[Epilogue]!  font-medium    bg-[#3DCA84]!  hover:bg-[#34b375]!  text-[#1C2B25]! h-11 text-base  mb-2'
         >
           Verify
         </Button>
@@ -78,7 +80,7 @@ export function OtpStep({
           type='link'
           onClick={onResend}
           disabled={loading}
-          className='text-emerald-600 text-sm'
+          className='font-[Epilogue]! text-emerald-600! text-sm'
         >
           Resend Code
         </Button>
