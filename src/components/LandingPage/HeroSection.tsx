@@ -1,5 +1,6 @@
 import BakeryImg from '../../../public/__mocks__/BakeryImage.png';
 import Link from 'next/link';
+import Button from '../common/Button';
 
 const HeroSection = () => {
   return (
@@ -29,9 +30,7 @@ const HeroSection = () => {
 
         {/* 3. Action Button */}
         <Link href='cake-library'>
-          <button className="mt-16 md:mt-24 rounded-full bg-[#923a3a] px-10 py-4 font-['Epilogue'] text-lg font-bold text-[#FDF5E6]! shadow-2xl transition-all duration-300 ease-in-out hover:bg-white hover:text-[#923a3a]! hover:-translate-y-2 active:scale-95">
-            Explore Cake Studio
-          </button>
+          <Button> Explore Cake Studio</Button>
         </Link>
       </div>
     </section>

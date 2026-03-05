@@ -28,12 +28,7 @@ const Navbar = () => {
         </h1>
       </div>
 
-      {/* RIGHT SECTION: Cart */}
-      <div className='z-20'>
-        <Badge count={0} showZero offset={[4, 0]} color='#923a3a'>
-          <ShoppingCartOutlined className='text-2xl md:text-4xl cursor-pointer' />
-        </Badge>
-      </div>
+      
     </nav>
   );
 };

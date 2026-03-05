@@ -12,11 +12,11 @@ import {
   Text,
   Extrude,
 } from '@react-three/drei';
-import { Tabs, Button, ConfigProvider } from 'antd';
+import { Tabs, Input, ConfigProvider } from 'antd';
 import { useRouter } from 'next/navigation';
 import { ArrowLeftOutlined, WhatsAppOutlined } from '@ant-design/icons';
 import { Download } from 'lucide-react';
-
+import Button from '@/components/common/Button';
 export type SugarRoseProps = {
   position: [number, number, number];
   scale?: number;
@@ -204,7 +204,7 @@ export default function CreateCakePage() {
               components: {
                 Tabs: {
                   itemActiveColor: '#7A2D2A',
-                  itemHoverColor: '#923a3a', // Lighter shade for hover micro-interaction
+                  itemHoverColor: '#923a3a', 
                   itemSelectedColor: '#7A2D2A',
                   inkBarColor: '#7A2D2A',
                   titleFontSize: 16,
@@ -255,9 +255,7 @@ export default function CreateCakePage() {
                 Tap to upload an image of your cake design
               </p>
 
-              <button className='bg-[#7A2D2A] text-white! px-6 py-2 rounded-lg font-semibold active:scale-95 transition'>
-                Upload
-              </button>
+              <Button>Upload</Button>
             </div>
 
             {/* Textarea */}
@@ -267,10 +265,8 @@ export default function CreateCakePage() {
               rows={4}
             />
             {/* Bottom fixed button */}
-            <div className='fixed bottom-0 left-0 right-0 p-6 '>
-              <button className="w-full bg-[#923a3a] text-white! py-4 rounded-2xl font-['Epilogue'] font-bold text-lg active:scale-[0.98] transition-transform shadow-md">
-                Get Quote
-              </button>
+            <div className='fixed bottom-0 left-0 right-0 p-6 z-50'>
+              <Button fullWidth>Get Quote</Button>
             </div>
           </div>
         )}
@@ -304,13 +300,9 @@ export default function CreateCakePage() {
                 <h2 className='text-xl font-bold text-[#5D4037]'>
                   2. Layers ({layers.length}/8)
                 </h2>
-                <button
-                  onClick={addLayer}
-                  disabled={layers.length >= 8}
-                  className="bg-[#923a3a] text-white! px-4 py-2 rounded-2xl font-['Epilogue'] font-bold text-sm active:scale-[0.98] transition-transform shadow-md disabled:opacity-50 disabled:active:scale-100 disabled:cursor-not-allowed hover:bg-[#a64848] hover:cursor-pointer"
-                >
+                <Button onClick={addLayer} disabled={layers.length >= 8}>
                   + Add Layer
-                </button>
+                </Button>
               </div>
               <div className='space-y-4'>
                 {layers.map((layer, index) => (
@@ -534,7 +526,6 @@ export default function CreateCakePage() {
                   <Button
                     size='large'
                     icon={<Download size={18} />}
-                    className='hidden md:flex'
                     onClick={handleDownload}
                   >
                     Download Design
@@ -550,14 +541,7 @@ export default function CreateCakePage() {
                       },
                     }}
                   >
-                    <Button
-                      size='large'
-                      type='primary'
-                      block
-                      className='bg-[#5D4037] hover:bg-[#4a322c] h-12 text-lg shadow-lg shadow-orange-900/10 flex items-center justify-center gap-2'
-                      onClick={handleOrderNow}
-                      style={{ backgroundColor: '#25D366 !important' }}
-                    >
+                    <Button onClick={handleOrderNow}>
                       <WhatsAppOutlined size={20} /> Order Now
                     </Button>
                   </ConfigProvider>
