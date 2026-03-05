@@ -52,7 +52,9 @@ export function OtpStep({
       }}
     >
       <div className='text-center'>
-        <h2 className='font-[Epilogue]! text-lg font-bold text-gray-800 mb-0.5'>Verification</h2>
+        <h2 className='font-[Epilogue]! text-lg font-bold text-gray-800 mb-0.5'>
+          Verification
+        </h2>
         <p className='font-[Epilogue]! text-gray-500 text-sm mb-3'>
           Enter the 6-digit code sent to +91 {phoneNumber}
         </p>

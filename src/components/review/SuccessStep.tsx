@@ -5,8 +5,7 @@ import { ArrowLeftOutlined } from '@ant-design/icons';
 import { useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
 
-const googleMapsLink =
-  'https://www.google.com/maps/place/ZamZam'; // temporary static link
+const googleMapsLink = 'https://www.google.com/maps/place/ZamZam'; // temporary static link
 
 export function SuccessStep({ rating = 0 }: { rating?: number }) {
   const isHighRating = rating >= 4;
@@ -48,12 +47,12 @@ export function SuccessStep({ rating = 0 }: { rating?: number }) {
 
       {/* GOOGLE BUTTON ONLY IF RATING >= 4 */}
       {isHighRating && (
-        <div className="flex justify-center mb-8 animate-bounce">
+        <div className='flex justify-center mb-8 animate-bounce'>
           <a
             href={googleMapsLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-6 py-3 rounded-full font-bold text-black shadow-lg transition-all duration-300 hover:scale-105"
+            target='_blank'
+            rel='noopener noreferrer'
+            className='px-6 py-3 rounded-full font-bold text-black shadow-lg transition-all duration-300 hover:scale-105'
             style={{
               background: 'linear-gradient(135deg, #FFD700, #FFB800)',
             }}

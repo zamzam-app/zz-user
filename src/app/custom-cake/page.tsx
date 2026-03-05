@@ -204,7 +204,7 @@ export default function CreateCakePage() {
               components: {
                 Tabs: {
                   itemActiveColor: '#7A2D2A',
-                  itemHoverColor: '#923a3a', 
+                  itemHoverColor: '#923a3a',
                   itemSelectedColor: '#7A2D2A',
                   inkBarColor: '#7A2D2A',
                   titleFontSize: 16,

@@ -360,7 +360,8 @@ export function DynamicReviewForm({
                              [&_.ant-radio-inner:after]:bg-[#3DCA84]!
                              [&_.ant-radio-input:focus+.ant-radio-inner]:shadow-none!
                              [&.ant-radio-wrapper:hover]:bg-transparent!
-                             ">
+                             "
+                          >
                             {opt.text}
                           </Radio>
                         ))}
@@ -435,4 +436,3 @@ export function DynamicReviewForm({
     </div>
   );
 }
-
