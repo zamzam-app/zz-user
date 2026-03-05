@@ -27,8 +27,6 @@ const Navbar = () => {
           ZamZam Bun Studio
         </h1>
       </div>
-
-      
     </nav>
   );
 };

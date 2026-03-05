@@ -1,13 +1,13 @@
-import Link from "next/link";
-import React from "react";
+import Link from 'next/link';
+import React from 'react';
 
 interface ButtonProps {
   children: React.ReactNode;
   href?: string;
   onClick?: () => void;
   fullWidth?: boolean;
-  variant?: "primary" | "outline";
-  size?: "small" | "medium" | "large";
+  variant?: 'primary' | 'outline';
+  size?: 'small' | 'medium' | 'large';
   icon?: React.ReactNode;
   disabled?: boolean;
   className?: string;
@@ -18,12 +18,12 @@ const Button: React.FC<ButtonProps> = ({
   href,
   onClick,
   fullWidth = false,
-  variant = "primary",
-  className = "",
+  variant = 'primary',
+  className = '',
 }) => {
   const baseStyles = `
     inline-block
-    ${fullWidth ? "w-full" : ""}
+    ${fullWidth ? 'w-full' : ''}
     py-3
     px-10
     rounded-2xl
