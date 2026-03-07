@@ -1,11 +1,17 @@
 'use client';
 
 import type { FormInstance } from 'antd';
-import { Button, Checkbox, DatePicker, Form, Input, Rate, Radio } from 'antd';
-import { useEffect, useMemo } from 'react';
+import {
+  App,
+  Button,
+  Checkbox,
+  DatePicker,
+  Form,
+  Input,
+  Rate,
+  Radio,
+} from 'antd';
 import type { FormQuestion } from '@/types/form';
-import Link from 'next/link';
-import { ArrowLeftOutlined } from '@ant-design/icons';
 import { StarOutlined, StarFilled } from '@ant-design/icons';
 
 export type DynamicReviewFormProps = {
@@ -26,8 +32,6 @@ function RateField({
   count = 5,
   allowHalf,
   disabled,
-  character,
-  style,
 }: {
   value?: number;
   onChange?: (value: number) => void;
@@ -66,57 +70,13 @@ export function DynamicReviewForm({
   onFinishFailed,
   loading,
 }: DynamicReviewFormProps) {
+  const { message } = App.useApp();
   const questionsToShow = activeQuestions(questions);
-
-  const ratingQuestionIds = useMemo(
-    () => questionsToShow.filter((q) => q.type === 'rating').map((q) => q._id),
-    [questionsToShow]
-  );
-  const firstRatingId = ratingQuestionIds[0];
-  const isMultipleRatings = ratingQuestionIds.length > 1;
-
-  const answers = Form.useWatch('answers', form) ?? {};
-  const ratingValuesKey = JSON.stringify(
-    ratingQuestionIds.map((id) => answers[id as keyof typeof answers])
-  );
-
-  useEffect(() => {
-    if (!isMultipleRatings) return;
-    if (!firstRatingId) return;
-
-    const currentAnswers = form.getFieldValue('answers') ?? {};
-
-    const values = ratingQuestionIds
-      .slice(1) // exclude overall
-      .map((id) => currentAnswers[id])
-      .filter((v): v is number => typeof v === 'number');
-
-    if (values.length === 0) return;
-
-    const avg = values.reduce((a, b) => a + b, 0) / values.length;
-    const rounded = Math.round(avg * 10) / 10;
-
-    const current = currentAnswers[firstRatingId];
-
-    if (current !== rounded) {
-      form.setFieldValue(['answers', firstRatingId], rounded);
-    }
-  }, [
-    ratingValuesKey,
-    isMultipleRatings,
-    form,
-    firstRatingId,
-    ratingQuestionIds,
-  ]);
 
   return (
     <div className='pb-24 pt-4'>
       {/* Header */}
       <header className='relative flex items-center justify-center px-6 py-4'>
-        <Link href='/' className='absolute left-6'>
-          <ArrowLeftOutlined className='text-xl text-black!' />
-        </Link>
-
         <h1 className="font-['Epilogue'] font-extrabold tracking-tight text-gray-900 text-base sm:text-xl md:text-2xl lg:text-3xl truncate max-w-[70%] text-center translate-y-1 md:translate-y-2">
           Feedback Form
         </h1>
@@ -266,11 +226,25 @@ export function DynamicReviewForm({
           </Form.Item>
 
           {/* DYNAMIC QUESTIONS */}
-          {questionsToShow.map((question) => {
+          {questionsToShow.map((question, index) => {
             const isOverallRating =
               question.type === 'rating' &&
-              firstRatingId === question._id &&
-              isMultipleRatings;
+              question.title?.toLowerCase().includes('overall rating');
+            const questionNumber = isOverallRating
+              ? null
+              : questionsToShow
+                  .slice(0, index + 1)
+                  .filter(
+                    (q) =>
+                      !(
+                        q.type === 'rating' &&
+                        q.title?.toLowerCase().includes('overall rating')
+                      )
+                  ).length;
+            const labelText =
+              questionNumber != null
+                ? `${questionNumber}. ${question.title}`
+                : question.title;
 
             return (
               <div key={question._id} className='space-y-2'>
@@ -278,11 +252,11 @@ export function DynamicReviewForm({
                   name={['answers', question._id]}
                   label={
                     <span className="font-['Epilogue'] text-gray-800 font-semibold">
-                      {question.title}
+                      {labelText}
                     </span>
                   }
                   rules={
-                    question.isRequired && !isOverallRating
+                    question.isRequired
                       ? [
                           {
                             required: true,
@@ -308,7 +282,6 @@ export function DynamicReviewForm({
                         }
                         count={question.maxRatings ?? 5}
                         allowHalf={question.starStep === 0.5}
-                        disabled={isOverallRating}
                       />
                     </div>
                   )}
@@ -350,10 +323,10 @@ export function DynamicReviewForm({
                     >
                       <Radio.Group className='flex flex-col gap-3 mt-2 mb-4'>
                         {(question.options ?? []).map((opt, idx) => (
-                          <Radio
-                            key={idx}
-                            value={opt.text}
-                            className="text-gray-700 font-medium font-['Epilogue'] border-none! outline-none!
+                          <div key={idx} className='block'>
+                            <Radio
+                              value={opt.text}
+                              className="text-gray-700 font-medium font-['Epilogue'] border-none! outline-none!
                              [&.ant-radio-wrapper:hover_.ant-radio-inner]:border-[#3DCA84]!
                              [&_.ant-radio-checked_.ant-radio-inner]:border-[#3DCA84]!
                              [&_.ant-radio-checked_.ant-radio-inner]:bg-white!
@@ -361,9 +334,10 @@ export function DynamicReviewForm({
                              [&_.ant-radio-input:focus+.ant-radio-inner]:shadow-none!
                              [&.ant-radio-wrapper:hover]:bg-transparent!
                              "
-                          >
-                            {opt.text}
-                          </Radio>
+                            >
+                              {opt.text}
+                            </Radio>
+                          </div>
                         ))}
                       </Radio.Group>
                     </Form.Item>
@@ -379,40 +353,20 @@ export function DynamicReviewForm({
                     </Checkbox.Group>
                   )}
                 </Form.Item>
-
-                <Form.Item
-                  name={['complaints', question._id]}
-                  valuePropName='checked'
-                  noStyle
-                >
-                  <div className='flex items-center mt-2 mb-4'>
-                    <Checkbox
-                      className="
-        text-sm text-gray-600 font-medium font-['Epilogue']
-        /* Hover State */
-        [&.ant-checkbox-wrapper:hover_.ant-checkbox-inner]:border-[#3DCA84]!
-        
-        /* Checked State: Green Background */
-        [&_.ant-checkbox-checked_.ant-checkbox-inner]:bg-[#3DCA84]!
-        [&_.ant-checkbox-checked_.ant-checkbox-inner]:border-[#3DCA84]!
-        
-        /* Remove the Blue Halo and Box Shadow */
-        [&_.ant-checkbox-input:focus+.ant-checkbox-inner]:shadow-none!
-        [&_.ant-checkbox-wrapper:hover_.ant-checkbox-inner]:shadow-none!
-        [&_.ant-checkbox-inner]:shadow-none!
-
-        /* White Tick */
-        [&_.ant-checkbox-inner:after]:border-white!
-      "
-                    >
-                      Mark as complaint
-                    </Checkbox>
-                  </div>
-                </Form.Item>
               </div>
             );
           })}
         </Form>
+
+        <div className='flex justify-center mt-6 mb-6'>
+          <button
+            type='button'
+            onClick={() => message.info('Coming soon')}
+            className="font-['Epilogue'] text-sm font-medium py-2.5 px-6 rounded-xl bg-white text-black border border-black transition-all hover:opacity-90"
+          >
+            Report a complaint
+          </button>
+        </div>
       </div>
 
       <div className='fixed bottom-0 left-0 right-0 p-4  z-10'>
