@@ -1,7 +1,16 @@
 'use client';
 
 import type { FormInstance } from 'antd';
-import { Button, Checkbox, DatePicker, Form, Input, Rate, Radio } from 'antd';
+import {
+  App,
+  Button,
+  Checkbox,
+  DatePicker,
+  Form,
+  Input,
+  Rate,
+  Radio,
+} from 'antd';
 import type { FormQuestion } from '@/types/form';
 import { StarOutlined, StarFilled } from '@ant-design/icons';
 
@@ -61,6 +70,7 @@ export function DynamicReviewForm({
   onFinishFailed,
   loading,
 }: DynamicReviewFormProps) {
+  const { message } = App.useApp();
   const questionsToShow = activeQuestions(questions);
 
   return (
@@ -216,14 +226,33 @@ export function DynamicReviewForm({
           </Form.Item>
 
           {/* DYNAMIC QUESTIONS */}
-          {questionsToShow.map((question) => {
+          {questionsToShow.map((question, index) => {
+            const isOverallRating =
+              question.type === 'rating' &&
+              question.title?.toLowerCase().includes('overall rating');
+            const questionNumber = isOverallRating
+              ? null
+              : questionsToShow
+                  .slice(0, index + 1)
+                  .filter(
+                    (q) =>
+                      !(
+                        q.type === 'rating' &&
+                        q.title?.toLowerCase().includes('overall rating')
+                      )
+                  ).length;
+            const labelText =
+              questionNumber != null
+                ? `${questionNumber}. ${question.title}`
+                : question.title;
+
             return (
               <div key={question._id} className='space-y-2'>
                 <Form.Item
                   name={['answers', question._id]}
                   label={
                     <span className="font-['Epilogue'] text-gray-800 font-semibold">
-                      {question.title}
+                      {labelText}
                     </span>
                   }
                   rules={
@@ -324,40 +353,20 @@ export function DynamicReviewForm({
                     </Checkbox.Group>
                   )}
                 </Form.Item>
-
-                <Form.Item
-                  name={['complaints', question._id]}
-                  valuePropName='checked'
-                  noStyle
-                >
-                  <div className='flex justify-end mt-2 mb-4'>
-                    <Checkbox
-                      className="
-        text-sm text-gray-600 font-medium font-['Epilogue']
-        /* Hover State */
-        [&.ant-checkbox-wrapper:hover_.ant-checkbox-inner]:border-[#3DCA84]!
-        
-        /* Checked State: Green Background */
-        [&_.ant-checkbox-checked_.ant-checkbox-inner]:bg-[#3DCA84]!
-        [&_.ant-checkbox-checked_.ant-checkbox-inner]:border-[#3DCA84]!
-        
-        /* Remove the Blue Halo and Box Shadow */
-        [&_.ant-checkbox-input:focus+.ant-checkbox-inner]:shadow-none!
-        [&_.ant-checkbox-wrapper:hover_.ant-checkbox-inner]:shadow-none!
-        [&_.ant-checkbox-inner]:shadow-none!
-
-        /* White Tick */
-        [&_.ant-checkbox-inner:after]:border-white!
-      "
-                    >
-                      Mark as complaint
-                    </Checkbox>
-                  </div>
-                </Form.Item>
               </div>
             );
           })}
         </Form>
+
+        <div className='flex justify-center mt-6 mb-6'>
+          <button
+            type='button'
+            onClick={() => message.info('Coming soon')}
+            className="font-['Epilogue'] text-sm font-medium py-2.5 px-6 rounded-xl bg-white text-black border border-black transition-all hover:opacity-90"
+          >
+            Report a complaint
+          </button>
+        </div>
       </div>
 
       <div className='fixed bottom-0 left-0 right-0 p-4  z-10'>
