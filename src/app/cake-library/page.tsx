@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { ArrowLeftOutlined, SearchOutlined } from '@ant-design/icons';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -16,6 +16,9 @@ export default function LibraryPage() {
 
   const [products, setProducts] = useState<Product[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>('All');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -30,26 +33,73 @@ export default function LibraryPage() {
     fetchProducts();
   }, []);
 
-  const filteredCakes =
-    activeCategory === 'All'
-      ? products
-      : products.filter((cake) => cake.category === activeCategory);
+  useEffect(() => {
+    if (isSearchOpen) searchInputRef.current?.focus();
+  }, [isSearchOpen]);
+
+  const filteredCakes = products
+    .filter(
+      (cake) => activeCategory === 'All' || cake.category === activeCategory
+    )
+    .filter((cake) => {
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.trim().toLowerCase();
+      return (
+        cake.name.toLowerCase().includes(q) ||
+        (cake.description?.toLowerCase().includes(q) ?? false)
+      );
+    });
 
   return (
     <div className='bg-white min-h-screen pb-28'>
       {/* Header */}
-      <header className='relative flex items-center justify-center px-6 py-4'>
-        <Link href='/' className='absolute left-6'>
+      <header className='relative flex items-center justify-center px-6 pt-12 pb-4'>
+        <Link href='/' className='absolute left-6 z-10'>
           <ArrowLeftOutlined className='text-xl hover:text-[#751414]' />
         </Link>
 
-        <h1 className="font-['Epilogue'] font-extrabold tracking-tight text-gray-900 text-base sm:text-xl md:text-2xl lg:text-3xl truncate max-w-[70%] text-center translate-y-1 md:translate-y-2">
-          ZamZam Bun Studio
-        </h1>
+        {isSearchOpen ? (
+          <div className='absolute inset-x-0 mx-14 flex items-center gap-2'>
+            <div className='relative flex flex-1 items-center rounded-xl bg-[#F0F2F5] focus-within:ring-2 focus-within:ring-[#923a3a]/30'>
+              <SearchOutlined className='absolute left-4 text-lg text-gray-400 pointer-events-none' />
+              <input
+                ref={searchInputRef}
+                type='search'
+                placeholder='Search cakes by name or description...'
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className='w-full flex-1 py-2.5 pl-11 pr-10 rounded-xl bg-transparent font-["Epilogue"] text-sm placeholder:text-gray-500 focus:outline-none'
+                aria-label='Search cakes'
+              />
+              <button
+                type='button'
+                onClick={() => {
+                  setIsSearchOpen(false);
+                  setSearchQuery('');
+                }}
+                className='absolute right-3 p-1.5 rounded-full hover:bg-gray-200 text-gray-500 font-medium'
+                aria-label='Close search'
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        ) : (
+          <h1 className="font-['Epilogue'] font-extrabold tracking-tight text-gray-900 text-base sm:text-xl md:text-2xl lg:text-3xl truncate max-w-[70%] text-center translate-y-1 md:translate-y-2">
+            ZamZam Bun Studio
+          </h1>
+        )}
 
-        <div className='absolute right-6'>
-          <SearchOutlined className='text-xl hover:text-[#751414]' />
-        </div>
+        {!isSearchOpen && (
+          <button
+            type='button'
+            onClick={() => setIsSearchOpen(true)}
+            className='absolute right-6 p-2 rounded-full hover:bg-gray-100 text-gray-700 hover:text-[#751414]'
+            aria-label='Open search'
+          >
+            <SearchOutlined className='text-xl' />
+          </button>
+        )}
       </header>
 
       {/* Categories */}
@@ -73,15 +123,23 @@ export default function LibraryPage() {
 
       {/* Cake Grid */}
       <div className='grid grid-cols-2 gap-4 px-6 mt-4'>
-        {filteredCakes.map((cake) => (
-          <Link href={`/cake/${cake._id}`} key={cake._id}>
-            <CakeItem
-              image={cake.images?.[0]}
-              name={cake.name}
-              price={`₹${cake.price}`}
-            />
-          </Link>
-        ))}
+        {filteredCakes.length === 0 ? (
+          <p className='col-span-2 py-8 text-center font-["Epilogue"] text-gray-500'>
+            {searchQuery.trim() || activeCategory !== 'All'
+              ? 'No cakes match your search.'
+              : 'No cakes yet.'}
+          </p>
+        ) : (
+          filteredCakes.map((cake) => (
+            <Link href={`/cake/${cake._id}`} key={cake._id}>
+              <CakeItem
+                image={cake.images?.[0]}
+                name={cake.name}
+                price={`₹${cake.price}`}
+              />
+            </Link>
+          ))
+        )}
       </div>
 
       {/* Bottom Fixed Button */}
