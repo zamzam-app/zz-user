@@ -54,8 +54,11 @@ export default function LibraryPage() {
     <div className='bg-white min-h-screen pb-28'>
       {/* Header */}
       <header className='relative flex items-center justify-center px-6 pt-12 pb-4'>
-        <Link href='/' className='absolute left-6 z-10'>
-          <ArrowLeftOutlined className='text-xl hover:text-[#751414]' />
+        <Link
+          href='/'
+          className='absolute left-6 z-10 text-black! hover:text-[#751414]!'
+        >
+          <ArrowLeftOutlined className='text-xl' />
         </Link>
 
         {isSearchOpen ? (
@@ -131,7 +134,11 @@ export default function LibraryPage() {
           </p>
         ) : (
           filteredCakes.map((cake) => (
-            <Link href={`/cake/${cake._id}`} key={cake._id}>
+            <Link
+              href={`/cake/${cake._id}`}
+              key={cake._id}
+              className='text-black! no-underline hover:text-black!'
+            >
               <CakeItem
                 image={cake.images?.[0]}
                 name={cake.name}
@@ -176,7 +183,9 @@ function CakeItem({
         )}
       </div>
 
-      <h3 className="font-['Epilogue'] font-bold text-sm">{name}</h3>
+      <h3 className="font-['Epilogue'] font-bold text-sm text-black!">
+        {name}
+      </h3>
 
       <p className="font-['Epilogue'] text-[#923a3a] font-semibold text-sm">
         {price}

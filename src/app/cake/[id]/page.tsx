@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -36,7 +36,6 @@ export default function CustomizeCakePage() {
         setLoading(true);
         setError(false);
         const res = await productApi.getById(id as string);
-        // Backend may return { data: [product], meta } or the product object at top level
         const product =
           res.data?.[0] ??
           (res && '_id' in res && 'name' in res
@@ -88,7 +87,7 @@ export default function CustomizeCakePage() {
       {/* Header */}
       <header className='relative flex items-center px-6 py-4'>
         <Link href='/cake-library'>
-          <ArrowLeftOutlined className='text-xl text-black' />
+          <ArrowLeftOutlined className='text-xl text-black!' />
         </Link>
 
         <h1 className="flex-1 font-['Epilogue'] font-extrabold tracking-tight text-gray-900 sm:text-xl md:text-2xl lg:text-3xl text-center translate-y-1 md:translate-y-2">
