@@ -2,7 +2,6 @@
 
 import type { FormInstance } from 'antd';
 import { Button, Checkbox, DatePicker, Form, Input, Rate, Radio } from 'antd';
-import { useEffect, useMemo } from 'react';
 import type { FormQuestion } from '@/types/form';
 import Link from 'next/link';
 import { ArrowLeftOutlined } from '@ant-design/icons';
@@ -65,47 +64,6 @@ export function DynamicReviewForm({
   loading,
 }: DynamicReviewFormProps) {
   const questionsToShow = activeQuestions(questions);
-
-  const ratingQuestionIds = useMemo(
-    () => questionsToShow.filter((q) => q.type === 'rating').map((q) => q._id),
-    [questionsToShow]
-  );
-  const firstRatingId = ratingQuestionIds[0];
-  const isMultipleRatings = ratingQuestionIds.length > 1;
-
-  const answers = Form.useWatch('answers', form) ?? {};
-  const ratingValuesKey = JSON.stringify(
-    ratingQuestionIds.map((id) => answers[id as keyof typeof answers])
-  );
-
-  useEffect(() => {
-    if (!isMultipleRatings) return;
-    if (!firstRatingId) return;
-
-    const currentAnswers = form.getFieldValue('answers') ?? {};
-
-    const values = ratingQuestionIds
-      .slice(1) // exclude overall
-      .map((id) => currentAnswers[id])
-      .filter((v): v is number => typeof v === 'number');
-
-    if (values.length === 0) return;
-
-    const avg = values.reduce((a, b) => a + b, 0) / values.length;
-    const rounded = Math.round(avg * 10) / 10;
-
-    const current = currentAnswers[firstRatingId];
-
-    if (current !== rounded) {
-      form.setFieldValue(['answers', firstRatingId], rounded);
-    }
-  }, [
-    ratingValuesKey,
-    isMultipleRatings,
-    form,
-    firstRatingId,
-    ratingQuestionIds,
-  ]);
 
   return (
     <div className='pb-24 pt-4'>
@@ -265,11 +223,6 @@ export function DynamicReviewForm({
 
           {/* DYNAMIC QUESTIONS */}
           {questionsToShow.map((question) => {
-            const isOverallRating =
-              question.type === 'rating' &&
-              firstRatingId === question._id &&
-              isMultipleRatings;
-
             return (
               <div key={question._id} className='space-y-2'>
                 <Form.Item
@@ -280,7 +233,7 @@ export function DynamicReviewForm({
                     </span>
                   }
                   rules={
-                    question.isRequired && !isOverallRating
+                    question.isRequired
                       ? [
                           {
                             required: true,
@@ -306,7 +259,6 @@ export function DynamicReviewForm({
                         }
                         count={question.maxRatings ?? 5}
                         allowHalf={question.starStep === 0.5}
-                        disabled={isOverallRating}
                       />
                     </div>
                   )}
