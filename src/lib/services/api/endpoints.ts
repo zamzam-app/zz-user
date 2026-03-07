@@ -15,3 +15,7 @@ export const productEndpoints = {
   getAll: '/product',
   getById: (id: string) => `/product/${id}`,
 };
+
+export const UPLOAD = {
+  SIGNATURE: '/upload/signature',
+};

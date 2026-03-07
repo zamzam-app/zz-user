@@ -1,5 +1,8 @@
 import { request, fileUploadRequest } from './axios.config';
-import { ProductListResponse } from '../../../types/product';
+import {
+  ProductListResponse,
+  ProductByIdResponse,
+} from '../../../types/product';
 
 export const productApi = {
   getAll: async (): Promise<ProductListResponse> => {
@@ -9,10 +12,11 @@ export const productApi = {
     });
   },
 
-  getById: async (id: string) => {
-    return request({
+  getById: async (id: string): Promise<ProductByIdResponse> => {
+    return request<ProductByIdResponse>({
       method: 'GET',
       url: `/product/${id}`,
+      skipAuthRedirect: true,
     });
   },
 

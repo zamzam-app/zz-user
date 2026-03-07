@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { Form, message } from 'antd';
+import { App, Form } from 'antd';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { DynamicReviewForm } from '@/components/review/DynamicReviewForm';
@@ -68,6 +68,7 @@ function buildCreateRatingDto(
 export default function ReviewFormPage() {
   const params = useParams();
   const searchParams = useSearchParams();
+  const { message } = App.useApp();
   const { user, hydrateUser } = useAuth();
   const formId = params?.id as string;
 
@@ -98,15 +99,18 @@ export default function ReviewFormPage() {
     enabled: !!formId,
   });
 
-  const handleSubmit = useCallback((values: Record<string, unknown>) => {
-    const phone = values.phone as string;
-    if (!phone || phone.length !== 10) {
-      message.error('Please enter a valid 10-digit phone number');
-      return;
-    }
-    setPendingValues(values);
-    setOtpModalOpen(true);
-  }, []);
+  const handleSubmit = useCallback(
+    (values: Record<string, unknown>) => {
+      const phone = values.phone as string;
+      if (!phone || phone.length !== 10) {
+        message.error('Please enter a valid 10-digit phone number');
+        return;
+      }
+      setPendingValues(values);
+      setOtpModalOpen(true);
+    },
+    [message]
+  );
 
   const handleOtpVerify = useCallback(async () => {
     if (!otp || otp.length !== 6) {
@@ -156,7 +160,7 @@ export default function ReviewFormPage() {
     } finally {
       setSubmitting(false);
     }
-  }, [otp, pendingValues, formData, hydrateUser]);
+  }, [otp, pendingValues, formData, hydrateUser, message]);
 
   const contextUserId =
     user?.id ?? (user as { _id?: string } | null)?._id ?? null;
@@ -184,19 +188,19 @@ export default function ReviewFormPage() {
         message.error(msg);
       })
       .finally(() => setSubmitting(false));
-  }, [contextUserId, pendingRatingSubmit, formId, searchParams]);
+  }, [contextUserId, pendingRatingSubmit, formId, searchParams, message]);
 
   const handleOtpResend = useCallback(() => {
     // TODO: call backend to resend OTP
     message.info('OTP resent');
-  }, []);
+  }, [message]);
 
   const handleFinishFailed = useCallback(
     (info: { errorFields: { errors: string[] }[] }) => {
       const firstError = info.errorFields?.[0]?.errors?.[0];
       message.error(firstError ?? 'Please fill all required fields');
     },
-    []
+    [message]
   );
 
   if (!formId) {
