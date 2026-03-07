@@ -57,9 +57,15 @@ const Button: React.FC<ButtonProps> = ({
 
   const finalClass = `${baseStyles} ${variants[variant]} ${className}`;
 
+  // When rendering as Link, add !important so colors override antd's anchor styles
+  const linkOverrideClass =
+    variant === 'primary'
+      ? '!bg-[#923a3a] !text-[#FDF5E6] hover:!bg-white hover:!text-[#923a3a]'
+      : '!bg-white !text-[#923a3a] !border-[#923a3a] hover:!bg-[#923a3a] hover:!text-white';
+
   if (href) {
     return (
-      <Link href={href} className={finalClass}>
+      <Link href={href} className={`${finalClass} ${linkOverrideClass}`}>
         {children}
       </Link>
     );

@@ -1,8 +1,6 @@
 'use client';
 
 import Image from 'next/image';
-import { ShoppingCartOutlined } from '@ant-design/icons';
-import { Badge } from 'antd';
 import LogoImg from '../../../public/__mocks__/bun cafe logo.jpg';
 
 const Navbar = () => {
@@ -17,6 +15,7 @@ const Navbar = () => {
             fill
             priority
             className='object-cover'
+            sizes='(max-width: 768px) 64px, 88px'
           />
         </div>
       </div>

@@ -23,3 +23,6 @@ export interface ProductListResponse {
   data: Product[];
   meta: ProductMeta;
 }
+
+/** Response shape for GET /product/:id (same as list: data array + meta). */
+export type ProductByIdResponse = ProductListResponse;
