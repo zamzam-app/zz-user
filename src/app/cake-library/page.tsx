@@ -107,7 +107,14 @@ function CakeItem({
     <div className='flex flex-col gap-2 cursor-pointer'>
       <div className='relative aspect-4/5 rounded-4xl overflow-hidden'>
         {image && (
-          <Image src={image} alt={name} fill className='object-cover' />
+          <Image
+            src={image}
+            alt={name}
+            fill
+            className='object-cover'
+            sizes='(max-width: 768px) 50vw, 33vw'
+            loading='eager'
+          />
         )}
       </div>
 

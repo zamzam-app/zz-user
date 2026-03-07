@@ -15,6 +15,7 @@ const Navbar = () => {
             fill
             priority
             className='object-cover'
+            sizes='(max-width: 768px) 64px, 88px'
           />
         </div>
       </div>
