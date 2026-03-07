@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import * as THREE from 'three';
 import { Canvas, useThree } from '@react-three/fiber';
 import {
@@ -14,9 +14,15 @@ import {
 } from '@react-three/drei';
 import { Tabs, ConfigProvider } from 'antd';
 import { useRouter } from 'next/navigation';
-import { ArrowLeftOutlined, WhatsAppOutlined } from '@ant-design/icons';
+import Image from 'next/image';
+import {
+  ArrowLeftOutlined,
+  WhatsAppOutlined,
+  DeleteOutlined,
+} from '@ant-design/icons';
 import { Download } from 'lucide-react';
 import Button from '@/components/common/Button';
+import { useImageUpload } from '@/lib/hooks/useImageUpload';
 export type SugarRoseProps = {
   position: [number, number, number];
   scale?: number;
@@ -89,6 +95,16 @@ export default function CreateCakePage() {
 
   const [selectedDecorations, setSelectedDecorations] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState('');
+
+  // Upload tab: reference image and notes
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
+  const [uploadNotes, setUploadNotes] = useState('');
+  const uploadInputRef = useRef<HTMLInputElement>(null);
+  const {
+    upload,
+    loading: uploadLoading,
+    error: uploadError,
+  } = useImageUpload('custom-cake');
 
   const toggleDecoration = (id: string) => {
     setSelectedDecorations((prev) =>
@@ -170,6 +186,32 @@ export default function CreateCakePage() {
     window.open(whatsappUrl, '_blank');
   };
 
+  const handleGetQuote = () => {
+    let message = 'Hi! I would like to request a quote for a custom cake.\n\n';
+    if (uploadNotes.trim()) {
+      message += `*My requests:* ${uploadNotes.trim()}\n\n`;
+    }
+    if (uploadedImageUrl) {
+      message += `*Reference image:* ${uploadedImageUrl}`;
+    }
+    const whatsappUrl = `https://wa.me/917204094741?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
+  const handleUploadClick = () => uploadInputRef.current?.click();
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const url = await upload(file);
+      setUploadedImageUrl(url);
+    } catch {
+      // error state is set in the hook
+    }
+    e.target.value = '';
+  };
+
   const handleDownload = () => {
     if (!captureImage) return;
 
@@ -248,25 +290,65 @@ export default function CreateCakePage() {
             </p>
 
             {/* Upload box */}
+            <input
+              ref={uploadInputRef}
+              type='file'
+              accept='image/*'
+              className='hidden'
+              onChange={handleFileChange}
+            />
             <div className='border-2 border-dashed border-gray-300 rounded-xl p-10 text-center bg-white mb-5'>
-              <p className='font-semibold text-gray-900 mb-2'>Upload Image</p>
-
-              <p className='text-sm text-gray-500 mb-4'>
-                Tap to upload an image of your cake design
-              </p>
-
-              <Button>Upload</Button>
+              {uploadedImageUrl ? (
+                <div className='relative w-full max-w-xs mx-auto aspect-square rounded-lg overflow-hidden bg-gray-100'>
+                  <Image
+                    src={uploadedImageUrl}
+                    alt='Your cake reference'
+                    fill
+                    className='object-contain'
+                    sizes='(max-width: 320px) 280px, 320px'
+                  />
+                  <button
+                    type='button'
+                    onClick={() => setUploadedImageUrl(null)}
+                    className='absolute top-2 right-2 p-2 rounded-full bg-red-500 text-white hover:bg-red-600 transition shadow-md z-10'
+                    aria-label='Remove image'
+                  >
+                    <DeleteOutlined className='text-lg' />
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <p className='font-semibold text-gray-900 mb-2'>
+                    Upload Image
+                  </p>
+                  <p className='text-sm text-gray-500 mb-4'>
+                    Tap to upload an image of your cake design
+                  </p>
+                  <Button onClick={handleUploadClick} disabled={uploadLoading}>
+                    {uploadLoading ? 'Uploading…' : 'Upload'}
+                  </Button>
+                </>
+              )}
+              {uploadError && (
+                <p className='mt-3 text-sm text-red-600'>
+                  {uploadError.message}
+                </p>
+              )}
             </div>
 
             {/* Textarea */}
             <textarea
+              value={uploadNotes}
+              onChange={(e) => setUploadNotes(e.target.value)}
               placeholder=' Tell us how you want this to be'
               className='w-full p-8 rounded-xl bg-[#FFF9F0] text-sm text-gray-900 border-2 border-gray-300'
               rows={4}
             />
             {/* Bottom fixed button */}
             <div className='fixed bottom-0 left-0 right-0 p-6 z-50'>
-              <Button fullWidth>Get Quote</Button>
+              <Button fullWidth onClick={handleGetQuote}>
+                Get Quote
+              </Button>
             </div>
           </div>
         )}
