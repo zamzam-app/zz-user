@@ -3,8 +3,6 @@
 import type { FormInstance } from 'antd';
 import { Button, Checkbox, DatePicker, Form, Input, Rate, Radio } from 'antd';
 import type { FormQuestion } from '@/types/form';
-import Link from 'next/link';
-import { ArrowLeftOutlined } from '@ant-design/icons';
 import { StarOutlined, StarFilled } from '@ant-design/icons';
 
 export type DynamicReviewFormProps = {
@@ -69,10 +67,6 @@ export function DynamicReviewForm({
     <div className='pb-24 pt-4'>
       {/* Header */}
       <header className='relative flex items-center justify-center px-6 py-4'>
-        <Link href='/' className='absolute left-6'>
-          <ArrowLeftOutlined className='text-xl text-black!' />
-        </Link>
-
         <h1 className="font-['Epilogue'] font-extrabold tracking-tight text-gray-900 text-base sm:text-xl md:text-2xl lg:text-3xl truncate max-w-[70%] text-center translate-y-1 md:translate-y-2">
           Feedback Form
         </h1>
@@ -300,10 +294,10 @@ export function DynamicReviewForm({
                     >
                       <Radio.Group className='flex flex-col gap-3 mt-2 mb-4'>
                         {(question.options ?? []).map((opt, idx) => (
-                          <Radio
-                            key={idx}
-                            value={opt.text}
-                            className="text-gray-700 font-medium font-['Epilogue'] border-none! outline-none!
+                          <div key={idx} className='block'>
+                            <Radio
+                              value={opt.text}
+                              className="text-gray-700 font-medium font-['Epilogue'] border-none! outline-none!
                              [&.ant-radio-wrapper:hover_.ant-radio-inner]:border-[#3DCA84]!
                              [&_.ant-radio-checked_.ant-radio-inner]:border-[#3DCA84]!
                              [&_.ant-radio-checked_.ant-radio-inner]:bg-white!
@@ -311,9 +305,10 @@ export function DynamicReviewForm({
                              [&_.ant-radio-input:focus+.ant-radio-inner]:shadow-none!
                              [&.ant-radio-wrapper:hover]:bg-transparent!
                              "
-                          >
-                            {opt.text}
-                          </Radio>
+                            >
+                              {opt.text}
+                            </Radio>
+                          </div>
                         ))}
                       </Radio.Group>
                     </Form.Item>
@@ -335,7 +330,7 @@ export function DynamicReviewForm({
                   valuePropName='checked'
                   noStyle
                 >
-                  <div className='flex items-center mt-2 mb-4'>
+                  <div className='flex justify-end mt-2 mb-4'>
                     <Checkbox
                       className="
         text-sm text-gray-600 font-medium font-['Epilogue']

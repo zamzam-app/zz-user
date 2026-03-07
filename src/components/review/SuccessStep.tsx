@@ -1,7 +1,5 @@
 'use client';
 
-import Link from 'next/link';
-import { ArrowLeftOutlined } from '@ant-design/icons';
 import { useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
 
@@ -26,10 +24,6 @@ export function SuccessStep({ rating = 0 }: { rating?: number }) {
   return (
     <div className='pb-24 pt-4'>
       <header className='relative flex items-center justify-center px-6 py-4'>
-        <Link href='/' className='absolute left-6'>
-          <ArrowLeftOutlined className='text-xl text-black!' />
-        </Link>
-
         <h1 className="font-['Epilogue'] font-extrabold tracking-tight text-gray-900 text-base sm:text-xl md:text-2xl lg:text-3xl truncate max-w-[70%] text-center translate-y-1 md:translate-y-2">
           Feedback Submitted
         </h1>
