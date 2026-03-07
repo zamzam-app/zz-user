@@ -1,27 +1,87 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { cakes } from '../../../../public/__mocks__/cakes';
+import { productApi } from '@/lib/services/api/product.api';
+import { Product } from '@/types/product';
+
+const DEFAULT_OPTIONS = {
+  shapes: ['Round', 'Square', 'Heart'],
+  flavors: ['Vanilla', 'Chocolate', 'Strawberry'],
+  decorations: ['Edible Glitter', 'Fresh Flowers', 'Sprinkles'],
+};
 
 export default function CustomizeCakePage() {
   const { id } = useParams<{ id: string }>();
-  const cake = cakes.find((c) => c.id === id);
+  const [cake, setCake] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   const [selectedShape, setSelectedShape] = useState('');
   const [selectedFlavor, setSelectedFlavor] = useState('');
   const [selectedDecorations, setSelectedDecorations] = useState<string[]>([]);
 
-  if (!cake) return <div className='p-10 text-center'>Cake not found</div>;
+  useEffect(() => {
+    if (!id) {
+      setLoading(false);
+      setError(true);
+      return;
+    }
+
+    const fetchProduct = async () => {
+      try {
+        setLoading(true);
+        setError(false);
+        const res = await productApi.getById(id as string);
+        // Backend may return { data: [product], meta } or the product object at top level
+        const product =
+          res.data?.[0] ??
+          (res && '_id' in res && 'name' in res
+            ? (res as unknown as Product)
+            : null);
+        if (product?._id) {
+          setCake(product);
+        } else {
+          setError(true);
+        }
+      } catch {
+        setError(true);
+        setCake(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [id]);
 
   const toggleDecoration = (item: string) => {
     setSelectedDecorations((prev) =>
       prev.includes(item) ? prev.filter((d) => d !== item) : [...prev, item]
     );
   };
+
+  if (loading) {
+    return (
+      <div className='bg-white min-h-screen flex items-center justify-center'>
+        <div className='text-gray-500 font-[Epilogue]'>Loading...</div>
+      </div>
+    );
+  }
+
+  if (error || !cake) {
+    return (
+      <div className='bg-white min-h-screen flex items-center justify-center'>
+        <div className='p-10 text-center'>Cake not found</div>
+      </div>
+    );
+  }
+
+  const imageUrl = cake.images?.[0];
+  const options = DEFAULT_OPTIONS;
 
   return (
     <div className='bg-white min-h-screen pb-32'>
@@ -38,14 +98,17 @@ export default function CustomizeCakePage() {
 
       <main className='px-6 space-y-6'>
         {/* Product Image */}
-        <div className='relative w-full aspect-16/10 rounded-2xl overflow-hidden shadow-sm'>
-          <Image
-            src={cake.image}
-            alt={cake.name}
-            fill
-            className='object-cover'
-          />
-        </div>
+        {imageUrl && (
+          <div className='relative w-full aspect-16/10 rounded-2xl overflow-hidden shadow-sm'>
+            <Image
+              src={imageUrl}
+              alt={cake.name}
+              fill
+              className='object-cover'
+              sizes='(max-width: 768px) 100vw, 50vw'
+            />
+          </div>
+        )}
 
         {/* Cake Text */}
         <div className='space-y-2'>
@@ -65,7 +128,7 @@ export default function CustomizeCakePage() {
             Shape
           </label>
           <div className='flex gap-2'>
-            {cake.options.shapes.map((shape) => (
+            {options.shapes.map((shape) => (
               <button
                 key={shape}
                 onClick={() => setSelectedShape(shape)}
@@ -87,7 +150,7 @@ export default function CustomizeCakePage() {
             Flavor
           </label>
           <div className='flex gap-2'>
-            {cake.options.flavors.map((flavor) => (
+            {options.flavors.map((flavor) => (
               <button
                 key={flavor}
                 onClick={() => setSelectedFlavor(flavor)}
@@ -110,7 +173,7 @@ export default function CustomizeCakePage() {
           </label>
 
           <div className='space-y-3'>
-            {cake.options.decorations.map((decoration) => (
+            {options.decorations.map((decoration) => (
               <label
                 key={decoration}
                 className='flex items-center gap-3 cursor-pointer'

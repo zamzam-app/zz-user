@@ -26,8 +26,6 @@ function RateField({
   count = 5,
   allowHalf,
   disabled,
-  character,
-  style,
 }: {
   value?: number;
   onChange?: (value: number) => void;

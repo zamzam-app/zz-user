@@ -74,7 +74,7 @@ export default function LibraryPage() {
       {/* Cake Grid */}
       <div className='grid grid-cols-2 gap-4 px-6 mt-4'>
         {filteredCakes.map((cake) => (
-          <Link href={`/customize-cake/${cake._id}`} key={cake._id}>
+          <Link href={`/cake/${cake._id}`} key={cake._id}>
             <CakeItem
               image={cake.images?.[0]}
               name={cake.name}
