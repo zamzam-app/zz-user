@@ -11,58 +11,36 @@ import { useAuth } from '@/lib/auth/context/AuthContext';
 import { cookieService } from '@/lib/services/cookie.service';
 import { storage } from '@/lib/services/storage';
 import { formApi } from '@/lib/services/api/form.api';
-import { ratingApi } from '@/lib/services/api/rating.api';
+import { reviewApi } from '@/lib/services/api/review.api';
 import { authApi } from '@/lib/services/api/auth.api';
-import type { CreateRatingDto, ResponseDto } from '@/types/rating';
+import type { CreateReviewDto, UserResponse } from '@/types/review';
 import type { FormData, FormQuestion } from '@/types/form';
 
 const activeQuestions = (questions: FormQuestion[]) =>
   questions.filter((q) => q.isActive && !q.isDeleted);
 
-function buildCreateRatingDto(
+function buildCreateReviewPayload(
   formId: string,
   outletId: string,
-  userId: string,
+  userId: string | undefined,
   values: Record<string, unknown>,
   formData: FormData
-): CreateRatingDto {
+): CreateReviewDto {
   const answers = (values.answers as Record<string, unknown>) ?? {};
-  const complaints = (values.complaints as Record<string, boolean>) ?? {};
   const questions = activeQuestions(formData.questions);
-  const response: ResponseDto[] = questions.map((q) => ({
+  const response: UserResponse[] = questions.map((q) => ({
     questionId: q._id,
     answer:
       (answers[q._id] as string | string[] | number) ??
       (q.type === 'checkbox' ? [] : q.type === 'rating' ? 0 : ''),
-    isComplaint: Boolean(complaints[q._id]),
   }));
-  const ratingQuestionIds = questions
-    .filter((q) => q.type === 'rating')
-    .map((q) => q._id);
-  const ratingValues = ratingQuestionIds
-    .map((id) => answers[id])
-    .filter((v): v is number => typeof v === 'number');
-  const overallRating =
-    ratingValues.length > 0
-      ? Math.min(
-          5,
-          Math.max(
-            1,
-            Math.round(
-              (ratingValues.reduce((a, b) => a + b, 0) / ratingValues.length) *
-                10
-            ) / 10
-          )
-        )
-      : undefined;
-  return {
+  const payload: CreateReviewDto = {
     formId,
-    userId,
     outletId,
     response,
-    ...(overallRating !== undefined && { overallRating }),
-    type: 'review',
   };
+  if (userId) payload.userId = userId;
+  return payload;
 }
 
 export default function ReviewFormPage() {
@@ -174,12 +152,20 @@ export default function ReviewFormPage() {
     setPendingRatingSubmit(null);
 
     const outletId = fd.outletId ?? searchParams.get('outletId') ?? formId;
-    const payload = buildCreateRatingDto(formId, outletId, userId, values, fd);
-    setSubmittedRating(payload.overallRating);
+    const payload = buildCreateReviewPayload(
+      formId,
+      outletId,
+      userId ?? undefined,
+      values,
+      fd
+    );
     setSubmitting(true);
-    ratingApi
+    reviewApi
       .create(payload)
-      .then(() => setShowSuccess(true))
+      .then((res) => {
+        setSubmittedRating(res.overallRating);
+        setShowSuccess(true);
+      })
       .catch((err) => {
         const msg =
           err && typeof err === 'object' && 'message' in err
