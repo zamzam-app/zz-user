@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import Image from 'next/image';
 import { StarFilled } from '@ant-design/icons';
 
@@ -80,6 +79,7 @@ const Testimonials = () => {
                 alt='Chocolate Cake'
                 fill
                 className='object-cover'
+                sizes='(max-width: 768px) 320px, 320px'
               />
             </div>
 
@@ -106,6 +106,7 @@ const Testimonials = () => {
                 alt='Designer Cake'
                 fill
                 className='object-cover'
+                sizes='(max-width: 768px) 320px, 320px'
               />
             </div>
 
@@ -132,6 +133,7 @@ const Testimonials = () => {
                 alt='Designer Cake'
                 fill
                 className='object-cover'
+                sizes='(max-width: 768px) 320px, 320px'
               />
             </div>
 
@@ -158,6 +160,7 @@ const Testimonials = () => {
                 alt='Designer Cake'
                 fill
                 className='object-cover'
+                sizes='(max-width: 768px) 320px, 320px'
               />
             </div>
 

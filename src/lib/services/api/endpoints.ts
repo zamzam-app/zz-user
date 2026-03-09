@@ -8,8 +8,8 @@ export const formEndpoints = {
   getById: (id: string) => `/forms/${id}`,
 };
 
-export const ratingEndpoints = {
-  create: '/rating',
+export const reviewEndpoints = {
+  create: '/review',
 };
 export const productEndpoints = {
   getAll: '/product',

@@ -109,3 +109,15 @@ body {
 .otp-modal-no-scroll.ant-modal .ant-modal-body {
   overflow: hidden !important;
 }
+
+/* Complaint modal: hide textarea scrollbar and character count */
+.complaint-modal .ant-input {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.complaint-modal .ant-input::-webkit-scrollbar {
+  display: none;
+}
+.complaint-modal .ant-input-data-count {
+  display: none;
+}
