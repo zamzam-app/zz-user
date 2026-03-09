@@ -1,7 +1,14 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
 import { Canvas } from '@react-three/fiber';
-import { Stage, Center, Sphere, Text, Extrude, OrbitControls } from '@react-three/drei';
+import {
+  Stage,
+  Center,
+  Sphere,
+  Text,
+  Extrude,
+  OrbitControls,
+} from '@react-three/drei';
 import { ScreenshotBridge } from './ScreenshotBridge';
 import { SugarRose } from './SugarRose';
 import { Layer } from './types';

@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useCallback, useRef } from 'react';
 import { useImageUpload } from '@/lib/hooks/useImageUpload';
 import {
   DECORATIONS_LIST,
@@ -18,7 +17,6 @@ import {
 } from '@/components/custom-cake';
 
 export default function CreateCakePage() {
-  const router = useRouter();
   const [activeTab, setActiveTab] = useState('upload');
   const [selectedShape, setSelectedShape] = useState('round');
   const [captureImage, setCaptureImage] = useState<null | (() => string)>(null);
@@ -72,21 +70,6 @@ export default function CreateCakePage() {
     );
   };
 
-  const totalPrice = useMemo(() => {
-    const basePrice = 43;
-    const layersPrice = (layers.length - 1) * 20;
-    const decoPrice = selectedDecorations.reduce((sum, id) => {
-      const deco = DECORATIONS_LIST.find((d) => d.id === id);
-      return sum + (deco ? deco.price : 0);
-    }, 0);
-    return (
-      basePrice +
-      layersPrice +
-      decoPrice +
-      (inputValue.trim().length > 0 ? 10 : 0)
-    );
-  }, [layers, selectedDecorations, inputValue]);
-
   const handleOrderNow = () => {
     let message = '';
 
@@ -105,8 +88,7 @@ export default function CreateCakePage() {
         `• Shape: ${selectedShape.charAt(0).toUpperCase() + selectedShape.slice(1)}\n` +
         `• Layers (${layers.length}):\n${layerDetails}\n` +
         `• Decorations: ${decoNames || 'None'}\n` +
-        `• Text on Cake: ${inputValue.trim() || 'None'}\n\n` +
-        `*Estimated Price:* $${totalPrice}`;
+        `• Text on Cake: ${inputValue.trim() || 'None'}\n\n`;
     } else {
       message = `Hi! I would like to order a custom cake. I have a reference image to share for a quote.`;
     }
