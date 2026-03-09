@@ -4,21 +4,17 @@ import type { FormInstance } from 'antd';
 import { Button, Checkbox, DatePicker, Form, Input, Rate, Radio } from 'antd';
 import { useCallback, useState } from 'react';
 import { ComplaintModal } from '@/components/review/ComplaintModal';
-import type { CreateReviewDto } from '@/types/review';
-import type { FormData, FormQuestion } from '@/types/form';
+import type { FormQuestion } from '@/types/form';
 import { StarOutlined, StarFilled } from '@ant-design/icons';
 
 export type DynamicReviewFormProps = {
   form: FormInstance;
   questions: FormQuestion[];
   formTitle: string;
-  formId?: string;
-  outletId?: string;
-  formData?: FormData;
-  userId?: string;
   onSubmit: (values: Record<string, unknown>) => void;
   onFinishFailed?: (info: { errorFields: Array<{ errors: string[] }> }) => void;
-  onSubmitComplaint?: (payload: CreateReviewDto) => void | Promise<void>;
+  /** Called when user submits the complaint modal; receives only the reason. No API call—parent stores it and includes it in the main form submit. */
+  onComplaintSubmit?: (reason: string) => void;
   loading: boolean;
 };
 
@@ -65,24 +61,20 @@ export function DynamicReviewForm({
   form,
   questions,
   formTitle,
-  formId,
-  outletId,
-  formData,
-  userId,
   onSubmit,
   onFinishFailed,
-  onSubmitComplaint,
+  onComplaintSubmit,
   loading,
 }: DynamicReviewFormProps) {
   const [complaintModalOpen, setComplaintModalOpen] = useState(false);
   const questionsToShow = activeQuestions(questions);
 
   const handleComplaintSubmit = useCallback(
-    async (payload: CreateReviewDto) => {
-      await onSubmitComplaint?.(payload);
+    (reason: string) => {
+      onComplaintSubmit?.(reason);
       setComplaintModalOpen(false);
     },
-    [onSubmitComplaint]
+    [onComplaintSubmit]
   );
 
   return (
@@ -381,18 +373,11 @@ export function DynamicReviewForm({
         </div>
       </div>
 
-      {formId != null && outletId != null && formData != null && (
-        <ComplaintModal
-          open={complaintModalOpen}
-          onClose={() => setComplaintModalOpen(false)}
-          formId={formId}
-          outletId={outletId}
-          form={form}
-          formData={formData}
-          userId={userId}
-          onSubmit={handleComplaintSubmit}
-        />
-      )}
+      <ComplaintModal
+        open={complaintModalOpen}
+        onClose={() => setComplaintModalOpen(false)}
+        onSubmit={handleComplaintSubmit}
+      />
 
       <div className='fixed bottom-0 left-0 right-0 p-4  z-10'>
         <Button

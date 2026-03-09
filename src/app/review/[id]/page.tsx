@@ -66,6 +66,7 @@ export default function ReviewFormPage() {
     /** Set after OTP when we have the user from authResponse (context may not have updated yet). */
     userId?: string | null;
   } | null>(null);
+  const [complaintReason, setComplaintReason] = useState<string | null>(null);
 
   const {
     data: formData,
@@ -159,10 +160,15 @@ export default function ReviewFormPage() {
       values,
       fd
     );
+    if (complaintReason?.trim()) {
+      payload.isComplaint = true;
+      payload.complaintReason = complaintReason.trim();
+    }
     setSubmitting(true);
     reviewApi
       .create(payload)
       .then((res) => {
+        setComplaintReason(null);
         setSubmittedRating(res.overallRating);
         setShowSuccess(true);
       })
@@ -174,7 +180,14 @@ export default function ReviewFormPage() {
         message.error(msg);
       })
       .finally(() => setSubmitting(false));
-  }, [contextUserId, pendingRatingSubmit, formId, searchParams, message]);
+  }, [
+    contextUserId,
+    pendingRatingSubmit,
+    formId,
+    searchParams,
+    message,
+    complaintReason,
+  ]);
 
   const handleOtpResend = useCallback(() => {
     // TODO: call backend to resend OTP
@@ -189,21 +202,9 @@ export default function ReviewFormPage() {
     [message]
   );
 
-  const handleSubmitComplaint = useCallback(
-    async (payload: Parameters<typeof reviewApi.create>[0]) => {
-      try {
-        await reviewApi.create(payload);
-        message.success('Complaint submitted');
-      } catch (err) {
-        const msg =
-          err && typeof err === 'object' && 'message' in err
-            ? String((err as { message: string }).message)
-            : 'Failed to submit complaint. Please try again.';
-        message.error(msg);
-      }
-    },
-    [message]
-  );
+  const handleComplaintSubmit = useCallback((reason: string) => {
+    setComplaintReason(reason);
+  }, []);
 
   if (!formId) {
     return (
@@ -259,13 +260,9 @@ export default function ReviewFormPage() {
           form={form}
           questions={formData.questions}
           formTitle={formData.title}
-          formId={formId}
-          outletId={formData.outletId ?? searchParams.get('outletId') ?? formId}
-          formData={formData}
-          userId={contextUserId ?? undefined}
           onSubmit={handleSubmit}
           onFinishFailed={handleFinishFailed}
-          onSubmitComplaint={handleSubmitComplaint}
+          onComplaintSubmit={handleComplaintSubmit}
           loading={false}
         />
         <OtpStep

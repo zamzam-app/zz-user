@@ -1,61 +1,30 @@
 'use client';
 
-import type { FormInstance } from 'antd';
 import { App, Button, Input, Modal } from 'antd';
 import { useCallback, useState } from 'react';
-import type { CreateReviewDto, UserResponse } from '@/types/review';
-import type { FormData, FormQuestion } from '@/types/form';
 
 const MAX_COMPLAINT_LENGTH = 4000;
-
-const activeQuestions = (questions: FormQuestion[]) =>
-  questions.filter((q) => q.isActive && !q.isDeleted);
-
-function buildResponseFromFormValues(
-  values: Record<string, unknown>,
-  formData: FormData
-): UserResponse[] {
-  const answers = (values.answers as Record<string, unknown>) ?? {};
-  const questions = activeQuestions(formData.questions);
-  return questions.map((q) => ({
-    questionId: q._id,
-    answer:
-      (answers[q._id] as string | string[] | number) ??
-      (q.type === 'checkbox' ? [] : q.type === 'rating' ? 0 : ''),
-  }));
-}
 
 export type ComplaintModalProps = {
   open: boolean;
   onClose: () => void;
-  formId: string;
-  outletId: string;
-  form: FormInstance;
-  formData: FormData;
-  userId?: string;
-  onSubmit: (payload: CreateReviewDto) => void | Promise<void>;
+  onSubmit: (reason: string) => void;
 };
 
 export function ComplaintModal({
   open,
   onClose,
-  formId,
-  outletId,
-  form,
-  formData,
-  userId,
   onSubmit,
 }: ComplaintModalProps) {
   const { message } = App.useApp();
   const [complaintReason, setComplaintReason] = useState('');
-  const [submitting, setSubmitting] = useState(false);
 
   const handleClose = useCallback(() => {
     setComplaintReason('');
     onClose();
   }, [onClose]);
 
-  const handleSubmit = useCallback(async () => {
+  const handleSubmit = useCallback(() => {
     const trimmed = complaintReason.trim();
     if (!trimmed) {
       message.warning('Please describe your complaint.');
@@ -67,36 +36,9 @@ export function ComplaintModal({
       );
       return;
     }
-    setSubmitting(true);
-    try {
-      const values = form.getFieldsValue();
-      const response = buildResponseFromFormValues(values, formData);
-      const payload: CreateReviewDto = {
-        formId,
-        outletId,
-        response,
-        isComplaint: true,
-        complaintReason: trimmed,
-      };
-      if (userId) payload.userId = userId;
-      await onSubmit(payload);
-      handleClose();
-    } catch {
-      // Parent typically shows error toast
-    } finally {
-      setSubmitting(false);
-    }
-  }, [
-    complaintReason,
-    form,
-    formData,
-    formId,
-    outletId,
-    userId,
-    onSubmit,
-    message,
-    handleClose,
-  ]);
+    onSubmit(trimmed);
+    handleClose();
+  }, [complaintReason, onSubmit, message, handleClose]);
 
   return (
     <Modal
@@ -108,9 +50,8 @@ export function ComplaintModal({
         <Button
           type='primary'
           onClick={handleSubmit}
-          loading={submitting}
           disabled={!complaintReason.trim()}
-          className="font-['Epilogue']"
+          className="font-['Epilogue']! text-gray-700! font-medium h-14 rounded-2xl text-lg border-none! transition-all bg-[#3DCA84]! hover:bg-[#34b375]! hover:text-[#1C2B25]! active:scale-[0.98]!"
         >
           Submit
         </Button>
@@ -129,7 +70,6 @@ export function ComplaintModal({
             setComplaintReason(e.target.value.slice(0, MAX_COMPLAINT_LENGTH))
           }
           maxLength={MAX_COMPLAINT_LENGTH}
-          showCount
           rows={8}
           className="font-['Epilogue'] rounded-xl bg-[#F1F5F3] border-none focus:ring-2 focus:ring-[#3DCA84]"
         />
