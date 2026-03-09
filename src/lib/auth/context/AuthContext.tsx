@@ -31,6 +31,8 @@ type AuthContextType = {
   hydrateUser: () => void;
   isHydrating: boolean;
   logout: () => void;
+  /** Clears cookies and storage and updates auth state without redirecting. */
+  clearSession: () => void;
 };
 
 const initialState: AuthState = {
@@ -59,6 +61,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
   const router = useRouter();
   const hydratedRef = useRef(false);
+
+  const clearSession = useCallback(() => {
+    cookieService.removeAccessToken();
+    storage.removeUser();
+    storage.removeToken();
+    dispatch({ type: 'LOGOUT' });
+  }, []);
 
   const logout = useCallback(async () => {
     try {
@@ -112,6 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isHydrating: state.isHydrating,
         hydrateUser,
         logout,
+        clearSession,
       }}
     >
       {children}

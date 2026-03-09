@@ -27,6 +27,7 @@ export interface User {
     name: string;
     logo?: string;
   };
+  lastLoginAt?: string;
 }
 
 export type SignInPayload = {
