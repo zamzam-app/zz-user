@@ -189,6 +189,22 @@ export default function ReviewFormPage() {
     [message]
   );
 
+  const handleSubmitComplaint = useCallback(
+    async (payload: Parameters<typeof reviewApi.create>[0]) => {
+      try {
+        await reviewApi.create(payload);
+        message.success('Complaint submitted');
+      } catch (err) {
+        const msg =
+          err && typeof err === 'object' && 'message' in err
+            ? String((err as { message: string }).message)
+            : 'Failed to submit complaint. Please try again.';
+        message.error(msg);
+      }
+    },
+    [message]
+  );
+
   if (!formId) {
     return (
       <div className='min-h-screen bg-white flex items-center justify-center'>
@@ -243,8 +259,13 @@ export default function ReviewFormPage() {
           form={form}
           questions={formData.questions}
           formTitle={formData.title}
+          formId={formId}
+          outletId={formData.outletId ?? searchParams.get('outletId') ?? formId}
+          formData={formData}
+          userId={contextUserId ?? undefined}
           onSubmit={handleSubmit}
           onFinishFailed={handleFinishFailed}
+          onSubmitComplaint={handleSubmitComplaint}
           loading={false}
         />
         <OtpStep

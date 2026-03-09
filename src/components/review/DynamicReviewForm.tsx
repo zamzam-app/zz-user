@@ -1,25 +1,24 @@
 'use client';
 
 import type { FormInstance } from 'antd';
-import {
-  App,
-  Button,
-  Checkbox,
-  DatePicker,
-  Form,
-  Input,
-  Rate,
-  Radio,
-} from 'antd';
-import type { FormQuestion } from '@/types/form';
+import { Button, Checkbox, DatePicker, Form, Input, Rate, Radio } from 'antd';
+import { useCallback, useState } from 'react';
+import { ComplaintModal } from '@/components/review/ComplaintModal';
+import type { CreateReviewDto } from '@/types/review';
+import type { FormData, FormQuestion } from '@/types/form';
 import { StarOutlined, StarFilled } from '@ant-design/icons';
 
 export type DynamicReviewFormProps = {
   form: FormInstance;
   questions: FormQuestion[];
   formTitle: string;
+  formId?: string;
+  outletId?: string;
+  formData?: FormData;
+  userId?: string;
   onSubmit: (values: Record<string, unknown>) => void;
   onFinishFailed?: (info: { errorFields: Array<{ errors: string[] }> }) => void;
+  onSubmitComplaint?: (payload: CreateReviewDto) => void | Promise<void>;
   loading: boolean;
 };
 
@@ -66,12 +65,25 @@ export function DynamicReviewForm({
   form,
   questions,
   formTitle,
+  formId,
+  outletId,
+  formData,
+  userId,
   onSubmit,
   onFinishFailed,
+  onSubmitComplaint,
   loading,
 }: DynamicReviewFormProps) {
-  const { message } = App.useApp();
+  const [complaintModalOpen, setComplaintModalOpen] = useState(false);
   const questionsToShow = activeQuestions(questions);
+
+  const handleComplaintSubmit = useCallback(
+    async (payload: CreateReviewDto) => {
+      await onSubmitComplaint?.(payload);
+      setComplaintModalOpen(false);
+    },
+    [onSubmitComplaint]
+  );
 
   return (
     <div className='pb-24 pt-4'>
@@ -361,13 +373,26 @@ export function DynamicReviewForm({
         <div className='flex justify-center mt-6 mb-6'>
           <button
             type='button'
-            onClick={() => message.info('Coming soon')}
+            onClick={() => setComplaintModalOpen(true)}
             className="font-['Epilogue'] text-sm font-medium py-2.5 px-6 rounded-xl bg-white text-black border border-black transition-all hover:opacity-90"
           >
             Report a complaint
           </button>
         </div>
       </div>
+
+      {formId != null && outletId != null && formData != null && (
+        <ComplaintModal
+          open={complaintModalOpen}
+          onClose={() => setComplaintModalOpen(false)}
+          formId={formId}
+          outletId={outletId}
+          form={form}
+          formData={formData}
+          userId={userId}
+          onSubmit={handleComplaintSubmit}
+        />
+      )}
 
       <div className='fixed bottom-0 left-0 right-0 p-4  z-10'>
         <Button
