@@ -19,6 +19,19 @@ import type { FormData, FormQuestion } from '@/types/form';
 const activeQuestions = (questions: FormQuestion[]) =>
   questions.filter((q) => q.isActive && !q.isDeleted);
 
+function toDobIso(dob: unknown): string | undefined {
+  if (dob == null) return undefined;
+  const d = dob as { format?: (f: string) => string };
+  if (typeof d.format === 'function') return d.format('YYYY-MM-DD');
+  if (typeof dob === 'string') {
+    if (/^\d{4}-\d{2}-\d{2}/.test(dob)) return dob;
+    const parts = dob.split(/[/-]/);
+    if (parts.length === 3 && parts[0].length <= 2 && parts[1].length <= 2)
+      return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+  }
+  return undefined;
+}
+
 function buildCreateReviewPayload(
   formId: string,
   outletId: string,
@@ -108,7 +121,20 @@ export default function ReviewFormPage() {
     setSubmitting(true);
     try {
       const phoneNumber = `+91${phone}`;
-      const authResponse = await authApi.verifyOtp({ phoneNumber, otp });
+      const nameTrimmed =
+        typeof pendingValues.name === 'string' ? pendingValues.name.trim() : '';
+      const emailTrimmed =
+        typeof pendingValues.email === 'string'
+          ? pendingValues.email.trim()
+          : '';
+      const dobIso = toDobIso(pendingValues.dob);
+      const authResponse = await authApi.verifyOtp({
+        phoneNumber,
+        otp,
+        ...(nameTrimmed && { name: nameTrimmed }),
+        ...(emailTrimmed && { email: emailTrimmed }),
+        ...(dobIso && { dob: dobIso }),
+      });
       cookieService.setAccessToken(authResponse.accessToken);
       storage.setToken(authResponse.accessToken);
       storage.setUser(authResponse.user);
