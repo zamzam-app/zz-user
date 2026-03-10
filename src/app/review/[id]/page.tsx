@@ -3,14 +3,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { App, Form } from 'antd';
 import { useParams, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { DynamicReviewForm } from '@/components/review/DynamicReviewForm';
 import { OtpStep } from '@/components/review/OtpStep';
 import { SuccessStep } from '@/components/review/SuccessStep';
 import { useAuth } from '@/lib/auth/context/AuthContext';
 import { cookieService } from '@/lib/services/cookie.service';
 import { storage } from '@/lib/services/storage';
-import { formApi } from '@/lib/services/api/form.api';
+import { outletApi } from '@/lib/services/api/outlet.api';
 import { reviewApi } from '@/lib/services/api/review.api';
 import { authApi } from '@/lib/services/api/auth.api';
 import type { CreateReviewDto, UserResponse } from '@/types/review';
@@ -61,7 +61,7 @@ export default function ReviewFormPage() {
   const searchParams = useSearchParams();
   const { message } = App.useApp();
   const { user, hydrateUser } = useAuth();
-  const formId = params?.id as string;
+  const qrToken = params?.id as string;
 
   const [form] = Form.useForm();
   const [otpModalOpen, setOtpModalOpen] = useState(false);
@@ -82,14 +82,22 @@ export default function ReviewFormPage() {
   const [complaintReason, setComplaintReason] = useState<string | null>(null);
 
   const {
-    data: formData,
+    data: outletData,
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['form', formId],
-    queryFn: () => formApi.getFormById(formId),
-    enabled: !!formId,
+    queryKey: ['outletByQr', qrToken],
+    queryFn: () => outletApi.getByQrToken(qrToken),
+    enabled: !!qrToken,
   });
+
+  const formData = useMemo(
+    () =>
+      outletData?.form != null
+        ? { ...outletData.form, outletId: outletData._id }
+        : null,
+    [outletData]
+  );
 
   const handleSubmit = useCallback(
     (values: Record<string, unknown>) => {
@@ -178,9 +186,9 @@ export default function ReviewFormPage() {
 
     setPendingRatingSubmit(null);
 
-    const outletId = fd.outletId ?? searchParams.get('outletId') ?? formId;
+    const outletId = fd.outletId ?? searchParams.get('outletId') ?? fd._id;
     const payload = buildCreateReviewPayload(
-      formId,
+      fd._id,
       outletId,
       userId ?? undefined,
       values,
@@ -209,7 +217,6 @@ export default function ReviewFormPage() {
   }, [
     contextUserId,
     pendingRatingSubmit,
-    formId,
     searchParams,
     message,
     complaintReason,
@@ -232,10 +239,10 @@ export default function ReviewFormPage() {
     setComplaintReason(reason);
   }, []);
 
-  if (!formId) {
+  if (!qrToken) {
     return (
       <div className='min-h-screen bg-white flex items-center justify-center'>
-        <p className='text-gray-500'>Invalid form link.</p>
+        <p className='text-gray-500'>Invalid link.</p>
       </div>
     );
   }
@@ -243,18 +250,35 @@ export default function ReviewFormPage() {
   if (isLoading) {
     return (
       <div className='min-h-screen bg-white flex items-center justify-center'>
-        <div className='text-gray-500'>Loading form...</div>
+        <div className='text-gray-500'>Loading...</div>
       </div>
     );
   }
 
-  if (error || !formData) {
+  if (error || !outletData) {
+    const is404 =
+      error &&
+      typeof error === 'object' &&
+      'status' in error &&
+      (error as { status?: number }).status === 404;
     return (
       <div className='min-h-screen bg-white flex items-center justify-center px-6'>
         <p className='text-gray-500 text-center'>
-          {error && typeof error === 'object' && 'message' in error
-            ? String((error as { message: string }).message)
-            : 'Failed to load form. Please try again later.'}
+          {is404
+            ? 'Invalid or expired link.'
+            : error && typeof error === 'object' && 'message' in error
+              ? String((error as { message: string }).message)
+              : 'Failed to load. Please try again later.'}
+        </p>
+      </div>
+    );
+  }
+
+  if (!formData) {
+    return (
+      <div className='min-h-screen bg-white flex items-center justify-center px-6'>
+        <p className='text-gray-500 text-center'>
+          This outlet has no feedback form.
         </p>
       </div>
     );
@@ -282,6 +306,17 @@ export default function ReviewFormPage() {
   return (
     <div className='min-h-screen bg-white'>
       <div className='max-w-md mx-auto h-full min-h-screen'>
+        {(outletData.name || outletData.table) && (
+          <div className='px-6 pt-4 text-center text-sm text-gray-500'>
+            {outletData.name && <span>{outletData.name}</span>}
+            {outletData.table && (
+              <span>
+                {outletData.name ? ' · ' : ''}
+                Table: {outletData.table.name}
+              </span>
+            )}
+          </div>
+        )}
         <DynamicReviewForm
           form={form}
           questions={formData.questions}
