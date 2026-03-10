@@ -2,12 +2,18 @@
 
 import { useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
+import { useAuth } from '@/lib/auth/context/AuthContext';
 
 const googleMapsLink = 'https://www.google.com/maps/place/ZamZam'; // temporary static link
 
 export function SuccessStep({ rating = 0 }: { rating?: number }) {
+  const { clearSession } = useAuth();
   const isHighRating = rating >= 4;
   const firedRef = useRef(false);
+
+  useEffect(() => {
+    clearSession();
+  }, [clearSession]);
 
   useEffect(() => {
     if (isHighRating && !firedRef.current) {

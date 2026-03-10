@@ -109,6 +109,14 @@ export default function CustomizeCakePage() {
           </div>
         )}
 
+        {/* Product name and description */}
+        <div>
+          <h2 className="font-['Epilogue'] font-bold text-lg text-[#0D141C]">
+            {cake.name}
+          </h2>
+          {cake.description && <p className='text-sm'>{cake.description}</p>}
+        </div>
+
         {/* Cake Text */}
         <div className='space-y-2'>
           <label className="block font-['Epilogue'] font-bold text-[#0D141C]">
