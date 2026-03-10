@@ -8,6 +8,10 @@ export const formEndpoints = {
   getById: (id: string) => `/forms/${id}`,
 };
 
+export const outletEndpoints = {
+  getByQrToken: (qrToken: string) => `/outlet/by-qr/${qrToken}`,
+};
+
 export const reviewEndpoints = {
   create: '/review',
 };
