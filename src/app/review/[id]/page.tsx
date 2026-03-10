@@ -11,58 +11,49 @@ import { useAuth } from '@/lib/auth/context/AuthContext';
 import { cookieService } from '@/lib/services/cookie.service';
 import { storage } from '@/lib/services/storage';
 import { formApi } from '@/lib/services/api/form.api';
-import { ratingApi } from '@/lib/services/api/rating.api';
+import { reviewApi } from '@/lib/services/api/review.api';
 import { authApi } from '@/lib/services/api/auth.api';
-import type { CreateRatingDto, ResponseDto } from '@/types/rating';
+import type { CreateReviewDto, UserResponse } from '@/types/review';
 import type { FormData, FormQuestion } from '@/types/form';
 
 const activeQuestions = (questions: FormQuestion[]) =>
   questions.filter((q) => q.isActive && !q.isDeleted);
 
-function buildCreateRatingDto(
+function toDobIso(dob: unknown): string | undefined {
+  if (dob == null) return undefined;
+  const d = dob as { format?: (f: string) => string };
+  if (typeof d.format === 'function') return d.format('YYYY-MM-DD');
+  if (typeof dob === 'string') {
+    if (/^\d{4}-\d{2}-\d{2}/.test(dob)) return dob;
+    const parts = dob.split(/[/-]/);
+    if (parts.length === 3 && parts[0].length <= 2 && parts[1].length <= 2)
+      return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+  }
+  return undefined;
+}
+
+function buildCreateReviewPayload(
   formId: string,
   outletId: string,
-  userId: string,
+  userId: string | undefined,
   values: Record<string, unknown>,
   formData: FormData
-): CreateRatingDto {
+): CreateReviewDto {
   const answers = (values.answers as Record<string, unknown>) ?? {};
-  const complaints = (values.complaints as Record<string, boolean>) ?? {};
   const questions = activeQuestions(formData.questions);
-  const response: ResponseDto[] = questions.map((q) => ({
+  const response: UserResponse[] = questions.map((q) => ({
     questionId: q._id,
     answer:
       (answers[q._id] as string | string[] | number) ??
       (q.type === 'checkbox' ? [] : q.type === 'rating' ? 0 : ''),
-    isComplaint: Boolean(complaints[q._id]),
   }));
-  const ratingQuestionIds = questions
-    .filter((q) => q.type === 'rating')
-    .map((q) => q._id);
-  const ratingValues = ratingQuestionIds
-    .map((id) => answers[id])
-    .filter((v): v is number => typeof v === 'number');
-  const overallRating =
-    ratingValues.length > 0
-      ? Math.min(
-          5,
-          Math.max(
-            1,
-            Math.round(
-              (ratingValues.reduce((a, b) => a + b, 0) / ratingValues.length) *
-                10
-            ) / 10
-          )
-        )
-      : undefined;
-  return {
+  const payload: CreateReviewDto = {
     formId,
-    userId,
     outletId,
     response,
-    ...(overallRating !== undefined && { overallRating }),
-    type: 'review',
   };
+  if (userId) payload.userId = userId;
+  return payload;
 }
 
 export default function ReviewFormPage() {
@@ -88,6 +79,7 @@ export default function ReviewFormPage() {
     /** Set after OTP when we have the user from authResponse (context may not have updated yet). */
     userId?: string | null;
   } | null>(null);
+  const [complaintReason, setComplaintReason] = useState<string | null>(null);
 
   const {
     data: formData,
@@ -129,7 +121,20 @@ export default function ReviewFormPage() {
     setSubmitting(true);
     try {
       const phoneNumber = `+91${phone}`;
-      const authResponse = await authApi.verifyOtp({ phoneNumber, otp });
+      const nameTrimmed =
+        typeof pendingValues.name === 'string' ? pendingValues.name.trim() : '';
+      const emailTrimmed =
+        typeof pendingValues.email === 'string'
+          ? pendingValues.email.trim()
+          : '';
+      const dobIso = toDobIso(pendingValues.dob);
+      const authResponse = await authApi.verifyOtp({
+        phoneNumber,
+        otp,
+        ...(nameTrimmed && { name: nameTrimmed }),
+        ...(emailTrimmed && { email: emailTrimmed }),
+        ...(dobIso && { dob: dobIso }),
+      });
       cookieService.setAccessToken(authResponse.accessToken);
       storage.setToken(authResponse.accessToken);
       storage.setUser(authResponse.user);
@@ -174,12 +179,25 @@ export default function ReviewFormPage() {
     setPendingRatingSubmit(null);
 
     const outletId = fd.outletId ?? searchParams.get('outletId') ?? formId;
-    const payload = buildCreateRatingDto(formId, outletId, userId, values, fd);
-    setSubmittedRating(payload.overallRating);
+    const payload = buildCreateReviewPayload(
+      formId,
+      outletId,
+      userId ?? undefined,
+      values,
+      fd
+    );
+    if (complaintReason?.trim()) {
+      payload.isComplaint = true;
+      payload.complaintReason = complaintReason.trim();
+    }
     setSubmitting(true);
-    ratingApi
+    reviewApi
       .create(payload)
-      .then(() => setShowSuccess(true))
+      .then((res) => {
+        setComplaintReason(null);
+        setSubmittedRating(res.overallRating);
+        setShowSuccess(true);
+      })
       .catch((err) => {
         const msg =
           err && typeof err === 'object' && 'message' in err
@@ -188,7 +206,14 @@ export default function ReviewFormPage() {
         message.error(msg);
       })
       .finally(() => setSubmitting(false));
-  }, [contextUserId, pendingRatingSubmit, formId, searchParams, message]);
+  }, [
+    contextUserId,
+    pendingRatingSubmit,
+    formId,
+    searchParams,
+    message,
+    complaintReason,
+  ]);
 
   const handleOtpResend = useCallback(() => {
     // TODO: call backend to resend OTP
@@ -202,6 +227,10 @@ export default function ReviewFormPage() {
     },
     [message]
   );
+
+  const handleComplaintSubmit = useCallback((reason: string) => {
+    setComplaintReason(reason);
+  }, []);
 
   if (!formId) {
     return (
@@ -259,6 +288,7 @@ export default function ReviewFormPage() {
           formTitle={formData.title}
           onSubmit={handleSubmit}
           onFinishFailed={handleFinishFailed}
+          onComplaintSubmit={handleComplaintSubmit}
           loading={false}
         />
         <OtpStep

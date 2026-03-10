@@ -5,6 +5,9 @@ import { request, withoutToken } from './axios.config';
 export type VerifyOtpPayload = {
   phoneNumber: string;
   otp: string;
+  name?: string;
+  email?: string;
+  dob?: string;
 };
 
 export const authApi = {
