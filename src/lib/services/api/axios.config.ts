@@ -6,6 +6,7 @@ import axios, {
   AxiosProgressEvent,
 } from 'axios';
 import { cookieService } from '../cookie.service';
+import { storage } from '../storage';
 import { ApiError } from '@/types';
 
 const baseURL = process.env.NEXT_PUBLIC_BASE_URL || '/api';
@@ -70,7 +71,7 @@ const createClient = (headers?: Record<string, string>): AxiosInstance =>
 export async function apiRequest<T = unknown>({
   ...options
 }: ApiOptions): Promise<T> {
-  const token = cookieService.getAccessToken() ?? '';
+  const token = cookieService.getAccessToken() ?? storage.getToken() ?? '';
 
   const client = createClient(
     token ? { Authorization: `Bearer ${token}` } : undefined
@@ -90,7 +91,7 @@ export async function withoutToken<T = unknown>({
 export async function fileUploadRequest<T = unknown>({
   ...options
 }: ApiOptions): Promise<T> {
-  const token = cookieService.getAccessToken() ?? '';
+  const token = cookieService.getAccessToken() ?? storage.getToken() ?? '';
 
   const client = axios.create({
     baseURL,
