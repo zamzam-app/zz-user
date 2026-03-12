@@ -10,10 +10,10 @@ import { StarOutlined, StarFilled } from '@ant-design/icons';
 export type DynamicReviewFormProps = {
   form: FormInstance;
   questions: FormQuestion[];
-  formTitle: string;
+  outletName?: string;
+  outletAddress?: string;
   onSubmit: (values: Record<string, unknown>) => void;
   onFinishFailed?: (info: { errorFields: Array<{ errors: string[] }> }) => void;
-  /** Called when user submits the complaint modal; receives only the reason. No API call—parent stores it and includes it in the main form submit. */
   onComplaintSubmit?: (reason: string) => void;
   loading: boolean;
 };
@@ -60,7 +60,8 @@ function RateField({
 export function DynamicReviewForm({
   form,
   questions,
-  formTitle,
+  outletName,
+  outletAddress,
   onSubmit,
   onFinishFailed,
   onComplaintSubmit,
@@ -79,19 +80,24 @@ export function DynamicReviewForm({
 
   return (
     <div className='pb-24 pt-4'>
-      {/* Header */}
-      <header className='relative flex items-center justify-center px-6 py-4'>
-        <h1 className="font-['Epilogue'] font-extrabold tracking-tight text-gray-900 text-base sm:text-xl md:text-2xl lg:text-3xl truncate max-w-[70%] text-center translate-y-1 md:translate-y-2">
+      {/* Header: outlet name (form-name size), address, form title (large) */}
+      <header className='px-6 py-4 text-center'>
+        {outletName && (
+          <h2 className="font-['Epilogue'] font-semibold text-[22px] text-gray-900">
+            {outletName}
+          </h2>
+        )}
+        {outletAddress && (
+          <p className="font-['Epilogue'] text-sm text-gray-500 mt-1">
+            {outletAddress}
+          </p>
+        )}
+        <h1 className="font-['Epilogue'] font-extrabold tracking-tight text-gray-900 text-base sm:text-xl md:text-2xl lg:text-3xl truncate max-w-[70%] mx-auto mt-2 translate-y-1 md:translate-y-2">
           Feedback Form
         </h1>
       </header>
-      <div className='px-6 mb-8 pt-2'>
-        <h2 className="font-['Epilogue'] font-semibold text-[22px] text-gray-900 text-center">
-          {formTitle}
-        </h2>
-      </div>
 
-      <div className=' px-6 review-form-no-inline-errors'>
+      <div className='px-6 pt-2 mb-8 review-form-no-inline-errors'>
         <Form
           form={form}
           layout='vertical'
@@ -255,9 +261,22 @@ export function DynamicReviewForm({
                 <Form.Item
                   name={['answers', question._id]}
                   label={
-                    <span className="font-['Epilogue'] text-gray-800 font-semibold">
-                      {labelText}
-                    </span>
+                    <div>
+                      <span className="font-['Epilogue'] text-gray-800 font-semibold">
+                        {labelText}
+                        {question.isRequired && (
+                          <span className='text-red-500 ml-0.5'>*</span>
+                        )}
+                      </span>
+                      {question.hint && (
+                        <p
+                          className='text-gray-500 text-sm mt-1 pl-4'
+                          style={{ fontWeight: 400 }}
+                        >
+                          {question.hint}
+                        </p>
+                      )}
+                    </div>
                   }
                   rules={
                     question.isRequired
@@ -268,13 +287,6 @@ export function DynamicReviewForm({
                           },
                         ]
                       : undefined
-                  }
-                  extra={
-                    question.hint ? (
-                      <span className='text-gray-400 text-sm'>
-                        {question.hint}
-                      </span>
-                    ) : undefined
                   }
                 >
                   {question.type === 'rating' && (

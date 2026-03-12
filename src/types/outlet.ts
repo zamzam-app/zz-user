@@ -10,6 +10,7 @@ export interface OutletTableInfo {
 export interface OutletByQrTokenResult {
   _id: string;
   name: string;
+  address?: string;
   form: FormData | null;
   table?: OutletTableInfo | null;
 }
