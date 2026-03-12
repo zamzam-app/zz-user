@@ -3,17 +3,18 @@
 import { useQuery } from '@tanstack/react-query';
 import { App, Form } from 'antd';
 import { useParams, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { DynamicReviewForm } from '@/components/review/DynamicReviewForm';
 import { OtpStep } from '@/components/review/OtpStep';
 import { SuccessStep } from '@/components/review/SuccessStep';
-import { useAuth } from '@/lib/auth/context/AuthContext';
-import { cookieService } from '@/lib/services/cookie.service';
-import { storage } from '@/lib/services/storage';
 import { outletApi } from '@/lib/services/api/outlet.api';
 import { reviewApi } from '@/lib/services/api/review.api';
 import { authApi } from '@/lib/services/api/auth.api';
-import type { CreateReviewDto, UserResponse } from '@/types/review';
+import type {
+  CreateReviewDto,
+  SubmitReviewWithOtpDto,
+  UserResponse,
+} from '@/types/review';
 import type { FormData, FormQuestion } from '@/types/form';
 
 const activeQuestions = (questions: FormQuestion[]) =>
@@ -60,7 +61,6 @@ export default function ReviewFormPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const { message } = App.useApp();
-  const { user, hydrateUser } = useAuth();
   const qrToken = params?.id as string;
 
   const [form] = Form.useForm();
@@ -73,12 +73,6 @@ export default function ReviewFormPage() {
     string,
     unknown
   > | null>(null);
-  const [pendingRatingSubmit, setPendingRatingSubmit] = useState<{
-    values: Record<string, unknown>;
-    formData: FormData;
-    /** Set after OTP when we have the user from authResponse (context may not have updated yet). */
-    userId?: string | null;
-  } | null>(null);
   const [complaintReason, setComplaintReason] = useState<string | null>(null);
 
   const {
@@ -100,12 +94,26 @@ export default function ReviewFormPage() {
   );
 
   const handleSubmit = useCallback(
-    (values: Record<string, unknown>) => {
-      const phone = values.phone as string;
+    async (values: Record<string, unknown>) => {
+      const phone = String(values.phone ?? '').trim();
       if (!phone || phone.length !== 10) {
         message.error('Please enter a valid 10-digit phone number');
         return;
       }
+
+      try {
+        await authApi.requestOtp({
+          phoneNumber: `+91${phone}`,
+        });
+      } catch (err) {
+        const msg =
+          err && typeof err === 'object' && 'message' in err
+            ? String((err as { message: string }).message)
+            : 'Failed to send OTP. Please try again.';
+        message.error(msg);
+        return;
+      }
+
       setPendingValues(values);
       setOtpModalOpen(true);
     },
@@ -136,30 +144,36 @@ export default function ReviewFormPage() {
           ? pendingValues.email.trim()
           : '';
       const dobIso = toDobIso(pendingValues.dob);
-      const authResponse = await authApi.verifyOtp({
+      const outletId =
+        formData.outletId ?? searchParams.get('outletId') ?? formData._id;
+      const reviewPayload = buildCreateReviewPayload(
+        formData._id,
+        outletId,
+        undefined,
+        pendingValues,
+        formData
+      );
+      const payload: SubmitReviewWithOtpDto = {
         phoneNumber,
         otp,
         ...(nameTrimmed && { name: nameTrimmed }),
         ...(emailTrimmed && { email: emailTrimmed }),
         ...(dobIso && { dob: dobIso }),
-      });
-      cookieService.setAccessToken(authResponse.accessToken);
-      storage.setToken(authResponse.accessToken);
-      storage.setUser(authResponse.user);
-      await hydrateUser();
-
-      const responseUserId =
-        authResponse.user?.id ??
-        (authResponse.user as { _id?: string })?._id ??
-        null;
-      setPendingRatingSubmit({
-        values: pendingValues,
-        formData,
-        userId: responseUserId,
-      });
+        formId: reviewPayload.formId,
+        outletId: reviewPayload.outletId,
+        response: reviewPayload.response,
+        ...(complaintReason?.trim() && {
+          isComplaint: true,
+          complaintReason: complaintReason.trim(),
+        }),
+      };
+      const res = await reviewApi.submitWithOtp(payload);
+      setComplaintReason(null);
+      setSubmittedRating(res.overallRating);
       setOtpModalOpen(false);
       setOtp('');
       setPendingValues(null);
+      setShowSuccess(true);
     } catch (err) {
       const status =
         err && typeof err === 'object' && 'status' in err
@@ -173,54 +187,7 @@ export default function ReviewFormPage() {
     } finally {
       setSubmitting(false);
     }
-  }, [otp, pendingValues, formData, hydrateUser, message]);
-
-  const contextUserId =
-    user?.id ?? (user as { _id?: string } | null)?._id ?? null;
-
-  useEffect(() => {
-    if (!pendingRatingSubmit) return;
-    const { values, formData: fd, userId: pendingUserId } = pendingRatingSubmit;
-    const userId = pendingUserId ?? contextUserId;
-    if (!userId) return;
-
-    setPendingRatingSubmit(null);
-
-    const outletId = fd.outletId ?? searchParams.get('outletId') ?? fd._id;
-    const payload = buildCreateReviewPayload(
-      fd._id,
-      outletId,
-      userId ?? undefined,
-      values,
-      fd
-    );
-    if (complaintReason?.trim()) {
-      payload.isComplaint = true;
-      payload.complaintReason = complaintReason.trim();
-    }
-    setSubmitting(true);
-    reviewApi
-      .create(payload)
-      .then((res) => {
-        setComplaintReason(null);
-        setSubmittedRating(res.overallRating);
-        setShowSuccess(true);
-      })
-      .catch((err) => {
-        const msg =
-          err && typeof err === 'object' && 'message' in err
-            ? String((err as { message: string }).message)
-            : 'Failed to submit review. Please try again.';
-        message.error(msg);
-      })
-      .finally(() => setSubmitting(false));
-  }, [
-    contextUserId,
-    pendingRatingSubmit,
-    searchParams,
-    message,
-    complaintReason,
-  ]);
+  }, [otp, pendingValues, formData, searchParams, complaintReason, message]);
 
   const handleOtpResend = useCallback(() => {
     // TODO: call backend to resend OTP

@@ -20,6 +20,21 @@ export interface CreateReviewDto {
   complaintReason?: string;
 }
 
+/** Payload for POST /review/submit-with-otp (verify OTP + create review in one call). */
+export interface SubmitReviewWithOtpDto {
+  phoneNumber: string;
+  otp: string;
+  name?: string;
+  email?: string;
+  dob?: string;
+  formId: string;
+  outletId: string;
+  response: UserResponse[];
+  outletTableId?: string;
+  isComplaint?: boolean;
+  complaintReason?: string | null;
+}
+
 /** Minimal create response shape so we can read server-computed overallRating. */
 export interface CreateReviewResponse {
   overallRating: number;

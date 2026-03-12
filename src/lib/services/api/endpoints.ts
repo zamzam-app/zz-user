@@ -1,6 +1,7 @@
 export const authEndpoints = {
   login: '/auth/login',
   logout: '/auth/logout',
+  requestOtp: '/auth/request-otp',
   verifyOtp: '/auth/verify-otp',
 };
 
@@ -14,6 +15,7 @@ export const outletEndpoints = {
 
 export const reviewEndpoints = {
   create: '/review',
+  submitWithOtp: '/review/submit-with-otp',
 };
 export const productEndpoints = {
   getAll: '/product',
