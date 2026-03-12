@@ -88,6 +88,22 @@ body {
   display: none;
 }
 
+/* Review form: prevent question label text from being cut off */
+.review-form-no-inline-errors .ant-form-item-label {
+  overflow: visible !important;
+  margin-bottom: 0 !important;
+  padding-bottom: 2px; /* allow descenders (g, y, p) to show */
+}
+
+/* Review form: hide default required asterisk (we show it inline with question text) */
+.review-form-no-inline-errors
+  .ant-form-item-label.ant-form-item-required::before,
+.review-form-no-inline-errors
+  .ant-form-item-label
+  > label.ant-form-item-required::before {
+  display: none !important;
+}
+
 /* OTP modal: bottom sheet, no scrollbar */
 .otp-modal-wrap-bottom {
   display: flex !important;
