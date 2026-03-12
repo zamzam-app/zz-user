@@ -3,7 +3,7 @@ import type {
   CreateReviewResponse,
   SubmitReviewWithOtpDto,
 } from '@/types/review';
-import { request } from './axios.config';
+import { request, withoutToken } from './axios.config';
 import { reviewEndpoints } from './endpoints';
 
 export const reviewApi = {
@@ -18,10 +18,11 @@ export const reviewApi = {
   submitWithOtp: async (
     payload: SubmitReviewWithOtpDto
   ): Promise<CreateReviewResponse> => {
-    return request({
+    return withoutToken({
       method: 'POST',
       url: reviewEndpoints.submitWithOtp,
       data: payload,
+      skipAuthRedirect: true,
     });
   },
 };
