@@ -306,21 +306,11 @@ export default function ReviewFormPage() {
   return (
     <div className='min-h-screen bg-white'>
       <div className='max-w-md mx-auto h-full min-h-screen'>
-        {(outletData.name || outletData.table) && (
-          <div className='px-6 pt-4 text-center text-sm text-gray-500'>
-            {outletData.name && <span>{outletData.name}</span>}
-            {outletData.table && (
-              <span>
-                {outletData.name ? ' · ' : ''}
-                Table: {outletData.table.name}
-              </span>
-            )}
-          </div>
-        )}
         <DynamicReviewForm
           form={form}
           questions={formData.questions}
-          formTitle={formData.title}
+          outletName={outletData.name}
+          outletAddress={outletData.address}
           onSubmit={handleSubmit}
           onFinishFailed={handleFinishFailed}
           onComplaintSubmit={handleComplaintSubmit}
