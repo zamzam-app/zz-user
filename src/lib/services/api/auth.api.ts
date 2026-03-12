@@ -2,6 +2,10 @@ import { SignInPayload, AuthResponse } from '@/types';
 import { authEndpoints } from './endpoints';
 import { request, withoutToken } from './axios.config';
 
+export type RequestOtpPayload = {
+  phoneNumber: string;
+};
+
 export type VerifyOtpPayload = {
   phoneNumber: string;
   otp: string;
@@ -23,6 +27,17 @@ export const authApi = {
     return request({
       method: 'POST',
       url: authEndpoints.logout,
+    });
+  },
+
+  requestOtp: async (
+    payload: RequestOtpPayload
+  ): Promise<{ message: string }> => {
+    return withoutToken({
+      method: 'POST',
+      url: authEndpoints.requestOtp,
+      data: payload,
+      skipAuthRedirect: true,
     });
   },
 
