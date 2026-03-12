@@ -61,15 +61,6 @@ export function SuccessStep({ rating = 0 }: { rating?: number }) {
           </a>
         </div>
       )}
-
-      <div className='w-full max-w-sm mx-auto rounded-2xl overflow-hidden mb-8 shadow-xl border border-gray-100'>
-        <div className='bg-gray-100 h-48 w-full flex flex-col items-center justify-center text-gray-400'>
-          <div className='text-3xl mb-2'>📸</div>
-          <span className="font-['Epilogue'] font-medium">
-            Restaurant Image
-          </span>
-        </div>
-      </div>
     </div>
   );
 }
