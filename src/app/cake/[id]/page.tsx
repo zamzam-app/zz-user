@@ -23,6 +23,8 @@ export default function CustomizeCakePage() {
   const [selectedShape, setSelectedShape] = useState('');
   const [selectedFlavor, setSelectedFlavor] = useState('');
   const [selectedDecorations, setSelectedDecorations] = useState<string[]>([]);
+  const [cakeText, setCakeText] = useState('');
+  const [additionalRequests, setAdditionalRequests] = useState('');
 
   useEffect(() => {
     if (!id) {
@@ -61,6 +63,38 @@ export default function CustomizeCakePage() {
     setSelectedDecorations((prev) =>
       prev.includes(item) ? prev.filter((d) => d !== item) : [...prev, item]
     );
+  };
+
+  const handleGetQuote = () => {
+    if (!cake) return;
+
+    // let message = `Hi! I would like to order for a cake.`;
+    // message += `Cake Name: **${cake.name}**`;
+    // if (additionalRequests.trim()) {
+    //   message += `My requests: ${additionalRequests.trim()}`;
+    // }
+    // if (cakeText.trim()) {
+    //   message += `Cake Text: ${cakeText.trim()}`;
+    // }
+    // if (cake.images?.[0]) {
+    //   message += `Reference image: ${cake.images[0]}`;
+    // }
+
+    const message =
+      `Hi! I would like to order a Cake.\n\n` +
+      `*Cake Details:*\n` +
+      `• Name: ${cake.name}\n` +
+      `• Cake Text: ${cakeText.trim() || 'None'}\n` +
+      `• Shape: ${selectedShape ? selectedShape.charAt(0).toUpperCase() + selectedShape.slice(1) : 'None'}\n` +
+      `• Decorations: ${selectedDecorations.join(', ') || 'None'}\n` +
+      `• Additional requests: ${additionalRequests.trim() || 'None'}\n`;
+    const imageUrl = cake.images?.[0];
+    const finalMessage = imageUrl
+      ? `${message}\nReference image: ${imageUrl}`
+      : message;
+
+    const whatsappUrl = `https://wa.me/917204094741?text=${encodeURIComponent(finalMessage)}`;
+    window.open(whatsappUrl, '_blank');
   };
 
   if (loading) {
@@ -125,6 +159,8 @@ export default function CustomizeCakePage() {
           <input
             type='text'
             placeholder='Add text for your cake'
+            value={cakeText}
+            onChange={(e) => setCakeText(e.target.value)}
             className='w-full p-4 rounded-xl bg-[#FDFCFB] border border-[#E8EDF2] ext-sm focus:outline-none resize-none'
           />
         </div>
@@ -207,6 +243,8 @@ export default function CustomizeCakePage() {
           <textarea
             rows={4}
             placeholder='e.g., specific color palette, allergy notes, etc.'
+            value={additionalRequests}
+            onChange={(e) => setAdditionalRequests(e.target.value)}
             className="w-full p-4 rounded-xl bg-[#FDFCFB] border border-[#E8EDF2] font-['Epilogue'] text-sm focus:outline-none resize-none"
           />
         </div>
@@ -214,7 +252,10 @@ export default function CustomizeCakePage() {
 
       {/* Bottom Button */}
       <div className='fixed bottom-0 left-0 right-0 p-6 '>
-        <button className="w-full bg-[#923a3a] text-white! py-4 rounded-2xl font-['Epilogue'] font-bold text-lg active:scale-[0.98] transition-transform shadow-md">
+        <button
+          onClick={handleGetQuote}
+          className="w-full bg-[#923a3a] text-white! py-4 rounded-2xl font-['Epilogue'] font-bold text-lg active:scale-[0.98] transition-transform shadow-md"
+        >
           Get Quote
         </button>
       </div>

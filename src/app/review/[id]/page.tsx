@@ -66,6 +66,7 @@ export default function ReviewFormPage() {
   const [form] = Form.useForm();
   const [otpModalOpen, setOtpModalOpen] = useState(false);
   const [otp, setOtp] = useState('');
+  const [requestingOtp, setRequestingOtp] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [submittedRating, setSubmittedRating] = useState<number | undefined>();
@@ -95,12 +96,14 @@ export default function ReviewFormPage() {
 
   const handleSubmit = useCallback(
     async (values: Record<string, unknown>) => {
+      if (requestingOtp) return;
       const phone = String(values.phone ?? '').trim();
       if (!phone || phone.length !== 10) {
         message.error('Please enter a valid 10-digit phone number');
         return;
       }
 
+      setRequestingOtp(true);
       try {
         await authApi.requestOtp({
           phoneNumber: `+91${phone}`,
@@ -112,12 +115,14 @@ export default function ReviewFormPage() {
             : 'Failed to send OTP. Please try again.';
         message.error(msg);
         return;
+      } finally {
+        setRequestingOtp(false);
       }
 
       setPendingValues(values);
       setOtpModalOpen(true);
     },
-    [message]
+    [message, requestingOtp]
   );
 
   const handleOtpVerify = useCallback(async () => {
@@ -281,7 +286,7 @@ export default function ReviewFormPage() {
           onSubmit={handleSubmit}
           onFinishFailed={handleFinishFailed}
           onComplaintSubmit={handleComplaintSubmit}
-          loading={false}
+          loading={requestingOtp}
         />
         <OtpStep
           open={otpModalOpen}
