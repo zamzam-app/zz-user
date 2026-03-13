@@ -7,30 +7,33 @@ import Link from 'next/link';
 import Button from '@/components/common/Button';
 
 import { productApi } from '../../lib/services/api/product.api';
+import { categoryApi } from '../../lib/services/api/category.api';
 import { Product } from '../../types/product';
-
-const cakeCategories = ['Anniversary', 'Birthday', 'Wedding'];
+import { Category } from '../../types/category';
 
 export default function LibraryPage() {
-  const categories = ['All', ...cakeCategories];
-
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchData = async () => {
       try {
-        const res = await productApi.getAll();
-        setProducts(res.data);
+        const [productRes, categoryRes] = await Promise.all([
+          productApi.getAll(),
+          categoryApi.getAll(),
+        ]);
+        setProducts(productRes.data ?? []);
+        setCategories(categoryRes.data ?? []);
       } catch (error) {
-        console.error('Failed to fetch products:', error);
+        console.error('Failed to fetch library data:', error);
       }
     };
 
-    fetchProducts();
+    fetchData();
   }, []);
 
   useEffect(() => {
@@ -38,9 +41,13 @@ export default function LibraryPage() {
   }, [isSearchOpen]);
 
   const filteredCakes = products
-    .filter(
-      (cake) => activeCategory === 'All' || cake.category === activeCategory
-    )
+    .filter((cake) => {
+      if (activeCategory === 'All') return true;
+      if (cake.categoryList && cake.categoryList.length > 0) {
+        return cake.categoryList.includes(activeCategory);
+      }
+      return cake.category === activeCategory;
+    })
     .filter((cake) => {
       if (!searchQuery.trim()) return true;
       const q = searchQuery.trim().toLowerCase();
@@ -107,18 +114,20 @@ export default function LibraryPage() {
 
       {/* Categories */}
       <div className='flex gap-3 px-6 py-4 overflow-x-auto no-scrollbar'>
-        {categories.map((cat) => {
-          const isActive = activeCategory === cat;
+        {['All', ...categories].map((cat) => {
+          const catId = typeof cat === 'string' ? 'All' : cat._id;
+          const label = typeof cat === 'string' ? cat : cat.name;
+          const isActive = activeCategory === catId;
 
           return (
             <button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
+              key={catId}
+              onClick={() => setActiveCategory(catId)}
               className={`px-5 py-2 rounded-xl font-bold text-sm whitespace-nowrap transition-all ${
                 isActive ? 'bg-[#923a3a] text-white!' : 'bg-[#F0F2F5]'
               }`}
             >
-              {cat}
+              {label}
             </button>
           );
         })}
