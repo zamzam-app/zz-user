@@ -312,17 +312,11 @@ export function DynamicReviewForm({
                   }
                 >
                   {question.type === 'rating' && (
-                    <div className='rounded-2xl py-6 flex flex-col items-center justify-center gap-3'>
-                      <RateField
-                        value={form.getFieldValue(['answers', question._id])}
-                        onChange={(val) =>
-                          form.setFieldValue(['answers', question._id], val)
-                        }
-                        count={question.maxRatings ?? 5}
-                        allowHalf={question.starStep === 0.5}
-                        allowClear={!question.isRequired}
-                      />
-                    </div>
+                    <RateField
+                      count={question.maxRatings ?? 5}
+                      allowHalf={question.starStep === 0.5}
+                      allowClear={!question.isRequired}
+                    />
                   )}
 
                   {question.type === 'short_answer' && (
