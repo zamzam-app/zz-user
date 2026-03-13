@@ -70,6 +70,12 @@ export function DynamicReviewForm({
   const [complaintModalOpen, setComplaintModalOpen] = useState(false);
   const questionsToShow = activeQuestions(questions);
 
+  const handleSubmitClick = useCallback(() => {
+    // iOS Safari can keep the latest text/autofill value uncommitted until blur.
+    (document.activeElement as HTMLElement | null)?.blur();
+    requestAnimationFrame(() => form.submit());
+  }, [form]);
+
   const handleComplaintSubmit = useCallback(
     (reason: string) => {
       onComplaintSubmit?.(reason);
@@ -396,7 +402,7 @@ export function DynamicReviewForm({
           type='primary'
           block
           size='large'
-          onClick={() => form.submit()}
+          onClick={handleSubmitClick}
           loading={loading}
           className=" font-['Epilogue']! text-gray-700! font-medium
       h-14 rounded-2xl text-lg border-none! transition-all
