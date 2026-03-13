@@ -5,7 +5,7 @@ import { Button, Checkbox, DatePicker, Form, Input, Rate, Radio } from 'antd';
 import { useCallback, useMemo, useState } from 'react';
 import { ComplaintModal } from '@/components/review/ComplaintModal';
 import type { FormQuestion } from '@/types/form';
-import { StarOutlined, StarFilled } from '@ant-design/icons';
+import { StarFilled } from '@ant-design/icons';
 
 export type DynamicReviewFormProps = {
   form: FormInstance;
@@ -22,40 +22,25 @@ const activeQuestions = (questions: FormQuestion[]) =>
   questions.filter((q) => q.isActive && !q.isDeleted);
 
 function RateField({
-  value,
-  onChange,
   count = 5,
   allowHalf,
   allowClear,
   disabled,
 }: {
-  value?: number;
-  onChange?: (value: number) => void;
   count?: number;
   allowHalf?: boolean;
   allowClear?: boolean;
   disabled?: boolean;
-  character?: (props: { index?: number; value?: number }) => React.ReactNode;
-  style?: React.CSSProperties;
 }) {
   return (
     <div className='flex justify-center'>
       <Rate
-        value={value}
-        onChange={onChange}
         count={count}
         allowHalf={allowHalf}
         allowClear={allowClear}
         disabled={disabled}
-        style={{ fontSize: 48 }}
-        character={({ index = 0, value = 0 }) => {
-          const selected = index + 1 <= value;
-          return selected ? (
-            <StarFilled style={{ margin: '0 8px', color: '#3DCA84' }} />
-          ) : (
-            <StarOutlined style={{ margin: '0 8px', color: '#3DCA84' }} />
-          );
-        }}
+        style={{ fontSize: 44, color: '#3DCA84' }}
+        character={<StarFilled />}
       />
     </div>
   );
@@ -101,7 +86,7 @@ export function DynamicReviewForm({
   );
 
   return (
-    <div className='pb-24 pt-4'>
+    <div className='pt-4 pb-[calc(7rem+env(safe-area-inset-bottom))]'>
       {/* Header: outlet name (form-name size), address, form title (large) */}
       <header className='px-6 py-4 text-center'>
         {outletName && (
@@ -403,7 +388,7 @@ export function DynamicReviewForm({
         onSubmit={handleComplaintSubmit}
       />
 
-      <div className='fixed bottom-0 left-0 right-0 p-4  z-10'>
+      <div className='fixed bottom-0 left-0 right-0 z-10 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-white/95 backdrop-blur-sm'>
         <Button
           type='primary'
           block
