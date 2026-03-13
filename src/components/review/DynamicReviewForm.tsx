@@ -2,7 +2,7 @@
 
 import type { FormInstance } from 'antd';
 import { Button, Checkbox, DatePicker, Form, Input, Rate, Radio } from 'antd';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { ComplaintModal } from '@/components/review/ComplaintModal';
 import type { FormQuestion } from '@/types/form';
 import { StarOutlined, StarFilled } from '@ant-design/icons';
@@ -26,12 +26,14 @@ function RateField({
   onChange,
   count = 5,
   allowHalf,
+  allowClear,
   disabled,
 }: {
   value?: number;
   onChange?: (value: number) => void;
   count?: number;
   allowHalf?: boolean;
+  allowClear?: boolean;
   disabled?: boolean;
   character?: (props: { index?: number; value?: number }) => React.ReactNode;
   style?: React.CSSProperties;
@@ -43,6 +45,7 @@ function RateField({
         onChange={onChange}
         count={count}
         allowHalf={allowHalf}
+        allowClear={allowClear}
         disabled={disabled}
         style={{ fontSize: 48 }}
         character={({ index = 0, value = 0 }) => {
@@ -68,7 +71,20 @@ export function DynamicReviewForm({
   loading,
 }: DynamicReviewFormProps) {
   const [complaintModalOpen, setComplaintModalOpen] = useState(false);
-  const questionsToShow = activeQuestions(questions);
+  const questionsToShow = useMemo(
+    () =>
+      activeQuestions(questions)
+        .slice()
+        .sort((a, b) => {
+          const aTime = Date.parse(a.createdAt ?? '');
+          const bTime = Date.parse(b.createdAt ?? '');
+          const aHasTime = Number.isFinite(aTime);
+          const bHasTime = Number.isFinite(bTime);
+          if (aHasTime && bHasTime && aTime !== bTime) return aTime - bTime;
+          return a._id.localeCompare(b._id);
+        }),
+    [questions]
+  );
 
   const handleSubmitClick = useCallback(() => {
     // iOS Safari can keep the latest text/autofill value uncommitted until blur.
@@ -304,6 +320,7 @@ export function DynamicReviewForm({
                         }
                         count={question.maxRatings ?? 5}
                         allowHalf={question.starStep === 0.5}
+                        allowClear={!question.isRequired}
                       />
                     </div>
                   )}
@@ -339,16 +356,12 @@ export function DynamicReviewForm({
                     />
                   )}
                   {question.type === 'multiple_choice' && (
-                    <Form.Item
-                      name={['answers', question._id]}
-                      noStyle // This removes the wrapper that causes the extra outline
-                    >
-                      <Radio.Group className='flex flex-col gap-3 mt-2 mb-4'>
-                        {(question.options ?? []).map((opt, idx) => (
-                          <div key={idx} className='block'>
-                            <Radio
-                              value={opt.text}
-                              className="text-gray-700 font-medium font-['Epilogue'] border-none! outline-none!
+                    <Radio.Group className='flex flex-col gap-3 mt-2 mb-4'>
+                      {(question.options ?? []).map((opt, idx) => (
+                        <div key={idx} className='block'>
+                          <Radio
+                            value={opt.text}
+                            className="text-gray-700 font-medium font-['Epilogue'] border-none! outline-none!
                              [&.ant-radio-wrapper:hover_.ant-radio-inner]:border-[#3DCA84]!
                              [&_.ant-radio-checked_.ant-radio-inner]:border-[#3DCA84]!
                              [&_.ant-radio-checked_.ant-radio-inner]:bg-white!
@@ -356,13 +369,12 @@ export function DynamicReviewForm({
                              [&_.ant-radio-input:focus+.ant-radio-inner]:shadow-none!
                              [&.ant-radio-wrapper:hover]:bg-transparent!
                              "
-                            >
-                              {opt.text}
-                            </Radio>
-                          </div>
-                        ))}
-                      </Radio.Group>
-                    </Form.Item>
+                          >
+                            {opt.text}
+                          </Radio>
+                        </div>
+                      ))}
+                    </Radio.Group>
                   )}
 
                   {question.type === 'checkbox' && (
