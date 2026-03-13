@@ -22,11 +22,15 @@ const activeQuestions = (questions: FormQuestion[]) =>
   questions.filter((q) => q.isActive && !q.isDeleted);
 
 function RateField({
+  value,
+  onChange,
   count = 5,
   allowHalf,
   allowClear,
   disabled,
 }: {
+  value?: number;
+  onChange?: (value: number) => void;
   count?: number;
   allowHalf?: boolean;
   allowClear?: boolean;
@@ -35,6 +39,8 @@ function RateField({
   return (
     <div className='flex justify-center'>
       <Rate
+        value={value}
+        onChange={onChange}
         count={count}
         allowHalf={allowHalf}
         allowClear={allowClear}
