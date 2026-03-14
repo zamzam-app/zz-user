@@ -107,6 +107,13 @@ export default function CustomizeCakePage() {
   const imageUrl = cake.images?.[0];
   const options = DEFAULT_OPTIONS;
 
+  const hasCustomizations =
+    selectedShape !== '' ||
+    selectedFlavor !== '' ||
+    selectedDecorations.length > 0 ||
+    cakeText.trim() !== '' ||
+    additionalRequests.trim() !== '';
+
   return (
     <div className='bg-white min-h-screen pb-32'>
       {/* Header */}
@@ -247,11 +254,23 @@ export default function CustomizeCakePage() {
           onClick={handleGetQuote}
           className="w-1/3 bg-[#fdfcfb] text-[#923a3a] border border-[#923a3a] py-4 rounded-2xl font-['Epilogue'] font-bold text-lg active:scale-[0.98] transition-transform shadow-sm flex items-center justify-center"
         >
-          Quote
+          Order Now On
+          <Image
+            src='/zz-logo.png'
+            alt='Zam Zam Logo'
+            width={60}
+            height={60}
+            className='-ml-3 object-contain'
+          />
         </button>
         <button
           onClick={() => setIsVisualiserOpen(true)}
-          className="flex-1 bg-[linear-gradient(135deg,#923a3a_0%,#6d2020_100%)] text-white! py-4 rounded-2xl font-['Epilogue'] font-bold text-lg active:scale-[0.98] transition-transform shadow-md flex items-center justify-center gap-2"
+          disabled={!hasCustomizations}
+          className={`flex-1 py-4 rounded-2xl font-['Epilogue'] font-bold text-lg transition-transform shadow-md flex items-center justify-center gap-2 ${
+            hasCustomizations
+              ? 'bg-[linear-gradient(135deg,#923a3a_0%,#6d2020_100%)] text-white! active:scale-[0.98]'
+              : 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'
+          }`}
         >
           <StarOutlined />
           Visualise
