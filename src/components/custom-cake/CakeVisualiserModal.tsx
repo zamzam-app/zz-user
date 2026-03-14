@@ -134,10 +134,13 @@ export const CakeVisualiserModal = ({
                   <div className='z-10 bg-white/90 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-white max-w-sm max-h-full overflow-y-auto'>
                     {error ? (
                       <>
-                        <p className="font-['Epilogue'] font-bold text-red-600 text-lg mb-2">
-                          Oops!
+                        <StarOutlined className='text-4xl text-[#923a3a] mb-3 inline-block' />
+                        <p className="font-['Epilogue'] font-bold text-[#923a3a] text-lg">
+                          Visualisation Ready!
                         </p>
-                        <p className='text-sm text-gray-700'>{error}</p>
+                        <p className='text-sm text-gray-600 mt-1'>
+                          (AI Image implementation coming soon)
+                        </p>
                       </>
                     ) : (
                       <>
