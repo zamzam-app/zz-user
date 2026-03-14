@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ArrowLeftOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, StarOutlined } from '@ant-design/icons';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { productApi } from '@/lib/services/api/product.api';
 import { Product } from '@/types/product';
+import { CakeVisualiserModal } from '@/components/custom-cake/CakeVisualiserModal';
 
 const DEFAULT_OPTIONS = {
   shapes: ['Round', 'Square', 'Heart'],
@@ -25,6 +26,7 @@ export default function CustomizeCakePage() {
   const [selectedDecorations, setSelectedDecorations] = useState<string[]>([]);
   const [cakeText, setCakeText] = useState('');
   const [additionalRequests, setAdditionalRequests] = useState('');
+  const [isVisualiserOpen, setIsVisualiserOpen] = useState(false);
 
   useEffect(() => {
     if (!id) {
@@ -68,24 +70,13 @@ export default function CustomizeCakePage() {
   const handleGetQuote = () => {
     if (!cake) return;
 
-    // let message = `Hi! I would like to order for a cake.`;
-    // message += `Cake Name: **${cake.name}**`;
-    // if (additionalRequests.trim()) {
-    //   message += `My requests: ${additionalRequests.trim()}`;
-    // }
-    // if (cakeText.trim()) {
-    //   message += `Cake Text: ${cakeText.trim()}`;
-    // }
-    // if (cake.images?.[0]) {
-    //   message += `Reference image: ${cake.images[0]}`;
-    // }
-
     const message =
       `Hi! I would like to order a Cake.\n\n` +
       `*Cake Details:*\n` +
       `• Name: ${cake.name}\n` +
       `• Cake Text: ${cakeText.trim() || 'None'}\n` +
       `• Shape: ${selectedShape ? selectedShape.charAt(0).toUpperCase() + selectedShape.slice(1) : 'None'}\n` +
+      `• Flavour: ${selectedFlavor.trim() || 'None'}\n` +
       `• Decorations: ${selectedDecorations.join(', ') || 'None'}\n` +
       `• Additional requests: ${additionalRequests.trim() || 'None'}\n`;
     const imageUrl = cake.images?.[0];
@@ -115,6 +106,13 @@ export default function CustomizeCakePage() {
 
   const imageUrl = cake.images?.[0];
   const options = DEFAULT_OPTIONS;
+
+  const hasCustomizations =
+    selectedShape !== '' ||
+    selectedFlavor !== '' ||
+    selectedDecorations.length > 0 ||
+    cakeText.trim() !== '' ||
+    additionalRequests.trim() !== '';
 
   return (
     <div className='bg-white min-h-screen pb-32'>
@@ -251,14 +249,46 @@ export default function CustomizeCakePage() {
       </main>
 
       {/* Bottom Button */}
-      <div className='fixed bottom-0 left-0 right-0 p-6 '>
+      <div className='fixed bottom-0 left-0 right-0 p-6 bg-white/90 backdrop-blur border-t border-gray-100 z-40 flex gap-4'>
         <button
           onClick={handleGetQuote}
-          className="w-full bg-[#923a3a] text-white! py-4 rounded-2xl font-['Epilogue'] font-bold text-lg active:scale-[0.98] transition-transform shadow-md"
+          className="w-1/3 bg-[#fdfcfb] text-[#923a3a] border border-[#923a3a] py-4 rounded-2xl font-['Epilogue'] font-bold text-lg active:scale-[0.98] transition-transform shadow-sm flex items-center justify-center"
         >
-          Get Quote
+          Order Now On
+          <Image
+            src='/zz-logo.png'
+            alt='Zam Zam Logo'
+            width={60}
+            height={60}
+            className='-ml-3 object-contain'
+          />
+        </button>
+        <button
+          onClick={() => setIsVisualiserOpen(true)}
+          disabled={!hasCustomizations}
+          className={`flex-1 py-4 rounded-2xl font-['Epilogue'] font-bold text-lg transition-transform shadow-md flex items-center justify-center gap-2 ${
+            hasCustomizations
+              ? 'bg-[linear-gradient(135deg,#923a3a_0%,#6d2020_100%)] text-white! active:scale-[0.98]'
+              : 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'
+          }`}
+        >
+          <StarOutlined />
+          Visualise
         </button>
       </div>
+
+      {/* Visualiser Modal */}
+      <CakeVisualiserModal
+        isOpen={isVisualiserOpen}
+        onClose={() => setIsVisualiserOpen(false)}
+        cakeName={cake.name}
+        shape={selectedShape}
+        flavor={selectedFlavor}
+        decorations={selectedDecorations}
+        additionalRequests={additionalRequests}
+        cakeText={cakeText}
+        baseImageUrl={imageUrl}
+      />
     </div>
   );
 }
