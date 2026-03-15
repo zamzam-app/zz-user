@@ -37,7 +37,9 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Build the prompt
-    let prompt = `Create a photorealistic, stunning image of a custom cake based on the following requirements:\n`;
+    let prompt = `You are an expert cake designer for "ZamZam" (also known as Nano Banana).\n`;
+    prompt += `CRITICAL INSTRUCTION: Without changing any changes in the existing image (especially preserve ZamZam's branding chips on top of the cake) except the customer's request generate the description. Whenever a customer sends a request, make changes on those requests only, but keep the existing cake image style and branding intact.\n\n`;
+    prompt += `Create a photorealistic, stunning description/visualization of a custom cake based on:\n`;
     prompt += `- Base Cake Reference/Vibe: ${cakeName || 'Custom Cake'}\n`;
     if (shape) prompt += `- Shape: ${shape}\n`;
     if (flavor) prompt += `- Flavor/Color Palette: ${flavor}\n`;
@@ -47,17 +49,9 @@ export async function POST(req: NextRequest) {
       prompt += `- Text to perfectly write on the cake: "${cakeText}"\n`;
     if (additionalRequests)
       prompt += `- Extra requests: ${additionalRequests}\n`;
-    prompt += `Make the staging professional, beautiful, and appetizing.`;
+    prompt += `\nMake the description vivid, professional, and appetizing.`;
 
-    const modelParams = { model: 'gemini-1.5-pro' }; // Use gemini-1.5-pro for complex instructions or wait for Gemini 2.0 Flash/Pro Image capability if supported
-
-    // As of current standard JS SDK text-to-image might be different,
-    // but typically we can pass images into an instructional prompt.
-    // However, for image GENERATION (Nano Banana), the model might be different.
-    // Let's use gemini-1.5-pro to return a base64 or assuming Nano banana is imagen-3.0-generate
-    // Actually, Nano Banana is Gemini Flash Image or similar.
-    // Let's stick with gemini-1.5-pro to return a descriptive generation or text since the SDK is for chat/multimodal right now.
-    // NOTE: If the user explicitly wants an image back, we can assume the standard endpoint for generation if the SDK supports it.
+    const modelParams = { model: 'gemini-2.5-flash-image' };
 
     const model = genAI.getGenerativeModel(modelParams);
 
