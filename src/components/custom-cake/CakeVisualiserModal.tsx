@@ -135,12 +135,27 @@ export const CakeVisualiserModal = ({
                     {error ? (
                       <>
                         <StarOutlined className='text-4xl text-[#923a3a] mb-3 inline-block' />
-                        <p className="font-['Epilogue'] font-bold text-[#923a3a] text-lg">
-                          Visualisation Ready!
-                        </p>
-                        <p className='text-sm text-gray-600 mt-1'>
-                          (AI Image implementation coming soon)
-                        </p>
+                        {error.toLowerCase().includes('429') ||
+                        error.toLowerCase().includes('quota') ? (
+                          <>
+                            <p className="font-['Epilogue'] font-bold text-[#923a3a] text-lg">
+                              AI is taking a break
+                            </p>
+                            <p className='text-sm text-gray-600 mt-1'>
+                              Too many requests! Please wait a minute and try
+                              again.
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <p className="font-['Epilogue'] font-bold text-[#923a3a] text-lg">
+                              Visualisation Ready!
+                            </p>
+                            <p className='text-sm text-gray-600 mt-1'>
+                              (AI Image implementation coming soon)
+                            </p>
+                          </>
+                        )}
                       </>
                     ) : (
                       <>
@@ -156,7 +171,7 @@ export const CakeVisualiserModal = ({
                           </div>
                         )}
                         <p className='text-xs text-[#923a3a] mt-3 font-medium'>
-                          *Nano Banana Image Generation via Gemini API Success!*
+                          *Powered by ZamZam AI (Nano Banana)*
                         </p>
                       </>
                     )}

@@ -254,7 +254,7 @@ export default function CustomizeCakePage() {
           onClick={handleGetQuote}
           className="w-1/3 bg-[#fdfcfb] text-[#923a3a] border border-[#923a3a] py-4 rounded-2xl font-['Epilogue'] font-bold text-lg active:scale-[0.98] transition-transform shadow-sm flex items-center justify-center"
         >
-          Order Now On
+          Order on
           <Image
             src='/zz-logo.png'
             alt='Zam Zam Logo'
