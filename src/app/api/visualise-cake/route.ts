@@ -1,97 +1,110 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI, Part } from '@google/generative-ai';
-
-const apiKey = process.env.GEMINI_API_KEY || '';
-const genAI = new GoogleGenerativeAI(apiKey);
+import { VertexAI } from '@google-cloud/vertexai';
+import path from 'path';
+import fs from 'fs';
 
 export async function POST(req: NextRequest) {
   try {
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: 'Missing GEMINI_API_KEY environment variable' },
-        { status: 500 }
-      );
-    }
-
+    const body = await req.json();
     const {
       cakeName,
       shape,
       flavor,
       decorations,
-      additionalRequests,
       cakeText,
-      baseImageUrl,
-    } = await req.json();
+      additionalRequests,
+    } = body;
 
-    // 1. Fetch base image
-    let baseImageBytes = null;
-    let baseImageMimeType = '';
+    // 1. Build a CLEAN prompt (Single line, no newlines)
+    const promptParts = ['Professional food photography of a custom cake.'];
+    if (cakeName) promptParts.push(`Style: ${cakeName}.`);
+    if (shape) promptParts.push(`Shape: ${shape}.`);
+    if (flavor) promptParts.push(`Flavor colors: ${flavor}.`);
+    if (decorations?.length)
+      promptParts.push(`Decorations: ${decorations.join(', ')}.`);
+    if (cakeText) promptParts.push(`Text " ${cakeText} " written on cake.`);
+    if (additionalRequests) promptParts.push(`Details: ${additionalRequests}.`);
+    promptParts.push(
+      'Studio lighting, photorealistic, high detail, 8k resolution.'
+    );
 
-    if (baseImageUrl) {
-      const imgRes = await fetch(baseImageUrl);
-      if (imgRes.ok) {
-        const arrayBuffer = await imgRes.arrayBuffer();
-        baseImageBytes = Buffer.from(arrayBuffer).toString('base64');
-        baseImageMimeType = imgRes.headers.get('content-type') || 'image/jpeg';
-      }
+    const prompt = promptParts.join(' ');
+
+    const PROJECT_ID = process.env.GOOGLE_PROJECT_ID || 'zamzam-img-gen';
+    const LOCATION = process.env.GOOGLE_LOCATION || 'asia-south1';
+
+    // Credentials path
+    const CREDENTIALS_FILENAME = 'zamzam-img-gen-bc57b359831c.json';
+    const keyFilePath = path.join(process.cwd(), CREDENTIALS_FILENAME);
+
+    if (fs.existsSync(keyFilePath)) {
+      process.env.GOOGLE_APPLICATION_CREDENTIALS = keyFilePath;
     }
 
-    // 2. Build the prompt
-    let prompt = `Create a photorealistic, stunning image of a custom cake based on the following requirements:\n`;
-    prompt += `- Base Cake Reference/Vibe: ${cakeName || 'Custom Cake'}\n`;
-    if (shape) prompt += `- Shape: ${shape}\n`;
-    if (flavor) prompt += `- Flavor/Color Palette: ${flavor}\n`;
-    if (decorations?.length)
-      prompt += `- Decorations: ${decorations.join(', ')}\n`;
-    if (cakeText)
-      prompt += `- Text to perfectly write on the cake: "${cakeText}"\n`;
-    if (additionalRequests)
-      prompt += `- Extra requests: ${additionalRequests}\n`;
-    prompt += `Make the staging professional, beautiful, and appetizing.`;
+    // --- STRATEGY 1: VERTEX AI (IMAGE 3) ---
+    try {
+      const vertexAI = new VertexAI({
+        project: PROJECT_ID,
+        location: LOCATION,
+      });
+      const model = vertexAI.getGenerativeModel({
+        model: 'imagen-3.0-generate-002',
+      });
 
-    const modelParams = { model: 'gemini-1.5-pro' }; // Use gemini-1.5-pro for complex instructions or wait for Gemini 2.0 Flash/Pro Image capability if supported
+      const result = await model.generateContent({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      });
 
-    // As of current standard JS SDK text-to-image might be different,
-    // but typically we can pass images into an instructional prompt.
-    // However, for image GENERATION (Nano Banana), the model might be different.
-    // Let's use gemini-1.5-pro to return a base64 or assuming Nano banana is imagen-3.0-generate
-    // Actually, Nano Banana is Gemini Flash Image or similar.
-    // Let's stick with gemini-1.5-pro to return a descriptive generation or text since the SDK is for chat/multimodal right now.
-    // NOTE: If the user explicitly wants an image back, we can assume the standard endpoint for generation if the SDK supports it.
+      interface VertexPart {
+        inlineData?: {
+          data: string;
+        };
+      }
+      const parts = (result.response.candidates?.[0]?.content?.parts ||
+        []) as VertexPart[];
+      const imagePart = parts.find((p) => p.inlineData);
 
-    const model = genAI.getGenerativeModel(modelParams);
+      if (imagePart?.inlineData?.data) {
+        return NextResponse.json({
+          image: `data:image/png;base64,${imagePart.inlineData.data}`,
+          source: 'vertex',
+        });
+      }
+    } catch {
+      console.warn('Vertex unavailable, trying fallback...');
+    }
 
-    const parts: Part[] = [{ text: prompt }];
+    // --- STRATEGY 2: POLLINATIONS (SUPER STABLE VERSION) ---
+    try {
+      const seed = Math.floor(Math.random() * 1000000);
+      // Removed flux model parameter to use the default stable one
+      const pollinatorUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&seed=${seed}&nologo=true`;
 
-    if (baseImageBytes) {
-      parts.push({
-        inlineData: {
-          data: baseImageBytes,
-          mimeType: baseImageMimeType,
-        },
+      const response = await fetch(pollinatorUrl);
+
+      if (!response.ok) throw new Error(`Status ${response.status}`);
+
+      const arrayBuffer = await response.arrayBuffer();
+      const base64Image = Buffer.from(arrayBuffer).toString('base64');
+
+      return NextResponse.json({
+        image: `data:image/png;base64,${base64Image}`,
+        source: 'fallback',
+      });
+    } catch {
+      // --- STRATEGY 3: FINAL SAFETY (DIRECT URL) ---
+      // If everything fails, we return a direct link that the browser can load.
+      const finalSeed = Math.floor(Math.random() * 1000000);
+      const finalUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?seed=${finalSeed}&nologo=true`;
+
+      return NextResponse.json({
+        image: finalUrl,
+        source: 'safety-net',
       });
     }
-
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts }],
-    });
-
-    const textResponse = result.response.text();
-
-    return NextResponse.json({
-      success: true,
-      message: textResponse,
-      // In a real Nano Banana API, this would return the generated base64 image strings.
-      // Since standard @google/generative-ai doesn't fully support arbitrary image generation natively returning images yet (usually returns text about it),
-      // we mock the generated string for now, but we've built the API piping correctly.
-      mockImagePrompt: prompt,
-    });
-  } catch (error: unknown) {
-    console.error('Gemini API Error:', error);
+  } catch {
     return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : 'Internal server error',
-      },
+      { error: 'Something went wrong. Please try refreshing.' },
       { status: 500 }
     );
   }

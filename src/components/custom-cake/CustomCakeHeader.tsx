@@ -24,7 +24,20 @@ export const CustomCakeHeader = ({
       </button>
 
       {/* Tabs */}
-      <div className='w-full max-w-md pointer-events-auto'>
+      <div className='w-full max-w-md pointer-events-auto custom-cake-tabs-container'>
+        <style>{`
+          .custom-cake-tabs-container .ant-tabs-card .ant-tabs-tab {
+            border-radius: 12px 12px 0 0 !important;
+            transition: all 0.3s ease;
+          }
+          .custom-cake-tabs-container .ant-tabs-card .ant-tabs-tab-active {
+            background-color: #7A2D2A !important;
+            border-color: #7A2D2A !important;
+          }
+          .custom-cake-tabs-container .ant-tabs-card .ant-tabs-tab:not(.ant-tabs-tab-active) {
+            background-color: #ffffff !important;
+          }
+        `}</style>
         <ConfigProvider
           theme={{
             token: {
@@ -53,12 +66,28 @@ export const CustomCakeHeader = ({
               {
                 key: 'upload',
                 label: (
-                  <span style={{ fontWeight: 'bold' }}>Upload Reference</span>
+                  <span
+                    style={{
+                      fontWeight: 'bold',
+                      color: activeTab === 'upload' ? '#e3c08d' : '#7A2D2A',
+                    }}
+                  >
+                    Upload Cake
+                  </span>
                 ),
               },
               {
                 key: 'custom',
-                label: <span style={{ fontWeight: 'bold' }}>Build Custom</span>,
+                label: (
+                  <span
+                    style={{
+                      fontWeight: 'bold',
+                      color: activeTab === 'custom' ? '#e3c08d' : '#7A2D2A',
+                    }}
+                  >
+                    Cake Studio
+                  </span>
+                ),
               },
             ]}
           />

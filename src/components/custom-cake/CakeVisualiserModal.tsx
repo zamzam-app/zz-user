@@ -26,7 +26,7 @@ export const CakeVisualiserModal = ({
   baseImageUrl,
 }: CakeVisualiserModalProps) => {
   const [isGenerating, setIsGenerating] = useState(true);
-  const [generatedPrompt, setGeneratedPrompt] = useState<string | null>(null);
+  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -35,7 +35,7 @@ export const CakeVisualiserModal = ({
     let isMounted = true;
     setIsGenerating(true);
     setError(null);
-    setGeneratedPrompt(null);
+    setGeneratedImage(null);
 
     const generateImage = async () => {
       try {
@@ -60,7 +60,11 @@ export const CakeVisualiserModal = ({
           throw new Error(data.error || 'Failed to generate image');
         }
 
-        setGeneratedPrompt(data.mockImagePrompt || data.message);
+        if (data.image) {
+          setGeneratedImage(data.image);
+        } else {
+          throw new Error('No image was returned from the server');
+        }
       } catch (err: unknown) {
         if (isMounted)
           setError(
@@ -121,46 +125,35 @@ export const CakeVisualiserModal = ({
                     Our AI is baking your custom visualization
                   </p>
                 </div>
+              ) : error ? (
+                <div className='flex flex-col items-center justify-center text-center p-6'>
+                  <div className='w-12 h-12 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-4'>
+                    <CloseOutlined className='text-xl' />
+                  </div>
+                  <p className="font-['Epilogue'] font-bold text-red-600 text-lg">
+                    Oops! Something went wrong
+                  </p>
+                  <p className='text-sm text-gray-600 mt-2 max-w-[250px]'>
+                    {error}
+                  </p>
+                </div>
               ) : (
-                <div className='flex flex-col items-center justify-center text-center p-6 h-full w-full'>
-                  {baseImageUrl ? (
+                <div className='relative w-full h-full'>
+                  {generatedImage ? (
                     <Image
-                      src={baseImageUrl}
+                      src={generatedImage}
                       alt='Generated Cake'
                       fill
-                      className='object-cover opacity-30 mix-blend-multiply transition-opacity duration-1000'
+                      className='object-cover transition-opacity duration-1000'
                     />
-                  ) : null}
-                  <div className='z-10 bg-white/90 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-white max-w-sm max-h-full overflow-y-auto'>
-                    {error ? (
-                      <>
-                        <StarOutlined className='text-4xl text-[#923a3a] mb-3 inline-block' />
-                        <p className="font-['Epilogue'] font-bold text-[#923a3a] text-lg">
-                          Visualisation Ready!
-                        </p>
-                        <p className='text-sm text-gray-600 mt-1'>
-                          (AI Image implementation coming soon)
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        <StarOutlined className='text-4xl text-[#923a3a] mb-3 inline-block' />
-                        <p className="font-['Epilogue'] font-bold text-[#923a3a] text-lg">
-                          Visualisation Prompt Ready!
-                        </p>
-                        {generatedPrompt && (
-                          <div className='mt-3 p-3 bg-gray-50 rounded-xl text-left'>
-                            <p className='text-xs text-gray-600 whitespace-pre-wrap leading-relaxed'>
-                              {generatedPrompt}
-                            </p>
-                          </div>
-                        )}
-                        <p className='text-xs text-[#923a3a] mt-3 font-medium'>
-                          *Nano Banana Image Generation via Gemini API Success!*
-                        </p>
-                      </>
-                    )}
-                  </div>
+                  ) : (
+                    <div className='flex flex-col items-center justify-center text-center p-6 h-full'>
+                      <StarOutlined className='text-4xl text-[#923a3a] mb-3 inline-block' />
+                      <p className="font-['Epilogue'] font-bold text-[#923a3a] text-lg">
+                        Visualisation Ready!
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

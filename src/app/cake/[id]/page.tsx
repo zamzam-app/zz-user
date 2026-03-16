@@ -249,12 +249,12 @@ export default function CustomizeCakePage() {
       </main>
 
       {/* Bottom Button */}
-      <div className='fixed bottom-0 left-0 right-0 p-6 bg-white/90 backdrop-blur border-t border-gray-100 z-40 flex gap-4'>
+      <div className='fixed bottom-0 left-0 right-0 p-6 bg-white/90 backdrop-blur border-t border-gray-100 z-40 flex flex-col md:flex-row gap-4'>
         <button
           onClick={handleGetQuote}
-          className="w-1/3 bg-[#fdfcfb] text-[#923a3a] border border-[#923a3a] py-4 rounded-2xl font-['Epilogue'] font-bold text-lg active:scale-[0.98] transition-transform shadow-sm flex items-center justify-center"
+          className="w-full md:w-1/3 bg-[#fdfcfb] text-[#923a3a] border border-[#923a3a] py-4 rounded-2xl font-['Epilogue'] font-bold text-lg active:scale-[0.98] transition-transform shadow-sm flex items-center justify-center"
         >
-          Order Now On
+          <span className='ml-10'>Order on</span>
           <Image
             src='/zz-logo.png'
             alt='Zam Zam Logo'
