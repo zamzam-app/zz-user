@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { CloseOutlined, StarOutlined } from '@ant-design/icons';
-import Image from 'next/image';
 
 interface CakeVisualiserModalProps {
   isOpen: boolean;
@@ -140,11 +139,10 @@ export const CakeVisualiserModal = ({
               ) : (
                 <div className='relative w-full h-full'>
                   {generatedImage ? (
-                    <Image
+                    <img
                       src={generatedImage}
                       alt='Generated Cake'
-                      fill
-                      className='object-cover transition-opacity duration-1000'
+                      className='w-full h-full object-cover transition-opacity duration-1000'
                     />
                   ) : (
                     <div className='flex flex-col items-center justify-center text-center p-6 h-full'>
