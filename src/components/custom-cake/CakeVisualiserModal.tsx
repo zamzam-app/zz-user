@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { CloseOutlined, StarOutlined } from '@ant-design/icons';
 import Image from 'next/image';
 
@@ -25,59 +25,60 @@ export const CakeVisualiserModal = ({
   cakeText,
   baseImageUrl,
 }: CakeVisualiserModalProps) => {
-  const [isGenerating, setIsGenerating] = useState(true);
-  const [generatedPrompt, setGeneratedPrompt] = useState<string | null>(null);
+  const [imageBase64, setImageBase64] = useState<string | null>(null);
+  const [imageMime, setImageMime] = useState<string>('image/png');
+  const [fallbackText, setFallbackText] = useState<string | null>(null);
+  const [placeholderImageUrl, setPlaceholderImageUrl] = useState<string | null>(
+    null
+  );
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!isOpen) return;
-
-    let isMounted = true;
-    setIsGenerating(true);
+  const handleGenerate = useCallback(async () => {
+    setIsLoading(true);
     setError(null);
-    setGeneratedPrompt(null);
+    setImageBase64(null);
+    setFallbackText(null);
+    setPlaceholderImageUrl(null);
 
-    const generateImage = async () => {
-      try {
-        const res = await fetch('/api/visualise-cake', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            cakeName,
-            shape,
-            flavor,
-            decorations,
-            additionalRequests,
-            cakeText,
-            baseImageUrl,
-          }),
-        });
+    try {
+      const res = await fetch('/api/visualise-cake', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: cakeName,
+          shape,
+          flavor,
+          decorations,
+          cakeText,
+          extraRequests: additionalRequests,
+          baseImageUrl: baseImageUrl ?? null,
+        }),
+      });
 
-        if (!isMounted) return;
+      const data = await res.json();
 
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.error || 'Failed to generate image');
-        }
-
-        setGeneratedPrompt(data.mockImagePrompt || data.message);
-      } catch (err: unknown) {
-        if (isMounted)
-          setError(
-            err instanceof Error ? err.message : 'An unknown error occurred'
-          );
-      } finally {
-        if (isMounted) setIsGenerating(false);
+      if (!data.success) {
+        setError(data.message || 'Something went wrong');
+        if (data.placeholderImage)
+          setPlaceholderImageUrl(data.placeholderImage);
+        return;
       }
-    };
 
-    generateImage();
-
-    return () => {
-      isMounted = false;
-    };
+      if (data.imageBase64) {
+        setImageBase64(data.imageBase64);
+        setImageMime(data.mimeType || 'image/png');
+        setFallbackText(data.message || null);
+      } else {
+        setFallbackText(data.message);
+      }
+    } catch (err: unknown) {
+      setError('Failed to generate cake preview. Please try again.');
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
   }, [
-    isOpen,
     cakeName,
     shape,
     flavor,
@@ -86,6 +87,11 @@ export const CakeVisualiserModal = ({
     cakeText,
     baseImageUrl,
   ]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    handleGenerate();
+  }, [isOpen, handleGenerate]);
 
   if (!isOpen) return null;
 
@@ -110,72 +116,84 @@ export const CakeVisualiserModal = ({
         <div className='p-6 overflow-y-auto w-full'>
           <div className='space-y-6'>
             {/* Visualisation Area */}
-            <div className='relative w-full aspect-square rounded-2xl overflow-hidden bg-gradient-to-br from-[#fdfcfb] to-[#f4ebeb] border-2 border-dashed border-[#e8edf2] flex items-center justify-center shadow-inner'>
-              {isGenerating ? (
-                <div className='flex flex-col items-center justify-center text-center p-6'>
+            <div className='relative w-full aspect-square rounded-2xl overflow-hidden bg-linear-to-br from-[#fdfcfb] to-[#f4ebeb] border-2 border-dashed border-[#e8edf2] flex items-center justify-center shadow-inner'>
+              {isLoading && (
+                <div className='flex flex-col items-center justify-center py-12'>
                   <div className='w-16 h-16 border-4 border-[#923a3a]/20 border-t-[#923a3a] rounded-full animate-spin mb-4' />
                   <p className="font-['Epilogue'] font-semibold text-gray-700 text-lg">
-                    Generating Magic...
+                    Generating your cake preview…
                   </p>
                   <p className='text-sm text-gray-500 mt-2 max-w-[200px]'>
                     Our AI is baking your custom visualization
                   </p>
                 </div>
-              ) : (
-                <div className='flex flex-col items-center justify-center text-center p-6 h-full w-full'>
-                  {baseImageUrl ? (
-                    <Image
-                      src={baseImageUrl}
-                      alt='Generated Cake'
-                      fill
-                      className='object-cover opacity-30 mix-blend-multiply transition-opacity duration-1000'
-                    />
-                  ) : null}
-                  <div className='z-10 bg-white/90 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-white max-w-sm max-h-full overflow-y-auto'>
-                    {error ? (
-                      <>
-                        <StarOutlined className='text-4xl text-[#923a3a] mb-3 inline-block' />
-                        {error.toLowerCase().includes('429') ||
-                        error.toLowerCase().includes('quota') ? (
-                          <>
-                            <p className="font-['Epilogue'] font-bold text-[#923a3a] text-lg">
-                              AI is taking a break
-                            </p>
-                            <p className='text-sm text-gray-600 mt-1'>
-                              Too many requests! Please wait a minute and try
-                              again.
-                            </p>
-                          </>
-                        ) : (
-                          <>
-                            <p className="font-['Epilogue'] font-bold text-[#923a3a] text-lg">
-                              Visualisation Ready!
-                            </p>
-                            <p className='text-sm text-gray-600 mt-1'>
-                              (AI Image implementation coming soon)
-                            </p>
-                          </>
-                        )}
-                      </>
-                    ) : (
-                      <>
-                        <StarOutlined className='text-4xl text-[#923a3a] mb-3 inline-block' />
-                        <p className="font-['Epilogue'] font-bold text-[#923a3a] text-lg">
-                          Visualisation Prompt Ready!
-                        </p>
-                        {generatedPrompt && (
-                          <div className='mt-3 p-3 bg-gray-50 rounded-xl text-left'>
-                            <p className='text-xs text-gray-600 whitespace-pre-wrap leading-relaxed'>
-                              {generatedPrompt}
-                            </p>
-                          </div>
-                        )}
-                        <p className='text-xs text-[#923a3a] mt-3 font-medium'>
-                          *Powered by ZamZam AI (Nano Banana)*
-                        </p>
-                      </>
-                    )}
-                  </div>
+              )}
+
+              {error && !isLoading && (
+                <div className='flex flex-col items-center justify-center text-center p-6'>
+                  <StarOutlined className='text-4xl text-[#923a3a] mb-3 inline-block' />
+                  {error.toLowerCase().includes('429') ||
+                  error.toLowerCase().includes('quota') ? (
+                    <>
+                      <p className="font-['Epilogue'] font-bold text-[#923a3a] text-lg">
+                        AI is taking a break
+                      </p>
+                      <p className='text-sm text-gray-600 mt-1'>
+                        Too many requests! Please wait a minute and try again.
+                      </p>
+                    </>
+                  ) : (
+                    <p className="font-['Epilogue'] font-bold text-[#923a3a] text-lg">
+                      {error}
+                    </p>
+                  )}
+                  {placeholderImageUrl && (
+                    <div className='mt-4 w-full max-w-sm rounded-2xl overflow-hidden shadow-lg'>
+                      <Image
+                        src={placeholderImageUrl}
+                        alt='Cake placeholder'
+                        width={400}
+                        height={400}
+                        className='w-full h-auto object-cover'
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {imageBase64 && !isLoading && (
+                <div className='flex flex-col items-center gap-3 p-4'>
+                  <Image
+                    src={`data:${imageMime};base64,${imageBase64}`}
+                    alt='Generated cake preview'
+                    width={512}
+                    height={512}
+                    unoptimized
+                    className='w-full max-w-sm rounded-2xl shadow-lg object-cover'
+                  />
+                  {fallbackText && (
+                    <p className='text-xs text-gray-500 text-center px-4'>
+                      {fallbackText}
+                    </p>
+                  )}
+                  <p className='text-xs text-[#923a3a] font-medium'>
+                    *Powered by ZamZam AI (Nano Banana)*
+                  </p>
+                </div>
+              )}
+
+              {fallbackText && !imageBase64 && !isLoading && !error && (
+                <div className='z-10 bg-white/90 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-white max-w-sm max-h-full overflow-y-auto'>
+                  <StarOutlined className='text-4xl text-[#923a3a] mb-3 inline-block' />
+                  <p className="font-['Epilogue'] font-bold text-[#923a3a] text-lg">
+                    Cake Description
+                  </p>
+                  <p className='mt-3 p-3 bg-gray-50 rounded-xl text-left text-sm text-gray-600 whitespace-pre-wrap'>
+                    {fallbackText}
+                  </p>
+                  <p className='text-xs text-[#923a3a] mt-3 font-medium'>
+                    *Powered by ZamZam AI (Nano Banana)*
+                  </p>
                 </div>
               )}
             </div>

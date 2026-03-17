@@ -1,92 +1,128 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI, Part } from '@google/generative-ai';
+import { GoogleAuth } from 'google-auth-library';
 
-const apiKey = process.env.GEMINI_API_KEY || '';
-const genAI = new GoogleGenerativeAI(apiKey);
+const PROJECT_ID = process.env.GOOGLE_CLOUD_PROJECT;
+const LOCATION = process.env.GOOGLE_CLOUD_LOCATION || 'us-central1';
+// Stable Imagen 4 GA model — production ready
+const MODEL = 'imagen-4.0-generate-001';
+
+const PLACEHOLDER_IMAGE =
+  'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=800';
+
+// Build a GoogleAuth client from env vars (works without a JSON file on disk)
+function getAuthClient() {
+  return new GoogleAuth({
+    credentials: {
+      client_email: process.env.GOOGLE_CLIENT_EMAIL,
+      private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    },
+    scopes: ['https://www.googleapis.com/auth/cloud-platform'],
+  });
+}
 
 export async function POST(req: NextRequest) {
-  try {
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: 'Missing GEMINI_API_KEY environment variable' },
-        { status: 500 }
-      );
-    }
+  if (
+    !PROJECT_ID ||
+    !process.env.GOOGLE_CLIENT_EMAIL ||
+    !process.env.GOOGLE_PRIVATE_KEY
+  ) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'Coming Soon',
+        placeholderImage: PLACEHOLDER_IMAGE,
+      },
+      { status: 200 }
+    );
+  }
 
+  try {
+    const body = await req.json();
     const {
-      cakeName,
+      name,
       shape,
       flavor,
       decorations,
-      additionalRequests,
       cakeText,
+      extraRequests,
       baseImageUrl,
-    } = await req.json();
+    } = body;
 
-    // 1. Fetch base image
-    let baseImageBytes = null;
-    let baseImageMimeType = '';
+    const prompt = `
+      You are an expert cake designer for ZamZam (Nano Banana).
+      Generate a photorealistic, stunning image of a custom cake with these details:
+      - Cake name / text on cake: ${cakeText || name || 'Keep original'}
+      - Shape: ${shape || 'Keep original'}
+      - Flavor: ${flavor || 'Keep original'}
+      - Decorations: ${decorations || 'None'}
+      - Extra requests: ${extraRequests || 'None'}
+      Preserve all ZamZam branding elements. Only change what the customer requested.
+      Make it look professional and appetizing.
+    `.trim();
+
+    // Get a short-lived access token from the service account
+    const auth = getAuthClient();
+    const accessToken = await auth.getAccessToken();
+
+    const endpoint = `https://${LOCATION}-aiplatform.googleapis.com/v1/projects/${PROJECT_ID}/locations/${LOCATION}/publishers/google/models/${MODEL}:predict`;
+
+    // Build instances — include base image if provided
+    const instance: Record<string, unknown> = { prompt };
 
     if (baseImageUrl) {
-      const imgRes = await fetch(baseImageUrl);
-      if (imgRes.ok) {
-        const arrayBuffer = await imgRes.arrayBuffer();
-        baseImageBytes = Buffer.from(arrayBuffer).toString('base64');
-        baseImageMimeType = imgRes.headers.get('content-type') || 'image/jpeg';
-      }
-    }
-
-    // 2. Build the prompt
-    let prompt = `You are an expert cake designer for "ZamZam" (also known as Nano Banana).\n`;
-    prompt += `CRITICAL INSTRUCTION: Without changing any changes in the existing image (especially preserve ZamZam's branding chips on top of the cake) except the customer's request generate the description. Whenever a customer sends a request, make changes on those requests only, but keep the existing cake image style and branding intact.\n\n`;
-    prompt += `Create a photorealistic, stunning description/visualization of a custom cake based on:\n`;
-    prompt += `- Base Cake Reference/Vibe: ${cakeName || 'Custom Cake'}\n`;
-    if (shape) prompt += `- Shape: ${shape}\n`;
-    if (flavor) prompt += `- Flavor/Color Palette: ${flavor}\n`;
-    if (decorations?.length)
-      prompt += `- Decorations: ${decorations.join(', ')}\n`;
-    if (cakeText)
-      prompt += `- Text to perfectly write on the cake: "${cakeText}"\n`;
-    if (additionalRequests)
-      prompt += `- Extra requests: ${additionalRequests}\n`;
-    prompt += `\nMake the description vivid, professional, and appetizing.`;
-
-    const modelParams = { model: 'gemini-2.5-flash-image' };
-
-    const model = genAI.getGenerativeModel(modelParams);
-
-    const parts: Part[] = [{ text: prompt }];
-
-    if (baseImageBytes) {
-      parts.push({
-        inlineData: {
-          data: baseImageBytes,
-          mimeType: baseImageMimeType,
+      const imageRes = await fetch(baseImageUrl);
+      if (!imageRes.ok) throw new Error('Failed to fetch base image');
+      const buffer = await imageRes.arrayBuffer();
+      const base64 = Buffer.from(buffer).toString('base64');
+      const mimeType = imageRes.headers.get('content-type') || 'image/jpeg';
+      // For Imagen editing, provide the reference image
+      instance.referenceImages = [
+        {
+          referenceType: 'REFERENCE_TYPE_RAW',
+          referenceId: 1,
+          referenceImage: { bytesBase64Encoded: base64, mimeType },
         },
-      });
+      ];
     }
 
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts }],
+    const vertexRes = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        instances: [instance],
+        parameters: {
+          sampleCount: 1,
+          outputOptions: { mimeType: 'image/png' },
+        },
+      }),
     });
 
-    const textResponse = result.response.text();
+    if (!vertexRes.ok) {
+      const errData = await vertexRes.json();
+      console.error('[visualise-cake] Vertex AI error:', errData);
+      throw new Error(errData?.error?.message || 'Vertex AI error');
+    }
+
+    const vertexData = await vertexRes.json();
+    const prediction = vertexData?.predictions?.[0];
+
+    if (!prediction?.bytesBase64Encoded) {
+      throw new Error('No image returned from Vertex AI');
+    }
 
     return NextResponse.json({
       success: true,
-      message: textResponse,
-      // In a real Nano Banana API, this would return the generated base64 image strings.
-      // Since standard @google/generative-ai doesn't fully support arbitrary image generation natively returning images yet (usually returns text about it),
-      // we mock the generated string for now, but we've built the API piping correctly.
-      mockImagePrompt: prompt,
+      imageBase64: prediction.bytesBase64Encoded,
+      mimeType: prediction.mimeType || 'image/png',
+      message: '',
     });
   } catch (error: unknown) {
-    console.error('Gemini API Error:', error);
-    return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : 'Internal server error',
-      },
-      { status: 500 }
-    );
+    console.error('[visualise-cake] Unexpected error:', error);
+    const msg =
+      error instanceof Error ? error.message : 'Internal server error';
+    return NextResponse.json({ success: false, message: msg }, { status: 500 });
   }
 }
