@@ -1,92 +1,120 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI, Part } from '@google/generative-ai';
 
-const apiKey = process.env.GEMINI_API_KEY || '';
-const genAI = new GoogleGenerativeAI(apiKey);
+const GEMINI_MODEL = 'gemini-3.1-flash-image-preview';
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+const PLACEHOLDER_IMAGE =
+  'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=800';
 
 export async function POST(req: NextRequest) {
-  try {
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: 'Missing GEMINI_API_KEY environment variable' },
-        { status: 500 }
-      );
-    }
+  const apiKey = process.env.GEMINI_API_KEY;
 
+  if (!apiKey) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'Coming Soon',
+        placeholderImage: PLACEHOLDER_IMAGE,
+      },
+      { status: 200 }
+    );
+  }
+
+  try {
+    const body = await req.json();
     const {
-      cakeName,
+      name,
       shape,
       flavor,
       decorations,
-      additionalRequests,
       cakeText,
+      extraRequests,
       baseImageUrl,
-    } = await req.json();
+    } = body;
 
-    // 1. Fetch base image
-    let baseImageBytes = null;
-    let baseImageMimeType = '';
+    const prompt = `
+      You are an expert cake designer for ZamZam.
+      Generate a photorealistic, stunning image of a custom cake with these details:
+      - Cake name / text on cake: ${cakeText || name || 'Keep original'}
+      - Shape: ${shape || 'Keep original'}
+      - Flavor: ${flavor || 'Keep original'}
+      - Decorations: ${decorations || 'None'}
+      - Extra requests: ${extraRequests || 'None'}
+      Preserve all ZamZam branding elements. Only change what the customer requested.
+      Make it look professional and appetizing.
+    `.trim();
 
+    // Build the parts array — text always goes last
+    const parts: object[] = [];
+
+    // If base image provided, fetch it and include as inlineData
     if (baseImageUrl) {
-      const imgRes = await fetch(baseImageUrl);
-      if (imgRes.ok) {
-        const arrayBuffer = await imgRes.arrayBuffer();
-        baseImageBytes = Buffer.from(arrayBuffer).toString('base64');
-        baseImageMimeType = imgRes.headers.get('content-type') || 'image/jpeg';
-      }
-    }
+      const imageRes = await fetch(baseImageUrl);
+      if (!imageRes.ok) throw new Error('Failed to fetch base image');
+      const buffer = await imageRes.arrayBuffer();
+      const base64 = Buffer.from(buffer).toString('base64');
+      const mimeType = imageRes.headers.get('content-type') || 'image/jpeg';
 
-    // 2. Build the prompt
-    let prompt = `You are an expert cake designer for "ZamZam" (also known as Nano Banana).\n`;
-    prompt += `CRITICAL INSTRUCTION: Without changing any changes in the existing image (especially preserve ZamZam's branding chips on top of the cake) except the customer's request generate the description. Whenever a customer sends a request, make changes on those requests only, but keep the existing cake image style and branding intact.\n\n`;
-    prompt += `Create a photorealistic, stunning description/visualization of a custom cake based on:\n`;
-    prompt += `- Base Cake Reference/Vibe: ${cakeName || 'Custom Cake'}\n`;
-    if (shape) prompt += `- Shape: ${shape}\n`;
-    if (flavor) prompt += `- Flavor/Color Palette: ${flavor}\n`;
-    if (decorations?.length)
-      prompt += `- Decorations: ${decorations.join(', ')}\n`;
-    if (cakeText)
-      prompt += `- Text to perfectly write on the cake: "${cakeText}"\n`;
-    if (additionalRequests)
-      prompt += `- Extra requests: ${additionalRequests}\n`;
-    prompt += `\nMake the description vivid, professional, and appetizing.`;
-
-    const modelParams = { model: 'gemini-2.5-flash-image' };
-
-    const model = genAI.getGenerativeModel(modelParams);
-
-    const parts: Part[] = [{ text: prompt }];
-
-    if (baseImageBytes) {
       parts.push({
-        inlineData: {
-          data: baseImageBytes,
-          mimeType: baseImageMimeType,
-        },
+        inlineData: { mimeType, data: base64 },
       });
     }
 
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts }],
+    parts.push({ text: prompt });
+
+    // Call Gemini directly — authentication via x-goog-api-key header
+    const geminiRes = await fetch(GEMINI_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey,
+      },
+      body: JSON.stringify({
+        contents: [{ parts }],
+        generationConfig: {
+          responseModalities: ['TEXT', 'IMAGE'],
+        },
+      }),
     });
 
-    const textResponse = result.response.text();
+    if (!geminiRes.ok) {
+      const errData = await geminiRes.json();
+      console.error('[visualise-cake] Gemini error:', errData);
+      throw new Error(errData?.error?.message || 'Gemini API error');
+    }
 
+    const geminiData = await geminiRes.json();
+    const responseParts = geminiData?.candidates?.[0]?.content?.parts ?? [];
+
+    type Part = {
+      inlineData?: { data: string; mimeType: string };
+      text?: string;
+    };
+    const imagePart = responseParts.find((p: Part) => p.inlineData) as
+      | Part
+      | undefined;
+    const textPart = responseParts.find((p: Part) => p.text) as
+      | Part
+      | undefined;
+
+    if (imagePart?.inlineData) {
+      return NextResponse.json({
+        success: true,
+        imageBase64: imagePart.inlineData.data,
+        mimeType: imagePart.inlineData.mimeType,
+        message: textPart?.text || '',
+      });
+    }
+
+    // Fallback: no image returned
     return NextResponse.json({
       success: true,
-      message: textResponse,
-      // In a real Nano Banana API, this would return the generated base64 image strings.
-      // Since standard @google/generative-ai doesn't fully support arbitrary image generation natively returning images yet (usually returns text about it),
-      // we mock the generated string for now, but we've built the API piping correctly.
-      mockImagePrompt: prompt,
+      imageBase64: null,
+      message: textPart?.text || 'No image generated',
     });
   } catch (error: unknown) {
-    console.error('Gemini API Error:', error);
-    return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : 'Internal server error',
-      },
-      { status: 500 }
-    );
+    console.error('[visualise-cake] Error:', error);
+    const msg =
+      error instanceof Error ? error.message : 'Internal server error';
+    return NextResponse.json({ success: false, message: msg }, { status: 500 });
   }
 }
