@@ -83,14 +83,13 @@ export default function CreateCakePage() {
         .join(', ');
 
       message =
-        `Hi! I would like to order a Custom Cake.\n\n` +
         `*Cake Details:*\n` +
         `• Shape: ${selectedShape.charAt(0).toUpperCase() + selectedShape.slice(1)}\n` +
         `• Layers (${layers.length}):\n${layerDetails}\n` +
         `• Decorations: ${decoNames || 'None'}\n` +
         `• Text on Cake: ${inputValue.trim() || 'None'}\n\n`;
     } else {
-      message = `Hi! I would like to order a custom cake. I have a reference image to share for a quote.`;
+      message = `without changing any changes in the existing image(especially preserve ZamZam's branding chips on top of the cake) except the customers request generate a product ready photo`;
     }
 
     const whatsappUrl = `https://wa.me/917204094741?text=${encodeURIComponent(message)}`;
