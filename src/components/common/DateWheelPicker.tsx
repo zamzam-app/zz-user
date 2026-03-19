@@ -152,7 +152,7 @@ export function DateWheelPicker({
   const wheelClassNames = {
     optionItem: "font-['Epilogue'] text-sm font-medium text-[#0D141C]/45",
     highlightWrapper: 'bg-white/70 rounded-md border-y border-[#E8EDF2]',
-    highlightItem: "font-['Epilogue'] text-base font-extrabold text-[#0D141C]",
+    highlightItem: "font-['Epilogue'] text-base text-[#923a3a]",
   };
 
   const PICKER_ROW_HEIGHT = 36;
