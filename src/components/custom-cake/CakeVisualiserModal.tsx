@@ -6,6 +6,7 @@ import {
 } from '@ant-design/icons';
 import Image from 'next/image';
 import { useImageUpload } from '@/lib/hooks/useImageUpload';
+import { loadStoredCakeUserDetails } from '@/components/cake/CakeUserDetailsModal';
 
 interface CakeVisualiserModalProps {
   isOpen: boolean;
@@ -41,6 +42,18 @@ export const CakeVisualiserModal = ({
   const [isQuoting, setIsQuoting] = useState(false);
 
   const { upload } = useImageUpload('cake-visualiser');
+  const { upload: uploadToCustomCakes } = useImageUpload('custom-cakes');
+
+  const buildCustomCakePrompt = useCallback((): string => {
+    const parts: string[] = [cakeName];
+    if (shape) parts.push(`${shape} shape`);
+    if (flavor) parts.push(`${flavor} flavor`);
+    if (decorations.length)
+      parts.push(`decorations: ${decorations.join(', ')}`);
+    if (cakeText?.trim()) parts.push(`text: ${cakeText.trim()}`);
+    if (additionalRequests?.trim()) parts.push(additionalRequests.trim());
+    return parts.filter(Boolean).join(', ');
+  }, [cakeName, shape, flavor, decorations, cakeText, additionalRequests]);
 
   const handleGenerate = useCallback(async () => {
     setIsLoading(true);
@@ -77,6 +90,45 @@ export const CakeVisualiserModal = ({
         setImageBase64(data.imageBase64);
         setImageMime(data.mimeType || 'image/png');
         setFallbackText(null);
+
+        // Upload to Cloudinary and send to custom-cakes API (only when cake is generated)
+        try {
+          const mime = data.mimeType || 'image/png';
+          const ext = mime.includes('png')
+            ? 'png'
+            : mime.includes('jpeg') || mime.includes('jpg')
+              ? 'jpg'
+              : 'png';
+          const binary = atob(data.imageBase64);
+          const bytes = new Uint8Array(binary.length);
+          for (let i = 0; i < binary.length; i++)
+            bytes[i] = binary.charCodeAt(i);
+          const blob = new Blob([bytes], { type: mime });
+          const file = new File([blob], `cake-preview.${ext}`, { type: mime });
+          const imageUrl = await uploadToCustomCakes(file);
+          const prompt = buildCustomCakePrompt();
+          const stored = loadStoredCakeUserDetails();
+          const phone = (stored.phone ?? '').trim();
+          const dob = stored.dob?.trim() || undefined;
+          const gender =
+            stored.gender === 'male' || stored.gender === 'female'
+              ? stored.gender
+              : undefined;
+          const customCakesUrl = `${process.env.NEXT_PUBLIC_BASE_URL || '/api'}/custom-cakes`;
+          await fetch(customCakesUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              prompt,
+              imageUrl,
+              phone,
+              ...(dob && { dob }),
+              ...(gender && { gender }),
+            }),
+          });
+        } catch (saveErr) {
+          console.error('Failed to save custom cake to backend:', saveErr);
+        }
       } else {
         setFallbackText(data.message);
       }
@@ -94,6 +146,8 @@ export const CakeVisualiserModal = ({
     additionalRequests,
     cakeText,
     baseImageUrl,
+    uploadToCustomCakes,
+    buildCustomCakePrompt,
   ]);
 
   useEffect(() => {
