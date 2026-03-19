@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { DatePicker, Input, message } from 'antd';
+import { Input, message } from 'antd';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
+import { DateWheelPicker } from '@/components/common/DateWheelPicker';
 
 interface CakeUserDetailsModalProps {
   isOpen: boolean;
@@ -45,8 +46,8 @@ export const CakeUserDetailsModal = ({
       message.error('Enter a valid 10-digit mobile number');
       return false;
     }
-    if (!dob) {
-      message.error('Date of birth is required');
+    if (!dob?.isValid()) {
+      message.error('Please select a valid date of birth');
       return false;
     }
     if (!isValidPastDate(dob)) {
@@ -120,15 +121,11 @@ export const CakeUserDetailsModal = ({
             >
               Date of birth <span className='text-red-500'>*</span>
             </label>
-            <DatePicker
+            <DateWheelPicker
+              key={dob ? String(dob.valueOf()) : 'empty'}
               id='cake-user-dob'
               value={dob}
-              onChange={(d) => setDob(d)}
-              format='DD/MM/YYYY'
-              placeholder='Select date of birth'
-              className="w-full font-['Epilogue'] rounded-xl [&.ant-picker]:rounded-xl"
-              size='large'
-              allowClear
+              onChange={(date) => setDob(date)}
             />
           </div>
 
