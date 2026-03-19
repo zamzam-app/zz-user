@@ -8,6 +8,7 @@ import { useParams } from 'next/navigation';
 import { productApi } from '@/lib/services/api/product.api';
 import { Product } from '@/types/product';
 import { CakeVisualiserModal } from '@/components/custom-cake/CakeVisualiserModal';
+import { CakeUserDetailsModal } from '@/components/cake/CakeUserDetailsModal';
 
 const DEFAULT_OPTIONS = {
   shapes: ['Round', 'Square', 'Heart'],
@@ -27,6 +28,7 @@ export default function CustomizeCakePage() {
   const [cakeText, setCakeText] = useState('');
   const [additionalRequests, setAdditionalRequests] = useState('');
   const [isVisualiserOpen, setIsVisualiserOpen] = useState(false);
+  const [isUserDetailsOpen, setIsUserDetailsOpen] = useState(false);
 
   useEffect(() => {
     if (!id) {
@@ -264,7 +266,7 @@ export default function CustomizeCakePage() {
           />
         </button>
         <button
-          onClick={() => setIsVisualiserOpen(true)}
+          onClick={() => setIsUserDetailsOpen(true)}
           disabled={!hasCustomizations}
           className={`flex-1 py-4 rounded-2xl font-['Epilogue'] font-bold text-lg transition-transform shadow-md flex items-center justify-center gap-2 ${
             hasCustomizations
@@ -277,6 +279,15 @@ export default function CustomizeCakePage() {
         </button>
       </div>
 
+      {/* User details gate modal */}
+      <CakeUserDetailsModal
+        isOpen={isUserDetailsOpen}
+        onClose={() => setIsUserDetailsOpen(false)}
+        onConfirm={() => {
+          setIsUserDetailsOpen(false);
+          setIsVisualiserOpen(true);
+        }}
+      />
       {/* Visualiser Modal */}
       <CakeVisualiserModal
         isOpen={isVisualiserOpen}
