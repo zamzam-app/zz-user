@@ -150,15 +150,26 @@ export function DateWheelPicker({
   );
 
   const wheelClassNames = {
-    optionItem: "font-['Epilogue'] text-sm",
-    highlightItem: "font-['Epilogue'] font-semibold text-[#0D141C]",
+    optionItem: "font-['Epilogue'] text-sm font-medium text-[#0D141C]/45",
+    highlightWrapper: 'bg-white/70 rounded-md border-y border-[#E8EDF2]',
+    highlightItem: "font-['Epilogue'] text-base font-extrabold text-[#0D141C]",
   };
+
+  const PICKER_ROW_HEIGHT = 36;
+  const VISIBLE_ROWS = 3;
+  const pickerHeight = PICKER_ROW_HEIGHT * VISIBLE_ROWS; // 108px
 
   return (
     <div
       id={id}
-      className={`rounded-xl border border-[#E8EDF2] bg-[#FDFCFB] overflow-hidden ${className}`}
+      className={`date-wheel-picker rounded-xl border border-[#E8EDF2] bg-[#FDFCFB] overflow-hidden ${className}`}
+      style={
+        {
+          ['--date-wheel-picker-height' as string]: `${pickerHeight}px`,
+        } as React.CSSProperties
+      }
     >
+      <style>{`.date-wheel-picker [data-rwp-wrapper]{height:var(--date-wheel-picker-height) !important}.date-wheel-picker [data-rwp]{height:var(--date-wheel-picker-height) !important}`}</style>
       <WheelPickerWrapper className='flex'>
         <WheelPicker
           options={dayOptions}
