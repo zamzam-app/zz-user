@@ -6,6 +6,37 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { DateWheelPicker } from '@/components/common/DateWheelPicker';
 
+const CAKE_USER_DETAILS_STORAGE_KEY = 'cakeUserDetails';
+
+export interface StoredCakeUserDetails {
+  phone: string;
+  dob: string | null;
+  gender: string;
+}
+
+export function loadStoredCakeUserDetails(): Partial<StoredCakeUserDetails> {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = localStorage.getItem(CAKE_USER_DETAILS_STORAGE_KEY);
+    if (!raw) return {};
+    return JSON.parse(raw) as Partial<StoredCakeUserDetails>;
+  } catch {
+    return {};
+  }
+}
+
+function saveStoredDetails(details: StoredCakeUserDetails) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(
+      CAKE_USER_DETAILS_STORAGE_KEY,
+      JSON.stringify(details)
+    );
+  } catch {
+    // ignore
+  }
+}
+
 interface CakeUserDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -28,14 +59,38 @@ function isValidPhone(value: string): boolean {
   return digits.length === 10 && /^[6-9]\d{9}$/.test(digits);
 }
 
+function getInitialFormState(): {
+  number: string;
+  dob: Dayjs | null;
+  gender: string;
+} {
+  const stored = loadStoredCakeUserDetails();
+  return {
+    number: stored.phone ?? '',
+    dob: stored.dob && dayjs(stored.dob).isValid() ? dayjs(stored.dob) : null,
+    gender: stored.gender ?? '',
+  };
+}
+
 export const CakeUserDetailsModal = ({
   isOpen,
   onClose,
   onConfirm,
 }: CakeUserDetailsModalProps) => {
-  const [number, setNumber] = useState('');
-  const [dob, setDob] = useState<Dayjs | null>(null);
-  const [gender, setGender] = useState<string>('');
+  const [form, setForm] = useState(getInitialFormState);
+  const { number, dob, gender } = form;
+  const setNumber = useCallback(
+    (value: string) => setForm((f) => ({ ...f, number: value })),
+    []
+  );
+  const setDob = useCallback(
+    (value: Dayjs | null) => setForm((f) => ({ ...f, dob: value })),
+    []
+  );
+  const setGender = useCallback(
+    (value: string) => setForm((f) => ({ ...f, gender: value })),
+    []
+  );
 
   const validate = useCallback((): boolean => {
     if (!number.trim()) {
@@ -60,13 +115,16 @@ export const CakeUserDetailsModal = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
+    saveStoredDetails({
+      phone: number.trim(),
+      dob: dob?.isValid() ? dob.toISOString() : null,
+      gender: gender || '',
+    });
     onConfirm();
   };
 
   const handleClose = () => {
-    setNumber('');
-    setDob(null);
-    setGender('');
+    setForm({ number: '', dob: null, gender: '' });
     onClose();
   };
 
