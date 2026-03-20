@@ -78,7 +78,7 @@ export default function LibraryPage() {
                 placeholder='Search cakes by name or description...'
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className='w-full flex-1 py-2.5 pl-11 pr-10 rounded-xl bg-transparent font-["Epilogue"] text-sm placeholder:text-gray-500 focus:outline-none'
+                className='w-full flex-1 py-2.5 pl-11 pr-10 rounded-xl bg-transparent font-["Epilogue"] text-base placeholder:text-gray-500 focus:outline-none'
                 aria-label='Search cakes'
               />
               <button
