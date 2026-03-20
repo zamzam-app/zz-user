@@ -168,7 +168,7 @@ export const CakeUserDetailsModal = ({
               placeholder='10-digit mobile number'
               maxLength={14}
               size='large'
-              className="font-['Epilogue'] rounded-xl"
+              className="font-['Epilogue'] rounded-xl text-base"
             />
           </div>
 
@@ -180,7 +180,6 @@ export const CakeUserDetailsModal = ({
               Date of birth <span className='text-red-500'>*</span>
             </label>
             <DateWheelPicker
-              key={dob ? String(dob.valueOf()) : 'empty'}
               id='cake-user-dob'
               value={dob}
               onChange={(date) => setDob(date)}
