@@ -16,7 +16,7 @@ export const TextTopperSection = ({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         maxLength={maxLength}
-        className='w-full p-5 rounded-xl bg-[#FFF9F0] text-sm text-gray-900 border-2 border-gray-300'
+        className='w-full p-5 rounded-xl bg-[#FFF9F0] text-base text-gray-900 border-2 border-gray-300'
         placeholder='E.g., "Happy Birthday Sarah!"'
         rows={2}
       />

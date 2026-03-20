@@ -84,7 +84,7 @@ export const UploadReferenceTab = ({
         value={uploadNotes}
         onChange={(e) => onUploadNotesChange(e.target.value)}
         placeholder=' Tell us how you want this to be'
-        className='w-full p-8 rounded-xl bg-[#FFF9F0] text-sm text-gray-900 border-2 border-gray-300'
+        className='w-full p-8 rounded-xl bg-[#FFF9F0] text-base text-gray-900 border-2 border-gray-300'
         rows={4}
       />
       {/* Bottom fixed button */}

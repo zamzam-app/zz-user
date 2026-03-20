@@ -161,7 +161,7 @@ export default function CustomizeCakePage() {
             placeholder='Add text for your cake'
             value={cakeText}
             onChange={(e) => setCakeText(e.target.value)}
-            className='w-full p-4 rounded-xl bg-[#FDFCFB] border border-[#E8EDF2] text-sm focus:outline-none resize-none'
+            className='w-full p-4 rounded-xl bg-[#FDFCFB] border border-[#E8EDF2] text-base focus:outline-none resize-none'
           />
         </div>
 
@@ -245,7 +245,7 @@ export default function CustomizeCakePage() {
             placeholder='e.g., specific color palette, allergy notes, etc.'
             value={additionalRequests}
             onChange={(e) => setAdditionalRequests(e.target.value)}
-            className="w-full p-4 rounded-xl bg-[#FDFCFB] border border-[#E8EDF2] font-['Epilogue'] text-sm focus:outline-none resize-none"
+            className="w-full p-4 rounded-xl bg-[#FDFCFB] border border-[#E8EDF2] font-['Epilogue'] text-base focus:outline-none resize-none"
           />
         </div>
       </main>
