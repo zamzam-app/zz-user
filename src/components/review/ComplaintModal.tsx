@@ -71,7 +71,7 @@ export function ComplaintModal({
           }
           maxLength={MAX_COMPLAINT_LENGTH}
           rows={8}
-          className="font-['Epilogue'] rounded-xl bg-[#F1F5F3] border-none focus:ring-2 focus:ring-[#3DCA84]"
+          className="font-['Epilogue'] rounded-xl bg-[#F1F5F3] border-none focus:ring-2 focus:ring-[#3DCA84] text-base"
         />
       </div>
     </Modal>

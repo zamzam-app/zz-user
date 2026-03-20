@@ -131,7 +131,7 @@ export function DynamicReviewForm({
           >
             <Input
               placeholder='Enter your name'
-              className='w-full rounded-xl px-4 py-4 h-12
+              className='w-full rounded-xl px-4 py-4 h-12 text-base
              border-none! 
              bg-[#F1F5F3]! 
              text-[#4A6D5F]! 
@@ -165,7 +165,7 @@ export function DynamicReviewForm({
                 <span className='text-[#4A6D5F] font-medium mr-1'>+91</span>
               }
               maxLength={10}
-              className='w-full rounded-xl px-4 py-4 h-12
+              className='w-full rounded-xl px-4 py-4 h-12 text-base
                          border-none! 
                          border-transparent!
                          shadow-none!
@@ -207,7 +207,7 @@ export function DynamicReviewForm({
             <Input
               type='email'
               placeholder='Enter your email'
-              className='w-full rounded-xl px-4 py-4 h-12
+              className='w-full rounded-xl px-4 py-4 h-12 text-base
              border-none! 
              bg-[#F1F5F3]! 
              text-[#4A6D5F]! 
@@ -231,7 +231,7 @@ export function DynamicReviewForm({
             <DatePicker
               placeholder='Select date of birth'
               format='DD/MM/YYYY'
-              className='w-full rounded-xl px-4 py-4 h-12
+              className='w-full rounded-xl px-4 py-4 h-12 text-base
               border-none! 
               bg-[#F1F5F3]! 
               text-[#4A6D5F]! 
@@ -313,7 +313,7 @@ export function DynamicReviewForm({
                   {question.type === 'short_answer' && (
                     <Input
                       placeholder='Your answer'
-                      className='w-full rounded-xl px-4 py-4 h-12
+                      className='w-full rounded-xl px-4 py-4 h-12 text-base
                                  border-none! 
                                bg-[#F1F5F3]! 
                                text-[#4A6D5F]! 
@@ -329,7 +329,7 @@ export function DynamicReviewForm({
                     <Input.TextArea
                       rows={4}
                       placeholder='Your answer'
-                      className='w-full rounded-xl px-4 py-4 h-12
+                      className='w-full rounded-xl px-4 py-4 h-12 text-base
                                  border-none! 
                                bg-[#F1F5F3]! 
                                text-[#32403B]! 
