@@ -12,6 +12,12 @@ export type DynamicReviewFormProps = {
   questions: FormQuestion[];
   outletName?: string;
   outletAddress?: string;
+  previousReviews?: Array<{
+    name: string;
+    rating: number;
+    text: string;
+    date?: string;
+  }>;
   onSubmit: (values: Record<string, unknown>) => void;
   onFinishFailed?: (info: { errorFields: Array<{ errors: string[] }> }) => void;
   onComplaintSubmit?: (reason: string) => void;
@@ -56,6 +62,7 @@ export function DynamicReviewForm({
   questions,
   outletName,
   outletAddress,
+  previousReviews,
   onSubmit,
   onFinishFailed,
   onComplaintSubmit,
@@ -91,6 +98,30 @@ export function DynamicReviewForm({
     [onComplaintSubmit]
   );
 
+  const reviewPreviewItems =
+    previousReviews && previousReviews.length > 0
+      ? previousReviews
+      : [
+          {
+            name: 'Ananya',
+            rating: 5,
+            text: 'Fresh bakes and quick service. Loved the soft sponge!',
+            date: '2 days ago',
+          },
+          {
+            name: 'Rohit',
+            rating: 4.5,
+            text: 'Clean outlet, friendly staff. The pastries were spot on.',
+            date: 'Last week',
+          },
+          {
+            name: 'Meera',
+            rating: 5,
+            text: 'Great taste and consistent quality every visit.',
+            date: '3 weeks ago',
+          },
+        ];
+
   return (
     <div className='pt-4 pb-[calc(7rem+env(safe-area-inset-bottom))]'>
       {/* Header: outlet name (form-name size), address, form title (large) */}
@@ -109,6 +140,50 @@ export function DynamicReviewForm({
           Feedback Form
         </h1>
       </header>
+
+      <section className='px-6 pb-6'>
+        <div className='max-w-2xl mx-auto'>
+          <div className='flex items-end justify-between'>
+            <div>
+              <p className="font-['Epilogue'] text-sm text-gray-500">
+                Recent customer reviews
+              </p>
+              <h2 className="font-['Epilogue'] text-lg font-semibold text-gray-900">
+                What people say about {outletName ?? 'this outlet'}
+              </h2>
+            </div>
+            <span className="hidden sm:inline-block font-['Epilogue'] text-xs text-gray-400">
+              {reviewPreviewItems.length} highlights
+            </span>
+          </div>
+          <div className='mt-4 flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x snap-mandatory'>
+            {reviewPreviewItems.map((review, index) => (
+              <article
+                key={`${review.name}-${index}`}
+                className='min-w-[240px] max-w-[260px] snap-start rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-[0_6px_20px_rgba(15,23,42,0.06)]'
+              >
+                <div className='flex items-center gap-1 text-[#3DCA84]'>
+                  <StarFilled className='text-sm' />
+                  <span className="font-['Epilogue'] text-sm font-semibold text-gray-900">
+                    {review.rating.toFixed(1)}
+                  </span>
+                </div>
+                <p className="mt-2 font-['Epilogue'] text-sm text-gray-700 leading-relaxed">
+                  {review.text}
+                </p>
+                <div className='mt-3 flex items-center justify-between text-xs text-gray-500'>
+                  <span className="font-['Epilogue'] font-medium text-gray-600">
+                    {review.name}
+                  </span>
+                  {review.date && (
+                    <span className="font-['Epilogue']">{review.date}</span>
+                  )}
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
 
       <div className='px-6 pt-2 mb-8 review-form-no-inline-errors'>
         <Form
