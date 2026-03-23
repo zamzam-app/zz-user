@@ -18,6 +18,7 @@ export type DynamicReviewFormProps = {
     text: string;
     date?: string;
   }>;
+  renderDob?: (form: FormInstance) => React.ReactNode;
   onSubmit: (values: Record<string, unknown>) => void;
   onFinishFailed?: (info: { errorFields: Array<{ errors: string[] }> }) => void;
   onComplaintSubmit?: (reason: string) => void;
@@ -26,6 +27,15 @@ export type DynamicReviewFormProps = {
 
 const activeQuestions = (questions: FormQuestion[]) =>
   questions.filter((q) => q.isActive && !q.isDeleted);
+
+const displayCustomerName = (name: string): string => {
+  const trimmed = name.trim();
+  if (!trimmed) return 'Customer';
+  const first = trimmed.split(/\s+/)[0];
+  if (first.length >= 10) return first;
+  const maxLen = 12;
+  return trimmed.length > maxLen ? `${trimmed.slice(0, maxLen)}…` : trimmed;
+};
 
 function RateField({
   value,
@@ -63,6 +73,7 @@ export function DynamicReviewForm({
   outletName,
   outletAddress,
   previousReviews,
+  renderDob,
   onSubmit,
   onFinishFailed,
   onComplaintSubmit,
@@ -99,7 +110,7 @@ export function DynamicReviewForm({
   );
 
   const reviewPreviewItems =
-    previousReviews && previousReviews.length > 0
+    previousReviews !== undefined
       ? previousReviews
       : [
           {
@@ -129,59 +140,48 @@ export function DynamicReviewForm({
         {outletName && (
           <h2 className="font-['Epilogue'] font-semibold text-[22px] text-gray-900">
             {outletName}
+            {outletAddress ? `, ${outletAddress}` : ''}
           </h2>
         )}
-        {outletAddress && (
-          <p className="font-['Epilogue'] text-sm text-gray-500 mt-1">
-            {outletAddress}
-          </p>
-        )}
-        <h1 className="font-['Epilogue'] font-extrabold tracking-tight text-gray-900 text-base sm:text-xl md:text-2xl lg:text-3xl truncate max-w-[70%] mx-auto mt-2 translate-y-1 md:translate-y-2">
-          Feedback Form
-        </h1>
       </header>
 
       <section className='px-6 pb-6'>
         <div className='max-w-2xl mx-auto'>
           <div className='flex items-end justify-between'>
             <div>
-              <p className="font-['Epilogue'] text-sm text-gray-500">
-                Recent customer reviews
-              </p>
-              <h2 className="font-['Epilogue'] text-lg font-semibold text-gray-900">
+              <h1 className="font-['Epilogue'] text-lg font-semibold text-gray-900">
                 What people say about {outletName ?? 'this outlet'}
-              </h2>
+              </h1>
             </div>
-            <span className="hidden sm:inline-block font-['Epilogue'] text-xs text-gray-400">
-              {reviewPreviewItems.length} highlights
-            </span>
           </div>
-          <div className='mt-4 flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x snap-mandatory'>
-            {reviewPreviewItems.map((review, index) => (
-              <article
-                key={`${review.name}-${index}`}
-                className='min-w-[240px] max-w-[260px] snap-start rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-[0_6px_20px_rgba(15,23,42,0.06)]'
-              >
-                <div className='flex items-center gap-1 text-[#3DCA84]'>
-                  <StarFilled className='text-sm' />
-                  <span className="font-['Epilogue'] text-sm font-semibold text-gray-900">
-                    {review.rating.toFixed(1)}
-                  </span>
-                </div>
-                <p className="mt-2 font-['Epilogue'] text-sm text-gray-700 leading-relaxed">
-                  {review.text}
-                </p>
-                <div className='mt-3 flex items-center justify-between text-xs text-gray-500'>
-                  <span className="font-['Epilogue'] font-medium text-gray-600">
-                    {review.name}
-                  </span>
-                  {review.date && (
-                    <span className="font-['Epilogue']">{review.date}</span>
-                  )}
-                </div>
-              </article>
-            ))}
-          </div>
+          {reviewPreviewItems.length > 0 ? (
+            <div className='mt-1 flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'>
+              {reviewPreviewItems.map((review, index) => (
+                <article
+                  key={`${review.name}-${index}`}
+                  className='min-w-[240px] max-w-[260px] snap-start rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-[0_6px_20px_rgba(15,23,42,0.06)]'
+                >
+                  <div className='flex items-center gap-1 text-[#3DCA84]'>
+                    <StarFilled className='text-sm' />
+                    <span className="font-['Epilogue'] text-sm font-semibold text-gray-900">
+                      {review.rating.toFixed(1)}
+                    </span>
+                  </div>
+                  <p className="mt-2 font-['Epilogue'] text-sm text-gray-700 leading-relaxed">
+                    {review.text}
+                  </p>
+                  <div className='mt-3 flex items-center justify-between text-xs text-gray-500'>
+                    <span className="font-['Epilogue'] font-medium text-gray-600">
+                      {displayCustomerName(review.name)}
+                    </span>
+                    {review.date && (
+                      <span className="font-['Epilogue']">{review.date}</span>
+                    )}
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : null}
         </div>
       </section>
 
@@ -303,24 +303,28 @@ export function DynamicReviewForm({
               </span>
             }
           >
-            <DatePicker
-              placeholder='Select date of birth'
-              format='DD/MM/YYYY'
-              className='w-full rounded-xl px-4 py-4 h-12 text-base
-              border-none! 
-              bg-[#F1F5F3]! 
-              text-[#4A6D5F]! 
-              [&.ant-picker]:border-none!
-              [&.ant-picker]:shadow-none!
-              [&.ant-picker]:bg-[#F1F5F3]!
-              [&.ant-picker:hover]:border-none!
-              [&.ant-picker:hover]:bg-[#F1F5F3]!
-              /*Focus State - Green Ring */
-              [&.ant-picker-focused]:ring-2!
-              [&.ant-picker-focused]:ring-[#3DCA84]!
-              [&.ant-picker-focused]:shadow-none!
-              transition-all'
-            />
+            {renderDob ? (
+              renderDob(form)
+            ) : (
+              <DatePicker
+                placeholder='Select date of birth'
+                format='DD/MM/YYYY'
+                className='w-full rounded-xl px-4 py-4 h-12 text-base
+                border-none! 
+                bg-[#F1F5F3]! 
+                text-[#4A6D5F]! 
+                [&.ant-picker]:border-none!
+                [&.ant-picker]:shadow-none!
+                [&.ant-picker]:bg-[#F1F5F3]!
+                [&.ant-picker:hover]:border-none!
+                [&.ant-picker:hover]:bg-[#F1F5F3]!
+                /*Focus State - Green Ring */
+                [&.ant-picker-focused]:ring-2!
+                [&.ant-picker-focused]:ring-[#3DCA84]!
+                [&.ant-picker-focused]:shadow-none!
+                transition-all'
+              />
+            )}
           </Form.Item>
 
           {/* DYNAMIC QUESTIONS */}
