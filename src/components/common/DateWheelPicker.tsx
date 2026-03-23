@@ -36,6 +36,8 @@ export interface DateWheelPickerProps {
   maxYear?: number;
   id?: string;
   className?: string;
+  highlightTextClassName?: string;
+  optionTextClassName?: string;
 }
 
 const CURRENT_YEAR = dayjs().year();
@@ -48,6 +50,8 @@ export function DateWheelPicker({
   maxYear = CURRENT_YEAR,
   id,
   className = '',
+  highlightTextClassName = "font-['Epilogue'] text-base text-[#923a3a]",
+  optionTextClassName = "font-['Epilogue'] text-sm font-medium text-[#0D141C]/45",
 }: DateWheelPickerProps) {
   const getDefaultParts = useCallback(
     () => ({
@@ -150,9 +154,9 @@ export function DateWheelPicker({
   );
 
   const wheelClassNames = {
-    optionItem: "font-['Epilogue'] text-sm font-medium text-[#0D141C]/45",
+    optionItem: optionTextClassName,
     highlightWrapper: 'bg-white/70 rounded-md border-y border-[#E8EDF2]',
-    highlightItem: "font-['Epilogue'] text-base text-[#923a3a]",
+    highlightItem: highlightTextClassName,
   };
 
   const PICKER_ROW_HEIGHT = 36;
