@@ -19,6 +19,7 @@ const Button: React.FC<ButtonProps> = ({
   onClick,
   fullWidth = false,
   variant = 'primary',
+  disabled = false,
   className = '',
 }) => {
   const baseStyles = `
@@ -35,6 +36,9 @@ const Button: React.FC<ButtonProps> = ({
     transition-all duration-300 ease-in-out
     cursor-pointer
     active:scale-95
+    disabled:opacity-60
+    disabled:cursor-not-allowed
+    disabled:active:scale-100
   `;
 
   const variants = {
@@ -64,6 +68,16 @@ const Button: React.FC<ButtonProps> = ({
       : '!bg-white !text-[#923a3a] !border-[#923a3a] hover:!bg-[#923a3a] hover:!text-white';
 
   if (href) {
+    if (disabled) {
+      return (
+        <span
+          className={`${finalClass} ${linkOverrideClass}`}
+          aria-disabled='true'
+        >
+          {children}
+        </span>
+      );
+    }
     return (
       <Link href={href} className={`${finalClass} ${linkOverrideClass}`}>
         {children}
@@ -72,7 +86,7 @@ const Button: React.FC<ButtonProps> = ({
   }
 
   return (
-    <button onClick={onClick} className={finalClass}>
+    <button onClick={onClick} className={finalClass} disabled={disabled}>
       {children}
     </button>
   );

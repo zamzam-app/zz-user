@@ -7,6 +7,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { DynamicReviewForm } from '@/components/review/DynamicReviewForm';
 import { OtpStep } from '@/components/review/OtpStep';
 import { SuccessStep } from '@/components/review/SuccessStep';
+import { DateWheelPicker } from '@/components/common/DateWheelPicker';
 import { outletApi } from '@/lib/services/api/outlet.api';
 import { reviewApi } from '@/lib/services/api/review.api';
 import { authApi } from '@/lib/services/api/auth.api';
@@ -19,6 +20,11 @@ import type { FormData, FormQuestion } from '@/types/form';
 
 const activeQuestions = (questions: FormQuestion[]) =>
   questions.filter((q) => q.isActive && !q.isDeleted);
+
+const TARGET_REVIEW_QUESTION = 'overall experience at the store';
+
+const normalizeText = (value: string) =>
+  value.toLowerCase().replace(/\s+/g, ' ').trim();
 
 function toDobIso(dob: unknown): string | undefined {
   if (dob == null) return undefined;
@@ -93,6 +99,92 @@ export default function ReviewFormPage() {
         : null,
     [outletData]
   );
+
+  const targetQuestionId = useMemo(() => {
+    if (!formData) return undefined;
+    const match = activeQuestions(formData.questions).find(
+      (q) =>
+        q.title &&
+        normalizeText(q.title) === normalizeText(TARGET_REVIEW_QUESTION)
+    );
+    return match?._id;
+  }, [formData]);
+
+  const { data: recentReviewsData } = useQuery({
+    queryKey: ['reviews', outletData?._id],
+    queryFn: () =>
+      reviewApi.getAll({
+        outletId: outletData?._id,
+        limit: 6,
+        page: 1,
+      }),
+    enabled: !!outletData?._id,
+  });
+
+  const recentReviews = useMemo(() => {
+    if (!recentReviewsData || !targetQuestionId) return [];
+    const rawList = Array.isArray(recentReviewsData)
+      ? recentReviewsData
+      : Array.isArray(recentReviewsData.data)
+        ? recentReviewsData.data
+        : Array.isArray(
+              (recentReviewsData as unknown as { reviews?: unknown }).reviews
+            )
+          ? (recentReviewsData as unknown as { reviews: unknown[] }).reviews
+          : [];
+
+    return rawList
+      .map((review) => {
+        const responses =
+          (review as { userResponses?: unknown[] }).userResponses ??
+          (review as { response?: unknown[] }).response ??
+          [];
+        const answer = (
+          responses as Array<{
+            questionId?: string | { _id?: string; title?: string };
+            answer?: unknown;
+          }>
+        ).find((resp) => {
+          if (!resp.questionId) return false;
+          if (typeof resp.questionId === 'string') {
+            return resp.questionId === targetQuestionId;
+          }
+          const title = resp.questionId.title;
+          return (
+            typeof title === 'string' &&
+            normalizeText(title) === normalizeText(TARGET_REVIEW_QUESTION)
+          );
+        })?.answer;
+        const text = Array.isArray(answer)
+          ? answer.map(String).join(', ')
+          : answer != null
+            ? String(answer)
+            : '';
+        const overallRating =
+          (review as { overallRating?: number }).overallRating ??
+          (review as { rating?: number }).rating ??
+          0;
+        const customerName =
+          (review as { userId?: { name?: string } }).userId?.name ??
+          (review as { user?: { name?: string } }).user?.name ??
+          'Customer';
+        return {
+          name: customerName,
+          rating: Number.isFinite(overallRating) ? Number(overallRating) : 0,
+          text,
+          date: (review as { createdAt?: string }).createdAt
+            ? new Date(
+                (review as { createdAt: string }).createdAt
+              ).toLocaleDateString('en-IN', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+              })
+            : undefined,
+        };
+      })
+      .filter((item) => item.text.trim().length > 0 && item.rating > 4.3);
+  }, [recentReviewsData, targetQuestionId]);
 
   const handleSubmit = useCallback(
     async (values: Record<string, unknown>) => {
@@ -283,6 +375,15 @@ export default function ReviewFormPage() {
           questions={formData.questions}
           outletName={outletData.name}
           outletAddress={outletData.address}
+          previousReviews={recentReviews}
+          renderDob={(formInstance) => (
+            <DateWheelPicker
+              value={formInstance.getFieldValue('dob') ?? null}
+              onChange={(date) => formInstance.setFieldValue('dob', date)}
+              className='bg-white'
+              highlightTextClassName="font-['Epilogue'] text-base text-[#3DCA84]"
+            />
+          )}
           onSubmit={handleSubmit}
           onFinishFailed={handleFinishFailed}
           onComplaintSubmit={handleComplaintSubmit}

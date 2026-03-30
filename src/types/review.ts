@@ -41,6 +41,20 @@ export interface CreateReviewResponse {
   [key: string]: unknown;
 }
 
+/** Query params for GET /review. */
+export interface QueryReviewDto {
+  outletId?: string;
+  formId?: string;
+  userId?: string;
+  isComplaint?: boolean;
+  isDeleted?: boolean;
+  isActive?: boolean;
+  page?: number;
+  limit?: number;
+  sort?: string;
+  [key: string]: string | number | boolean | undefined;
+}
+
 /** Full review resource (list/detail responses). */
 export interface IReview {
   _id?: string;
@@ -59,4 +73,17 @@ export interface IReview {
   resolutionNotes?: string;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface ReviewMeta {
+  total: number;
+  currentPage: number;
+  hasPrevPage: boolean;
+  hasNextPage: boolean;
+  limit: number;
+}
+
+export interface ReviewListResponse {
+  data: IReview[];
+  meta?: ReviewMeta;
 }

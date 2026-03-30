@@ -14,6 +14,7 @@ export const outletEndpoints = {
 };
 
 export const reviewEndpoints = {
+  list: '/review',
   create: '/review',
   submitWithOtp: '/review/submit-with-otp',
 };

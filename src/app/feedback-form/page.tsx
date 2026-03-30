@@ -5,6 +5,9 @@ import type { UploadChangeParam } from 'antd/es/upload';
 import type { UploadFile } from 'antd/es/upload/interface';
 import { Upload as UploadIcon, ChevronLeft, Send, Star } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
+import { reviewApi } from '@/lib/services/api/review.api';
+import type { IReview } from '@/types/review';
 
 const { Dragger } = Upload;
 const { TextArea } = Input;
@@ -12,6 +15,17 @@ const { TextArea } = Input;
 export default function FeedbackPage() {
   const router = useRouter();
   const [form] = Form.useForm();
+
+  const {
+    data: reviewList,
+    isLoading: reviewsLoading,
+    isError: reviewsError,
+  } = useQuery({
+    queryKey: ['reviews', { limit: 5, page: 1 }],
+    queryFn: () => reviewApi.getAll({ limit: 5, page: 1, isDeleted: false }),
+  });
+
+  const reviews: IReview[] = reviewList?.data ?? [];
 
   const normFile = (e: UploadChangeParam<UploadFile>) => {
     if (Array.isArray(e)) return e;
@@ -41,6 +55,60 @@ export default function FeedbackPage() {
       </header>
 
       <div className='container mx-auto px-4 py-8 max-w-4xl'>
+        {/* Recent Reviews */}
+        <section className='mb-6'>
+          <div className='bg-white rounded-3xl shadow-sm border border-[#D4AF37]/10 p-6 md:p-8'>
+            <div className='flex items-center justify-between mb-4'>
+              <h2 className='text-lg font-semibold text-[#5D4037]'>
+                Recent Reviews
+              </h2>
+              {reviewList?.meta?.total != null ? (
+                <span className='text-sm text-gray-400'>
+                  {reviewList.meta.total} total
+                </span>
+              ) : null}
+            </div>
+
+            {reviewsLoading ? (
+              <p className='text-sm text-gray-400'>Loading reviews...</p>
+            ) : reviewsError ? (
+              <p className='text-sm text-gray-400'>
+                Unable to load reviews right now.
+              </p>
+            ) : reviews.length === 0 ? (
+              <p className='text-sm text-gray-400'>No reviews yet.</p>
+            ) : (
+              <div className='space-y-4'>
+                {reviews.map((review, index) => (
+                  <div
+                    key={
+                      review._id ??
+                      `${review.createdAt ?? 'unknown'}-${review.overallRating}-${index}`
+                    }
+                    className='flex items-start justify-between gap-4 rounded-2xl border border-gray-100 p-4'
+                  >
+                    <div>
+                      <p className='text-sm font-medium text-[#5D4037]'>
+                        Customer
+                      </p>
+                      <p className='text-xs text-gray-400'>
+                        {review.createdAt
+                          ? new Date(review.createdAt).toLocaleDateString()
+                          : 'Date unavailable'}
+                      </p>
+                    </div>
+                    <Rate
+                      disabled
+                      value={review.overallRating}
+                      className='text-[#D4AF37]'
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
         {/* Main Card */}
         <div className='bg-white rounded-3xl shadow-xl border border-[#D4AF37]/10 p-6 md:p-10'>
           <div className='text-center mb-10'>
