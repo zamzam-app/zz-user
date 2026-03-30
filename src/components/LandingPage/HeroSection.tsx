@@ -1,8 +1,20 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import BakeryImg from '../../../public/__mocks__/BakeryImage.png';
-import Link from 'next/link';
 import Button from '../common/Button';
 
 const HeroSection = () => {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleExplore = () => {
+    if (isLoading) return;
+    setIsLoading(true);
+    router.push('/cake-library');
+  };
+
   return (
     <section className='relative h-150 md:h-187.5 w-full overflow-hidden flex flex-col items-center justify-center'>
       {/* 1. Background Image Container */}
@@ -29,9 +41,17 @@ const HeroSection = () => {
         </p>
 
         {/* 3. Action Button */}
-        <Link href='cake-library'>
-          <Button> Explore Cake Studio</Button>
-        </Link>
+        <Button onClick={handleExplore} disabled={isLoading}>
+          <span className='inline-flex items-center gap-2'>
+            Explore Cake Studio
+            {isLoading && (
+              <span
+                className='h-4 w-4 rounded-full border-2 border-white/40 border-t-white animate-spin'
+                aria-hidden='true'
+              />
+            )}
+          </span>
+        </Button>
       </div>
     </section>
   );
