@@ -7,6 +7,7 @@ import {
 import Image from 'next/image';
 import { useImageUpload } from '@/lib/hooks/useImageUpload';
 import { loadStoredCakeUserDetails } from '@/components/cake/CakeUserDetailsModal';
+import { buildWhatsAppUrl } from '@/lib/utils/whatsapp';
 
 interface CakeVisualiserModalProps {
   isOpen: boolean;
@@ -180,29 +181,12 @@ export const CakeVisualiserModal = ({
     }
   };
 
-  const handleGetQuote = async () => {
+  const handleGetQuote = () => {
     if (!imageBase64 || isQuoting) return;
     setIsQuoting(true);
     setError(null);
 
     try {
-      const binary = atob(imageBase64);
-      const bytes = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-
-      const mime = imageMime || 'image/png';
-      const ext = mime.includes('png')
-        ? 'png'
-        : mime.includes('jpeg') || mime.includes('jpg')
-          ? 'jpg'
-          : 'png';
-      const blob = new Blob([bytes], { type: mime });
-      const file = new File([blob], `zamzam-cake-preview.${ext}`, {
-        type: mime,
-      });
-
-      const uploadedUrl = await upload(file);
-
       const message =
         `Hi! I would like to order a Cake.\n\n` +
         `*Cake Details:*\n` +
@@ -212,11 +196,10 @@ export const CakeVisualiserModal = ({
         `• Flavour: ${flavor.trim() || 'None'}\n` +
         `• Decorations: ${decorations.join(', ') || 'None'}\n` +
         `• Additional requests: ${additionalRequests.trim() || 'None'}\n\n` +
-        `Generated preview: ${uploadedUrl}\n` +
         (baseImageUrl ? `Reference image: ${baseImageUrl}\n` : '');
 
-      const whatsappUrl = `https://wa.me/917204094741?text=${encodeURIComponent(message)}`;
-      window.open(whatsappUrl, '_blank');
+      const whatsappUrl = buildWhatsAppUrl('917204094741', message);
+      window.location.href = whatsappUrl;
     } catch (e) {
       console.error(e);
       setError('Failed to generate quote link. Please try again.');
@@ -255,8 +238,11 @@ export const CakeVisualiserModal = ({
                   <p className="font-['Epilogue'] font-semibold text-gray-700 text-lg">
                     Generating your cake preview…
                   </p>
-                  <p className='text-sm text-gray-500 mt-2 max-w-[200px]'>
-                    Our AI is baking your custom visualization
+                  <p className='text-sm text-gray-500 mt-2 max-w-[240px] text-center'>
+                    Our AI is baking your custom visualization.
+                  </p>
+                  <p className='text-xs text-gray-400 mt-2 max-w-[220px] text-center'>
+                    It takes ~15 to 30 secs to visualise a cake.
                   </p>
                 </div>
               )}

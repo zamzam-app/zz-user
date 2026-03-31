@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "skills": {
+    "clean-code": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "computedHash": "14ba8e7d8477723eca6d48a79a1924337f4a1f5f1c7ab9b0a7acc073268ecd5a"
+    },
+    "code-review-pro": {
+      "source": "onewave-ai/claude-skills",
+      "sourceType": "github",
+      "computedHash": "445641e6b9eaa5a00f49060259fb4e23a8f339536ec7fc313e39b817dd402a51"
+    }
+  }
+}
