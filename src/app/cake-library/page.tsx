@@ -17,6 +17,7 @@ export default function LibraryPage() {
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -30,6 +31,8 @@ export default function LibraryPage() {
         setCategories(categoryRes.data ?? []);
       } catch (error) {
         console.error('Failed to fetch library data:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -56,6 +59,11 @@ export default function LibraryPage() {
         (cake.description?.toLowerCase().includes(q) ?? false)
       );
     });
+
+  const shouldShowEmptyState =
+    !isLoading &&
+    filteredCakes.length === 0 &&
+    (searchQuery.trim() || activeCategory !== 'All');
 
   return (
     <div className='bg-white min-h-screen pb-28'>
@@ -113,29 +121,45 @@ export default function LibraryPage() {
       </header>
 
       {/* Categories */}
-      <div className='flex gap-3 px-6 py-4 overflow-x-auto no-scrollbar'>
-        {['All', ...categories].map((cat) => {
-          const catId = typeof cat === 'string' ? 'All' : cat._id;
-          const label = typeof cat === 'string' ? cat : cat.name;
-          const isActive = activeCategory === catId;
+      {isLoading ? (
+        <div className='flex gap-3 px-6 py-4 overflow-x-auto no-scrollbar'>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className='h-9 w-20 rounded-xl shimmer' />
+          ))}
+        </div>
+      ) : (
+        <div className='flex gap-3 px-6 py-4 overflow-x-auto no-scrollbar'>
+          {['All', ...categories].map((cat) => {
+            const catId = typeof cat === 'string' ? 'All' : cat._id;
+            const label = typeof cat === 'string' ? cat : cat.name;
+            const isActive = activeCategory === catId;
 
-          return (
-            <button
-              key={catId}
-              onClick={() => setActiveCategory(catId)}
-              className={`px-5 py-2 rounded-xl font-bold text-sm whitespace-nowrap transition-all ${
-                isActive ? 'bg-[#923a3a] text-white!' : 'bg-[#F0F2F5]'
-              }`}
-            >
-              {label}
-            </button>
-          );
-        })}
-      </div>
+            return (
+              <button
+                key={catId}
+                onClick={() => setActiveCategory(catId)}
+                className={`px-5 py-2 rounded-xl font-bold text-sm whitespace-nowrap transition-all ${
+                  isActive ? 'bg-[#923a3a] text-white!' : 'bg-[#F0F2F5]'
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Cake Grid */}
       <div className='grid grid-cols-2 gap-4 px-6 mt-4'>
-        {filteredCakes.length === 0 ? (
+        {isLoading || (!shouldShowEmptyState && filteredCakes.length === 0) ? (
+          Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className='flex flex-col gap-2'>
+              <div className='aspect-4/5 rounded-4xl shimmer' />
+              <div className='h-4 w-3/4 rounded shimmer' />
+              <div className='h-4 w-1/2 rounded shimmer' />
+            </div>
+          ))
+        ) : shouldShowEmptyState ? (
           <p className='col-span-2 py-8 text-center font-["Epilogue"] text-gray-500'>
             {searchQuery.trim() || activeCategory !== 'All'
               ? 'No cakes match your search.'
@@ -160,9 +184,13 @@ export default function LibraryPage() {
 
       {/* Bottom Fixed Button */}
       <div className='fixed bottom-0 left-0 right-0 p-6 z-50'>
-        <Button href='/custom-cake' fullWidth>
-          Upload your design
-        </Button>
+        {isLoading ? (
+          <div className='h-12 w-full rounded-2xl shimmer' />
+        ) : (
+          <Button href='/custom-cake' fullWidth>
+            Upload your design
+          </Button>
+        )}
       </div>
     </div>
   );

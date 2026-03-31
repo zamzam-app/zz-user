@@ -68,6 +68,21 @@ body {
   touch-action: pan-y;
 }
 
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, #eeeeee 0%, #f7f7f7 20%, #eeeeee 40%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
 .ant-select-selector {
   height: 48px !important;
   padding: 0 14px !important;

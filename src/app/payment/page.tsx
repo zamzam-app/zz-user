@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   ShoppingBag,
 } from 'lucide-react';
+import { buildWhatsAppUrl, openWhatsAppUrl } from '@/lib/utils/whatsapp';
 
 function PaymentContent() {
   const router = useRouter();
@@ -45,11 +46,8 @@ function PaymentContent() {
         }
         text += `Total Paid: $${totalPrice}\n------------------\nAddress: ${form.getFieldValue('address')}`;
 
-        const encodedText = encodeURIComponent(text);
-        const whatsappUrl = `https://wa.me/919999999999?text=${encodedText}`;
-
-        // Redirect
-        window.location.href = whatsappUrl;
+        const whatsappUrl = buildWhatsAppUrl('919999999999', text);
+        openWhatsAppUrl(whatsappUrl);
       }, 2000);
     } catch {
       // Validation failed
