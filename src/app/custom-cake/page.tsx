@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { useImageUpload } from '@/lib/hooks/useImageUpload';
+import { buildWhatsAppUrl, openWhatsAppUrl } from '@/lib/utils/whatsapp';
 import {
   DECORATIONS_LIST,
   CustomCakeHeader,
@@ -92,8 +93,8 @@ export default function CreateCakePage() {
       message = `without changing any changes in the existing image(especially preserve ZamZam's branding chips on top of the cake) except the customers request generate a product ready photo`;
     }
 
-    const whatsappUrl = `https://wa.me/917204094741?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
+    const whatsappUrl = buildWhatsAppUrl('917204094741', message);
+    openWhatsAppUrl(whatsappUrl);
   };
 
   const handleGetQuote = () => {
@@ -104,8 +105,8 @@ export default function CreateCakePage() {
     if (uploadedImageUrl) {
       message += `*Reference image:* ${uploadedImageUrl}`;
     }
-    const whatsappUrl = `https://wa.me/917204094741?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
+    const whatsappUrl = buildWhatsAppUrl('917204094741', message);
+    openWhatsAppUrl(whatsappUrl);
   };
 
   const handleUploadClick = () => uploadInputRef.current?.click();

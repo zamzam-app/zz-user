@@ -9,6 +9,7 @@ import { productApi } from '@/lib/services/api/product.api';
 import { Product } from '@/types/product';
 import { CakeVisualiserModal } from '@/components/custom-cake/CakeVisualiserModal';
 import { CakeUserDetailsModal } from '@/components/cake/CakeUserDetailsModal';
+import { buildWhatsAppUrl, openWhatsAppUrl } from '@/lib/utils/whatsapp';
 
 const DEFAULT_OPTIONS = {
   shapes: ['Round', 'Square', 'Heart'],
@@ -86,8 +87,8 @@ export default function CustomizeCakePage() {
       ? `${message}\nReference image: ${imageUrl}`
       : message;
 
-    const whatsappUrl = `https://wa.me/917204094741?text=${encodeURIComponent(finalMessage)}`;
-    window.open(whatsappUrl, '_blank');
+    const whatsappUrl = buildWhatsAppUrl('917204094741', finalMessage);
+    openWhatsAppUrl(whatsappUrl);
   };
 
   if (loading) {
