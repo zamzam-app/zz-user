@@ -56,10 +56,6 @@ export const CustomCakeHeader = ({
                   <span style={{ fontWeight: 'bold' }}>Upload Reference</span>
                 ),
               },
-              {
-                key: 'custom',
-                label: <span style={{ fontWeight: 'bold' }}>Build Custom</span>,
-              },
             ]}
           />
         </ConfigProvider>

@@ -26,3 +26,7 @@ export const productEndpoints = {
 export const UPLOAD = {
   SIGNATURE: '/upload/signature',
 };
+
+export const uploadedCakesEndpoints = {
+  create: '/uploaded-cakes',
+};
