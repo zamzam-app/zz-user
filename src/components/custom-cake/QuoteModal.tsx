@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import { Input, message } from 'antd';
 import { User, Phone } from 'lucide-react';
 import Button from '@/components/common/Button';
+import { buildWhatsAppUrl, openWhatsAppUrl } from '@/lib/utils/whatsapp';
 
 const QUOTE_USER_DETAILS_STORAGE_KEY = 'quoteUserDetails';
 
@@ -35,10 +36,19 @@ function saveStoredQuoteDetails(details: StoredQuoteUserDetails) {
   }
 }
 
+function clearStoredQuoteDetails() {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem(QUOTE_USER_DETAILS_STORAGE_KEY);
+  } catch {
+    // ignore
+  }
+}
+
 interface QuoteModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (details: StoredQuoteUserDetails) => void;
+  onConfirm: (details: StoredQuoteUserDetails) => string;
 }
 
 function isValidPhone(value: string): boolean {
@@ -93,11 +103,15 @@ export const QuoteModal = ({ isOpen, onClose, onConfirm }: QuoteModalProps) => {
       phone: phone.trim(),
     };
     saveStoredQuoteDetails(details);
-    onConfirm(details);
+    const message = onConfirm(details);
+    const whatsappUrl = buildWhatsAppUrl('917204094741', message);
+    openWhatsAppUrl(whatsappUrl, undefined, false);
+    handleClose();
   };
 
   const handleClose = () => {
     setForm({ name: '', phone: '' });
+    clearStoredQuoteDetails();
     onClose();
   };
 

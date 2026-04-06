@@ -104,7 +104,6 @@ export default function CreateCakePage() {
   };
 
   const handleQuoteConfirm = (details: { name: string; phone: string }) => {
-    setIsQuoteModalOpen(false);
     let message = `Hi! I would like to request a quote for a custom cake.\n\n`;
     message += `*Name:* ${details.name}\n`;
     message += `*Phone:* ${details.phone}\n\n`;
@@ -114,8 +113,7 @@ export default function CreateCakePage() {
     if (uploadedImageUrl) {
       message += `*Reference image:* ${uploadedImageUrl}`;
     }
-    const whatsappUrl = buildWhatsAppUrl('917204094741', message);
-    openWhatsAppUrl(whatsappUrl);
+    return message;
   };
 
   const handleUploadClick = () => uploadInputRef.current?.click();
