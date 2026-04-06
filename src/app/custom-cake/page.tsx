@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { useImageUpload } from '@/lib/hooks/useImageUpload';
 import { buildWhatsAppUrl, openWhatsAppUrl } from '@/lib/utils/whatsapp';
+import { uploadedCakesApi } from '@/lib/services/api/uploaded-cakes.api';
 import {
   DECORATIONS_LIST,
   CustomCakeHeader,
@@ -103,16 +104,30 @@ export default function CreateCakePage() {
     setIsQuoteModalOpen(true);
   };
 
-  const handleQuoteConfirm = (details: { name: string; phone: string }) => {
+  const handleQuoteConfirm = async (details: {
+    name: string;
+    phone: string;
+  }) => {
+    if (!uploadedImageUrl) {
+      throw new Error('Please upload a reference image before getting a quote');
+    }
+
+    const description = uploadNotes.trim() || 'No additional request provided';
+
+    await uploadedCakesApi.create({
+      name: details.name,
+      phone: details.phone,
+      referenceImageUrl: uploadedImageUrl,
+      description,
+    });
+
     let message = `Hi! I would like to request a quote for a custom cake.\n\n`;
     message += `*Name:* ${details.name}\n`;
     message += `*Phone:* ${details.phone}\n\n`;
-    if (uploadNotes.trim()) {
-      message += `*My requests:* ${uploadNotes.trim()}\n\n`;
+    if (description) {
+      message += `*My requests:* ${description}\n\n`;
     }
-    if (uploadedImageUrl) {
-      message += `*Reference image:* ${uploadedImageUrl}`;
-    }
+    message += `*Reference image:* ${uploadedImageUrl}`;
     return message;
   };
 

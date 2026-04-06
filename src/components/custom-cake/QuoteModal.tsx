@@ -48,7 +48,7 @@ function clearStoredQuoteDetails() {
 interface QuoteModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (details: StoredQuoteUserDetails) => string;
+  onConfirm: (details: StoredQuoteUserDetails) => Promise<string>;
 }
 
 function isValidPhone(value: string): boolean {
@@ -69,6 +69,7 @@ function getInitialFormState(): {
 
 export const QuoteModal = ({ isOpen, onClose, onConfirm }: QuoteModalProps) => {
   const [form, setForm] = useState(getInitialFormState);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { name, phone } = form;
   const setName = useCallback(
     (value: string) => setForm((f) => ({ ...f, name: value })),
@@ -95,18 +96,28 @@ export const QuoteModal = ({ isOpen, onClose, onConfirm }: QuoteModalProps) => {
     return true;
   }, [name, phone]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     if (!validate()) return;
     const details = {
       name: name.trim(),
       phone: phone.trim(),
     };
     saveStoredQuoteDetails(details);
-    const message = onConfirm(details);
-    const whatsappUrl = buildWhatsAppUrl('917204094741', message);
-    openWhatsAppUrl(whatsappUrl, undefined, false);
-    handleClose();
+    setIsSubmitting(true);
+    try {
+      const messageText = await onConfirm(details);
+      const whatsappUrl = buildWhatsAppUrl('917204094741', messageText);
+      openWhatsAppUrl(whatsappUrl, undefined, false);
+      handleClose();
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to submit quote request';
+      message.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleClose = () => {
@@ -178,8 +189,9 @@ export const QuoteModal = ({ isOpen, onClose, onConfirm }: QuoteModalProps) => {
                 fullWidth
                 size='large'
                 className='h-12 text-lg shadow-lg border-none'
+                disabled={isSubmitting}
               >
-                Get Quote
+                {isSubmitting ? 'Submitting...' : 'Get Quote'}
               </Button>
             </div>
           </form>
