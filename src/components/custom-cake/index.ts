@@ -10,3 +10,4 @@ export * from './DecorationsSection';
 export * from './TextTopperSection';
 export * from './CakePreview3D';
 export * from './CustomCakeActions';
+export * from './QuoteModal';

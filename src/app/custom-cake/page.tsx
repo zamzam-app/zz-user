@@ -13,6 +13,7 @@ import {
   TextTopperSection,
   CakePreview3D,
   CustomCakeActions,
+  QuoteModal,
   Layer,
   Flavor,
 } from '@/components/custom-cake';
@@ -21,6 +22,7 @@ export default function CreateCakePage() {
   const [activeTab, setActiveTab] = useState('upload');
   const [selectedShape, setSelectedShape] = useState('round');
   const [captureImage, setCaptureImage] = useState<null | (() => string)>(null);
+  const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
 
   // Helper to safely store a function in state
   const handleSetCaptureImage = useCallback((fn: () => string) => {
@@ -98,7 +100,14 @@ export default function CreateCakePage() {
   };
 
   const handleGetQuote = () => {
-    let message = 'Hi! I would like to request a quote for a custom cake.\n\n';
+    setIsQuoteModalOpen(true);
+  };
+
+  const handleQuoteConfirm = (details: { name: string; phone: string }) => {
+    setIsQuoteModalOpen(false);
+    let message = `Hi! I would like to request a quote for a custom cake.\n\n`;
+    message += `*Name:* ${details.name}\n`;
+    message += `*Phone:* ${details.phone}\n\n`;
     if (uploadNotes.trim()) {
       message += `*My requests:* ${uploadNotes.trim()}\n\n`;
     }
@@ -190,6 +199,12 @@ export default function CreateCakePage() {
           </div>
         )}
       </div>
+
+      <QuoteModal
+        isOpen={isQuoteModalOpen}
+        onClose={() => setIsQuoteModalOpen(false)}
+        onConfirm={handleQuoteConfirm}
+      />
     </div>
   );
 }
