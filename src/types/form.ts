@@ -7,7 +7,6 @@ export type QuestionType =
 
 export interface FormOption {
   text: string;
-  selected?: boolean | null;
 }
 
 export interface FormQuestion {
