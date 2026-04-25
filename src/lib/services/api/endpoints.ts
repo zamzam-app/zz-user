@@ -17,6 +17,7 @@ export const reviewEndpoints = {
   list: '/review',
   create: '/review',
   submitWithOtp: '/review/submit-with-otp',
+  ratingSummary: '/review/ratings-summary',
 };
 export const productEndpoints = {
   getAll: '/product',

@@ -55,6 +55,24 @@ export interface QueryReviewDto {
   [key: string]: string | number | boolean | undefined;
 }
 
+/** Query params for GET /review/ratings-summary. */
+export interface QueryRatingsSummaryDto {
+  outletId?: string;
+}
+
+export interface RatingsSummaryBreakdownItem {
+  rating: number;
+  count: number;
+  percentage: number;
+}
+
+export interface RatingsSummaryResponse {
+  averageRating: number;
+  totalReviews: number;
+  maxRating: number;
+  ratingBreakdown: RatingsSummaryBreakdownItem[];
+}
+
 /** Full review resource (list/detail responses). */
 export interface IReview {
   _id?: string;

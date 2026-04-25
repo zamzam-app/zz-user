@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { StarFilled } from '@ant-design/icons';
+import { useQuery } from '@tanstack/react-query';
+import { reviewApi } from '@/lib/services/api/review.api';
 
 import zamzam1 from '../../../public/__mocks__/reviews/r1.webp';
 import zamzam3 from '../../../public/__mocks__/reviews/r2.webp';
@@ -70,13 +72,36 @@ const TestimonialCard = ({ item }: { item: TestimonialCard }) => {
 };
 
 const Testimonials = () => {
-  const ratings = [
-    { stars: 5, percentage: 50.3, count: '7,392' },
-    { stars: 4, percentage: 34.1, count: '5,012' },
-    { stars: 3, percentage: 9.3, count: '1,372' },
-    { stars: 2, percentage: 2.4, count: '352' },
-    { stars: 1, percentage: 3.9, count: '578' },
-  ];
+  const { data: ratingsSummary, isLoading: ratingsSummaryLoading } = useQuery({
+    queryKey: ['review-ratings-summary'],
+    queryFn: () => reviewApi.getRatingsSummary(),
+  });
+
+  const maxRating = ratingsSummary?.maxRating ?? 5;
+  const averageRatingLabel =
+    ratingsSummaryLoading && !ratingsSummary
+      ? '--'
+      : (ratingsSummary?.averageRating ?? 0).toFixed(1);
+  const totalReviewsLabel =
+    ratingsSummaryLoading && !ratingsSummary
+      ? 'Loading reviews...'
+      : `${(ratingsSummary?.totalReviews ?? 0).toLocaleString('en-IN')} reviews`;
+
+  const ratings =
+    ratingsSummary?.ratingBreakdown?.length != null &&
+    ratingsSummary.ratingBreakdown.length > 0
+      ? [...ratingsSummary.ratingBreakdown]
+          .sort((a, b) => b.rating - a.rating)
+          .map((item) => ({
+            stars: item.rating,
+            percentage: item.percentage,
+            countLabel: item.count.toLocaleString('en-IN'),
+          }))
+      : Array.from({ length: maxRating }, (_, index) => ({
+          stars: maxRating - index,
+          percentage: 0,
+          countLabel: '0',
+        }));
 
   const testimonials: TestimonialCard[] = [
     {
@@ -129,16 +154,18 @@ The Nutella cookie bun 🤎 and pistachio bun 💚 are super soft, fresh, and ab
           {/* Left */}
           <div className='flex flex-col gap-2 w-[40%] shrink-0'>
             <span className='text-6xl lg:text-8xl font-bold text-[#0D141C] leading-none'>
-              4.2
+              {averageRatingLabel}
             </span>
 
             <div className='flex gap-1 text-[#923a3a] text-2xl'>
-              {[...Array(5)].map((_, i) => (
+              {[...Array(maxRating)].map((_, i) => (
                 <StarFilled key={i} />
               ))}
             </div>
 
-            <p className='text-sm text-[#4F7396] font-medium'>14,706 reviews</p>
+            <p className='text-sm text-[#4F7396] font-medium'>
+              {totalReviewsLabel}
+            </p>
           </div>
 
           {/* Right */}
@@ -150,12 +177,14 @@ The Nutella cookie bun 🤎 and pistachio bun 💚 are super soft, fresh, and ab
                 <div className='flex-1 h-2 bg-[#E8EDF2] rounded-full overflow-hidden'>
                   <div
                     className='h-full bg-[#923a3a]'
-                    style={{ width: `${item.percentage}%` }}
+                    style={{
+                      width: `${Math.max(0, Math.min(item.percentage, 100))}%`,
+                    }}
                   />
                 </div>
 
                 <span className='text-xs text-[#4F7396] w-24 text-right'>
-                  {item.percentage}% ({item.count})
+                  {item.percentage}% ({item.countLabel})
                 </span>
               </div>
             ))}
