@@ -1,7 +1,9 @@
 import type {
   CreateReviewDto,
   CreateReviewResponse,
+  QueryRatingsSummaryDto,
   QueryReviewDto,
+  RatingsSummaryResponse,
   ReviewListResponse,
   SubmitReviewWithOtpDto,
 } from '@/types/review';
@@ -32,6 +34,17 @@ export const reviewApi = {
       method: 'POST',
       url: reviewEndpoints.submitWithOtp,
       data: payload,
+      skipAuthRedirect: true,
+    });
+  },
+
+  getRatingsSummary: async (
+    query: QueryRatingsSummaryDto = {}
+  ): Promise<RatingsSummaryResponse> => {
+    return withoutToken<RatingsSummaryResponse>({
+      method: 'GET',
+      url: reviewEndpoints.ratingSummary,
+      params: query,
       skipAuthRedirect: true,
     });
   },
