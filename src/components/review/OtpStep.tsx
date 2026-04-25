@@ -10,7 +10,8 @@ export type OtpStepProps = {
   phoneNumber: string;
   onVerify: () => void;
   onResend: () => void;
-  loading: boolean;
+  verifyLoading: boolean;
+  resendLoading: boolean;
 };
 
 export function OtpStep({
@@ -21,8 +22,11 @@ export function OtpStep({
   phoneNumber,
   onVerify,
   onResend,
-  loading,
+  verifyLoading,
+  resendLoading,
 }: OtpStepProps) {
+  const actionsDisabled = verifyLoading || resendLoading;
+
   return (
     <Modal
       open={open}
@@ -64,6 +68,7 @@ export function OtpStep({
             value={otp}
             onChange={onOtpChange}
             size='large'
+            disabled={actionsDisabled}
           />
         </div>
         <Button
@@ -71,7 +76,8 @@ export function OtpStep({
           block
           size='large'
           onClick={onVerify}
-          loading={loading}
+          loading={verifyLoading}
+          disabled={resendLoading || otp.length !== 6}
           className='  font-[Epilogue]!  font-medium    bg-[#3DCA84]!  hover:bg-[#34b375]!  text-[#1C2B25]! h-11 text-base  mb-2'
         >
           Verify
@@ -79,7 +85,8 @@ export function OtpStep({
         <Button
           type='link'
           onClick={onResend}
-          disabled={loading}
+          loading={resendLoading}
+          disabled={actionsDisabled}
           className='font-[Epilogue]! text-emerald-600! text-sm'
         >
           Resend Code
