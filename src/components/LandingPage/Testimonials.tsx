@@ -3,8 +3,6 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { StarFilled } from '@ant-design/icons';
-import { useQuery } from '@tanstack/react-query';
-import { reviewApi } from '@/lib/services/api/review.api';
 
 import zamzam1 from '../../../public/__mocks__/reviews/r1.webp';
 import zamzam3 from '../../../public/__mocks__/reviews/r2.webp';
@@ -20,6 +18,41 @@ type TestimonialCard = {
 };
 
 const TRUNCATE_LIMIT = 150;
+const GOOGLE_REVIEWS_SUMMARY = {
+  averageRating: 4.7,
+  totalReviews: 469,
+  maxRating: 5,
+  ratingBreakdown: [
+    { rating: 5, count: 379, percentage: 81 },
+    { rating: 4, count: 75, percentage: 16 },
+    { rating: 3, count: 5, percentage: 1 },
+    { rating: 2, count: 5, percentage: 1 },
+    { rating: 1, count: 5, percentage: 1 },
+  ],
+} as const;
+
+const RatingStars = ({
+  rating,
+  maxRating,
+  sizeClassName,
+}: {
+  rating: number;
+  maxRating: number;
+  sizeClassName: string;
+}) => {
+  const filledStars = Math.floor(Math.max(0, Math.min(rating, maxRating)));
+
+  return (
+    <div className={`flex gap-1 text-[#923a3a] ${sizeClassName}`}>
+      {Array.from({ length: maxRating }, (_, i) => (
+        <StarFilled
+          key={i}
+          className={i < filledStars ? 'text-[#923a3a]' : 'text-[#E1C7C7]'}
+        />
+      ))}
+    </div>
+  );
+};
 
 const TestimonialCard = ({ item }: { item: TestimonialCard }) => {
   const [expanded, setExpanded] = useState(false);
@@ -72,36 +105,18 @@ const TestimonialCard = ({ item }: { item: TestimonialCard }) => {
 };
 
 const Testimonials = () => {
-  const { data: ratingsSummary, isLoading: ratingsSummaryLoading } = useQuery({
-    queryKey: ['review-ratings-summary'],
-    queryFn: () => reviewApi.getRatingsSummary(),
-  });
+  const ratingsSummary = GOOGLE_REVIEWS_SUMMARY;
+  const maxRating = ratingsSummary.maxRating;
+  const averageRatingLabel = ratingsSummary.averageRating.toFixed(1);
+  const totalReviewsLabel = `${ratingsSummary.totalReviews.toLocaleString('en-IN')} reviews`;
 
-  const maxRating = ratingsSummary?.maxRating ?? 5;
-  const averageRatingLabel =
-    ratingsSummaryLoading && !ratingsSummary
-      ? '--'
-      : (ratingsSummary?.averageRating ?? 0).toFixed(1);
-  const totalReviewsLabel =
-    ratingsSummaryLoading && !ratingsSummary
-      ? 'Loading reviews...'
-      : `${(ratingsSummary?.totalReviews ?? 0).toLocaleString('en-IN')} reviews`;
-
-  const ratings =
-    ratingsSummary?.ratingBreakdown?.length != null &&
-    ratingsSummary.ratingBreakdown.length > 0
-      ? [...ratingsSummary.ratingBreakdown]
-          .sort((a, b) => b.rating - a.rating)
-          .map((item) => ({
-            stars: item.rating,
-            percentage: item.percentage,
-            countLabel: item.count.toLocaleString('en-IN'),
-          }))
-      : Array.from({ length: maxRating }, (_, index) => ({
-          stars: maxRating - index,
-          percentage: 0,
-          countLabel: '0',
-        }));
+  const ratings = [...ratingsSummary.ratingBreakdown]
+    .sort((a, b) => b.rating - a.rating)
+    .map((item) => ({
+      stars: item.rating,
+      percentage: item.percentage,
+      countLabel: item.count.toLocaleString('en-IN'),
+    }));
 
   const testimonials: TestimonialCard[] = [
     {
@@ -151,24 +166,22 @@ The Nutella cookie bun 🤎 and pistachio bun 💚 are super soft, fresh, and ab
 
         {/* Ratings */}
         <div className='flex items-center gap-4 w-full mb-16'>
-          {/* Left */}
           <div className='flex flex-col gap-2 w-[40%] shrink-0'>
             <span className='text-6xl lg:text-8xl font-bold text-[#0D141C] leading-none'>
               {averageRatingLabel}
             </span>
 
-            <div className='flex gap-1 text-[#923a3a] text-2xl'>
-              {[...Array(maxRating)].map((_, i) => (
-                <StarFilled key={i} />
-              ))}
-            </div>
+            <RatingStars
+              rating={ratingsSummary?.averageRating ?? 0}
+              maxRating={maxRating}
+              sizeClassName='text-2xl'
+            />
 
             <p className='text-sm text-[#4F7396] font-medium'>
               {totalReviewsLabel}
             </p>
           </div>
 
-          {/* Right */}
           <div className='flex flex-col gap-3 w-[60%]'>
             {ratings.map((item) => (
               <div key={item.stars} className='flex items-center gap-2'>
