@@ -38,6 +38,9 @@ export const CakeVisualiserModal = ({
   const [placeholderImageUrl, setPlaceholderImageUrl] = useState<string | null>(
     null
   );
+  const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isQuoting, setIsQuoting] = useState(false);
@@ -62,6 +65,7 @@ export const CakeVisualiserModal = ({
     setImageBase64(null);
     setFallbackText(null);
     setPlaceholderImageUrl(null);
+    setGeneratedImageUrl(null);
 
     try {
       const res = await fetch('/api/visualise-cake', {
@@ -107,6 +111,7 @@ export const CakeVisualiserModal = ({
           const blob = new Blob([bytes], { type: mime });
           const file = new File([blob], `cake-preview.${ext}`, { type: mime });
           const imageUrl = await uploadToCustomCakes(file);
+          setGeneratedImageUrl(imageUrl);
           const prompt = buildCustomCakePrompt();
           const stored = loadStoredCakeUserDetails();
           const phone = (stored.phone ?? '').trim();
@@ -187,6 +192,7 @@ export const CakeVisualiserModal = ({
     setError(null);
 
     try {
+      const imageToShare = generatedImageUrl || baseImageUrl;
       const message =
         `Hi! I would like to order a Cake.\n\n` +
         `*Cake Details:*\n` +
@@ -196,7 +202,9 @@ export const CakeVisualiserModal = ({
         `• Flavour: ${flavor.trim() || 'None'}\n` +
         `• Decorations: ${decorations.join(', ') || 'None'}\n` +
         `• Additional requests: ${additionalRequests.trim() || 'None'}\n\n` +
-        (baseImageUrl ? `Reference image: ${baseImageUrl}\n` : '');
+        (imageToShare
+          ? `Generated preview: ${imageToShare}\n`
+          : '');
 
       const whatsappUrl = buildWhatsAppUrl('917204094741', message);
       window.location.href = whatsappUrl;

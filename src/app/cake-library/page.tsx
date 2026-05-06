@@ -60,10 +60,9 @@ export default function LibraryPage() {
       );
     });
 
-  const shouldShowEmptyState =
-    !isLoading &&
-    filteredCakes.length === 0 &&
-    (searchQuery.trim() || activeCategory !== 'All');
+  const hasActiveFilters =
+    searchQuery.trim().length > 0 || activeCategory !== 'All';
+  const shouldShowEmptyState = !isLoading && filteredCakes.length === 0;
 
   return (
     <div className='bg-white min-h-screen pb-28'>
@@ -151,7 +150,7 @@ export default function LibraryPage() {
 
       {/* Cake Grid */}
       <div className='grid grid-cols-2 gap-4 px-6 mt-4'>
-        {isLoading || (!shouldShowEmptyState && filteredCakes.length === 0) ? (
+        {isLoading ? (
           Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className='flex flex-col gap-2'>
               <div className='aspect-4/5 rounded-4xl shimmer' />
@@ -161,7 +160,7 @@ export default function LibraryPage() {
           ))
         ) : shouldShowEmptyState ? (
           <p className='col-span-2 py-8 text-center font-["Epilogue"] text-gray-500'>
-            {searchQuery.trim() || activeCategory !== 'All'
+            {hasActiveFilters
               ? 'No cakes match your search.'
               : 'No cakes yet.'}
           </p>
