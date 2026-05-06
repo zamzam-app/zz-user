@@ -141,6 +141,17 @@ body {
   overflow: hidden !important;
 }
 
+.otp-input-group .ant-input {
+  caret-color: #923a3a !important;
+}
+
+.otp-input-group .ant-input:focus,
+.otp-input-group .ant-input-focused,
+.otp-input-group .ant-input:focus-within {
+  border-color: #923a3a !important;
+  box-shadow: 0 0 0 2px rgba(146, 58, 58, 0.14) !important;
+}
+
 /* Complaint modal: hide textarea scrollbar and character count */
 .complaint-modal .ant-input {
   scrollbar-width: none;

@@ -5,6 +5,9 @@ import { Input, message } from 'antd';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { DateWheelPicker } from '@/components/common/DateWheelPicker';
+import { OtpStep } from '@/components/review/OtpStep';
+import { authApi } from '@/lib/services/api/auth.api';
+import { normalizeToE164IndianPhone } from '@/lib/utils/phone';
 
 const CAKE_USER_DETAILS_STORAGE_KEY = 'cakeUserDetails';
 
@@ -59,6 +62,26 @@ function isValidPhone(value: string): boolean {
   return digits.length === 10 && /^[6-9]\d{9}$/.test(digits);
 }
 
+function getApiErrorInfo(error: unknown): {
+  status?: number;
+  message?: string;
+} {
+  if (error == null || typeof error !== 'object') return {};
+  return {
+    status:
+      'status' in error ? (error as { status?: number }).status : undefined,
+    message:
+      'message' in error
+        ? String((error as { message?: string }).message)
+        : undefined,
+  };
+}
+
+function toDobIso(dob: Dayjs | null): string | undefined {
+  if (!dob?.isValid()) return undefined;
+  return dob.format('YYYY-MM-DD');
+}
+
 function getInitialFormState(): {
   number: string;
   dob: Dayjs | null;
@@ -67,7 +90,10 @@ function getInitialFormState(): {
   const stored = loadStoredCakeUserDetails();
   return {
     number: stored.phone ?? '',
-    dob: stored.dob && dayjs(stored.dob).isValid() ? dayjs(stored.dob) : null,
+    dob:
+      stored.dob && dayjs(stored.dob).isValid()
+        ? dayjs(stored.dob)
+        : dayjs().startOf('day'),
     gender: stored.gender ?? '',
   };
 }
@@ -78,6 +104,11 @@ export const CakeUserDetailsModal = ({
   onConfirm,
 }: CakeUserDetailsModalProps) => {
   const [form, setForm] = useState(getInitialFormState);
+  const [otpModalOpen, setOtpModalOpen] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [requestingOtp, setRequestingOtp] = useState(false);
+  const [resendingOtp, setResendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
   const { number, dob, gender } = form;
   const setNumber = useCallback(
     (value: string) => setForm((f) => ({ ...f, number: value })),
@@ -101,32 +132,121 @@ export const CakeUserDetailsModal = ({
       message.error('Enter a valid 10-digit mobile number');
       return false;
     }
-    if (!dob?.isValid()) {
-      message.error('Please select a valid date of birth');
-      return false;
-    }
-    if (!isValidPastDate(dob)) {
-      message.error('Please enter a valid past date');
+    if (!dob?.isValid() || !isValidPastDate(dob)) {
+      message.error('Enter a valid date of birth');
       return false;
     }
     return true;
   }, [number, dob]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
-    saveStoredDetails({
-      phone: number.trim(),
-      dob: dob?.isValid() ? dob.toISOString() : null,
-      gender: gender || '',
-    });
-    onConfirm();
+
+    const phoneNumber = normalizeToE164IndianPhone(number);
+    if (!phoneNumber) {
+      message.error('Please enter a valid 10-digit phone number');
+      return;
+    }
+
+    setRequestingOtp(true);
+    try {
+      await authApi.requestOtp({ phoneNumber });
+      setOtp('');
+      setOtpModalOpen(true);
+    } catch (err) {
+      const { status, message: apiMessage } = getApiErrorInfo(err);
+      if (status === 400) {
+        message.error(
+          'Invalid phone number. Please enter a valid number in +91 format.'
+        );
+      } else if (status === 500) {
+        message.error('Unable to send OTP right now. Please try again.');
+      } else {
+        message.error(apiMessage ?? 'Failed to send OTP. Please try again.');
+      }
+    } finally {
+      setRequestingOtp(false);
+    }
   };
 
   const handleClose = () => {
-    setForm({ number: '', dob: null, gender: '' });
+    setForm({ number: '', dob: dayjs().startOf('day'), gender: '' });
+    setOtpModalOpen(false);
+    setOtp('');
     onClose();
   };
+
+  const handleVerifyOtp = useCallback(async () => {
+    if (!otp || otp.length !== 6) {
+      message.error('Please enter the 6-digit verification code');
+      return;
+    }
+
+    const phoneNumber = normalizeToE164IndianPhone(number);
+    if (!phoneNumber) {
+      message.error('Invalid phone number. Please go back and re-enter it.');
+      return;
+    }
+    const dobIso = toDobIso(dob);
+
+    setVerifyingOtp(true);
+    try {
+      await authApi.verifyOtp({
+        phoneNumber,
+        otp,
+        ...(dobIso && { dob: dobIso }),
+      });
+      saveStoredDetails({
+        phone: phoneNumber,
+        dob: dob?.isValid() ? dob.toISOString() : null,
+        gender: gender || '',
+      });
+      setOtpModalOpen(false);
+      setOtp('');
+      onConfirm();
+    } catch (err) {
+      const { status, message: apiMessage } = getApiErrorInfo(err);
+      if (status === 400) {
+        message.error('Invalid phone number. Please request OTP again.');
+      } else if (status === 401) {
+        message.error('Invalid OTP. Please try again.');
+      } else if (status === 500) {
+        message.error('Unable to verify OTP right now. Please try again.');
+      } else {
+        message.error(apiMessage ?? 'Failed to verify OTP. Please try again.');
+      }
+    } finally {
+      setVerifyingOtp(false);
+    }
+  }, [dob, gender, number, onConfirm, otp]);
+
+  const handleResendOtp = useCallback(async () => {
+    const phoneNumber = normalizeToE164IndianPhone(number);
+    if (!phoneNumber) {
+      message.error('Invalid phone number. Please go back and re-enter it.');
+      return;
+    }
+
+    setResendingOtp(true);
+    try {
+      await authApi.requestOtp({ phoneNumber });
+      message.success('OTP resent successfully.');
+    } catch (err) {
+      const { status, message: apiMessage } = getApiErrorInfo(err);
+      if (status === 400) {
+        message.error(
+          'Invalid phone number. Please enter a valid number in +91 format.'
+        );
+      } else if (status === 500) {
+        message.error('Unable to resend OTP right now. Please try again.');
+      } else {
+        message.error(apiMessage ?? 'Failed to resend OTP. Please try again.');
+      }
+    } finally {
+      setResendingOtp(false);
+    }
+  }, [number]);
 
   if (!isOpen) return null;
 
@@ -216,13 +336,29 @@ export const CakeUserDetailsModal = ({
           <div className='pt-2'>
             <button
               type='submit'
+              disabled={requestingOtp}
               className="w-full py-4 rounded-2xl font-['Epilogue'] font-bold text-lg transition-transform shadow-md bg-[linear-gradient(135deg,#923a3a_0%,#6d2020_100%)] text-white! active:scale-[0.98]"
             >
-              Continue to Visualise
+              {requestingOtp ? 'Sending OTP...' : 'Continue to Visualise'}
             </button>
           </div>
         </form>
       </div>
+      <OtpStep
+        open={otpModalOpen}
+        onClose={() => {
+          if (verifyingOtp || resendingOtp) return;
+          setOtpModalOpen(false);
+          setOtp('');
+        }}
+        otp={otp}
+        onOtpChange={(value) => setOtp(value.replace(/\D/g, '').slice(0, 6))}
+        phoneNumber={number.replace(/\D/g, '').slice(-10)}
+        onVerify={handleVerifyOtp}
+        onResend={handleResendOtp}
+        verifyLoading={verifyingOtp}
+        resendLoading={resendingOtp}
+      />
     </div>
   );
 };
