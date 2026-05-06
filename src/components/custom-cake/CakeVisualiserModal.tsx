@@ -220,7 +220,9 @@ export const CakeVisualiserModal = ({
         `• Flavour: ${flavor.trim() || 'None'}\n` +
         `• Decorations: ${decorations.join(', ') || 'None'}\n` +
         `• Additional requests: ${additionalRequests.trim() || 'None'}\n\n` +
-        (imageToShare ? `Generated preview: ${imageToShare}\n` : '');
+        (imageToShare
+          ? `Generated preview: ${imageToShare}\n`
+          : '');
 
       const whatsappUrl = buildWhatsAppUrl('917204094741', message);
       window.location.href = whatsappUrl;
