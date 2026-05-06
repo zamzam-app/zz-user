@@ -160,9 +160,7 @@ export default function LibraryPage() {
           ))
         ) : shouldShowEmptyState ? (
           <p className='col-span-2 py-8 text-center font-["Epilogue"] text-gray-500'>
-            {hasActiveFilters
-              ? 'No cakes match your search.'
-              : 'No cakes yet.'}
+            {hasActiveFilters ? 'No cakes match your search.' : 'No cakes yet.'}
           </p>
         ) : (
           filteredCakes.map((cake) => (
