@@ -12,7 +12,11 @@ export const preopenWhatsAppWindow = (): Window | null => {
   }
 };
 
-export const openWhatsAppUrl = (url: string, preopened?: Window | null) => {
+export const openWhatsAppUrl = (
+  url: string,
+  preopened?: Window | null,
+  fallbackToSameTab = true
+) => {
   if (typeof window === 'undefined') return;
 
   if (preopened && !preopened.closed) {
@@ -26,7 +30,7 @@ export const openWhatsAppUrl = (url: string, preopened?: Window | null) => {
   }
 
   const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
-  if (!newWindow) {
+  if (!newWindow && fallbackToSameTab) {
     window.location.href = url;
   }
 };

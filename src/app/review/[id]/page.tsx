@@ -26,6 +26,28 @@ const TARGET_REVIEW_QUESTION = 'overall experience at the store';
 const normalizeText = (value: string) =>
   value.toLowerCase().replace(/\s+/g, ' ').trim();
 
+function normalizeToE164IndianPhone(value: unknown): string | null {
+  const digits = String(value ?? '').replace(/\D/g, '');
+  if (digits.length === 10) return `+91${digits}`;
+  if (digits.length === 12 && digits.startsWith('91')) return `+${digits}`;
+  return null;
+}
+
+function getApiErrorInfo(error: unknown): {
+  status?: number;
+  message?: string;
+} {
+  if (error == null || typeof error !== 'object') return {};
+  return {
+    status:
+      'status' in error ? (error as { status?: number }).status : undefined,
+    message:
+      'message' in error
+        ? String((error as { message?: string }).message)
+        : undefined,
+  };
+}
+
 function toDobIso(dob: unknown): string | undefined {
   if (dob == null) return undefined;
   const d = dob as { format?: (f: string) => string };
@@ -73,6 +95,7 @@ export default function ReviewFormPage() {
   const [otpModalOpen, setOtpModalOpen] = useState(false);
   const [otp, setOtp] = useState('');
   const [requestingOtp, setRequestingOtp] = useState(false);
+  const [resendingOtp, setResendingOtp] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [submittedRating, setSubmittedRating] = useState<number | undefined>();
@@ -189,8 +212,8 @@ export default function ReviewFormPage() {
   const handleSubmit = useCallback(
     async (values: Record<string, unknown>) => {
       if (requestingOtp) return;
-      const phone = String(values.phone ?? '').trim();
-      if (!phone || phone.length !== 10) {
+      const phoneNumber = normalizeToE164IndianPhone(values.phone);
+      if (!phoneNumber) {
         message.error('Please enter a valid 10-digit phone number');
         return;
       }
@@ -198,14 +221,19 @@ export default function ReviewFormPage() {
       setRequestingOtp(true);
       try {
         await authApi.requestOtp({
-          phoneNumber: `+91${phone}`,
+          phoneNumber,
         });
       } catch (err) {
-        const msg =
-          err && typeof err === 'object' && 'message' in err
-            ? String((err as { message: string }).message)
-            : 'Failed to send OTP. Please try again.';
-        message.error(msg);
+        const { status, message: apiMessage } = getApiErrorInfo(err);
+        if (status === 400) {
+          message.error(
+            'Invalid phone number. Please enter a valid number in +91 format.'
+          );
+        } else if (status === 500) {
+          message.error('Unable to send OTP right now. Please try again.');
+        } else {
+          message.error(apiMessage ?? 'Failed to send OTP. Please try again.');
+        }
         return;
       } finally {
         setRequestingOtp(false);
@@ -226,14 +254,13 @@ export default function ReviewFormPage() {
       message.error('Form data missing. Please try again.');
       return;
     }
-    const phone = String(pendingValues.phone ?? '').trim();
-    if (!phone || phone.length !== 10) {
+    const phoneNumber = normalizeToE164IndianPhone(pendingValues.phone);
+    if (!phoneNumber) {
       message.error('Invalid phone number.');
       return;
     }
     setSubmitting(true);
     try {
-      const phoneNumber = `+91${phone}`;
       const nameTrimmed =
         typeof pendingValues.name === 'string' ? pendingValues.name.trim() : '';
       const emailTrimmed =
@@ -243,6 +270,10 @@ export default function ReviewFormPage() {
       const dobIso = toDobIso(pendingValues.dob);
       const outletId =
         formData.outletId ?? searchParams.get('outletId') ?? formData._id;
+      const outletTableId =
+        outletData?.table?._id ??
+        searchParams.get('outletTableId') ??
+        undefined;
       const reviewPayload = buildCreateReviewPayload(
         formData._id,
         outletId,
@@ -259,6 +290,7 @@ export default function ReviewFormPage() {
         formId: reviewPayload.formId,
         outletId: reviewPayload.outletId,
         response: reviewPayload.response,
+        ...(outletTableId && { outletTableId }),
         ...(complaintReason?.trim() && {
           isComplaint: true,
           complaintReason: complaintReason.trim(),
@@ -272,24 +304,60 @@ export default function ReviewFormPage() {
       setPendingValues(null);
       setShowSuccess(true);
     } catch (err) {
-      const status =
-        err && typeof err === 'object' && 'status' in err
-          ? (err as { status?: number }).status
-          : undefined;
-      const msg =
-        err && typeof err === 'object' && 'message' in err
-          ? String((err as { message: string }).message)
-          : 'Failed to submit review. Please try again.';
-      message.error(status === 401 ? 'Incorrect OTP' : msg);
+      const { status, message: apiMessage } = getApiErrorInfo(err);
+      if (status === 400) {
+        message.error('Invalid phone number. Please request OTP again.');
+      } else if (status === 401) {
+        message.error('Invalid OTP. Please try again.');
+      } else if (status === 500) {
+        message.error(
+          'Server error while submitting review. Please try again.'
+        );
+      } else {
+        message.error(
+          apiMessage ?? 'Failed to submit review. Please try again.'
+        );
+      }
     } finally {
       setSubmitting(false);
     }
-  }, [otp, pendingValues, formData, searchParams, complaintReason, message]);
+  }, [
+    otp,
+    pendingValues,
+    formData,
+    outletData?.table?._id,
+    searchParams,
+    complaintReason,
+    message,
+  ]);
 
-  const handleOtpResend = useCallback(() => {
-    // TODO: call backend to resend OTP
-    message.info('OTP resent');
-  }, [message]);
+  const handleOtpResend = useCallback(async () => {
+    if (resendingOtp || requestingOtp) return;
+    const phoneNumber = normalizeToE164IndianPhone(pendingValues?.phone);
+    if (!phoneNumber) {
+      message.error('Invalid phone number. Please go back and re-enter it.');
+      return;
+    }
+
+    setResendingOtp(true);
+    try {
+      await authApi.requestOtp({ phoneNumber });
+      message.success('OTP resent successfully.');
+    } catch (err) {
+      const { status, message: apiMessage } = getApiErrorInfo(err);
+      if (status === 400) {
+        message.error(
+          'Invalid phone number. Please enter a valid number in +91 format.'
+        );
+      } else if (status === 500) {
+        message.error('Unable to resend OTP right now. Please try again.');
+      } else {
+        message.error(apiMessage ?? 'Failed to resend OTP. Please try again.');
+      }
+    } finally {
+      setResendingOtp(false);
+    }
+  }, [message, pendingValues?.phone, requestingOtp, resendingOtp]);
 
   const handleFinishFailed = useCallback(
     (info: { errorFields: { errors: string[] }[] }) => {
@@ -396,11 +464,12 @@ export default function ReviewFormPage() {
             setOtp('');
           }}
           otp={otp}
-          onOtpChange={setOtp}
+          onOtpChange={(value) => setOtp(value.replace(/\D/g, '').slice(0, 6))}
           phoneNumber={String(pendingValues?.phone ?? '')}
           onVerify={handleOtpVerify}
           onResend={handleOtpResend}
-          loading={submitting}
+          verifyLoading={submitting}
+          resendLoading={resendingOtp}
         />
       </div>
     </div>
