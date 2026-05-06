@@ -42,6 +42,7 @@ export const CakeVisualiserModal = ({
     null
   );
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [isQuoting, setIsQuoting] = useState(false);
 
@@ -61,6 +62,7 @@ export const CakeVisualiserModal = ({
 
   const handleGenerate = useCallback(async () => {
     setIsLoading(true);
+    setLoadingProgress(0);
     setError(null);
     setImageBase64(null);
     setFallbackText(null);
@@ -142,6 +144,8 @@ export const CakeVisualiserModal = ({
       setError('Failed to generate cake preview. Please try again.');
       console.error(err);
     } finally {
+      setLoadingProgress(100);
+      await new Promise((resolve) => setTimeout(resolve, 250));
       setIsLoading(false);
     }
   }, [
@@ -155,6 +159,20 @@ export const CakeVisualiserModal = ({
     uploadToCustomCakes,
     buildCustomCakePrompt,
   ]);
+
+  useEffect(() => {
+    if (!isLoading) return;
+
+    const interval = window.setInterval(() => {
+      setLoadingProgress((current) => {
+        if (current >= 95) return current;
+        const step = current < 60 ? 8 : current < 85 ? 4 : 1;
+        return Math.min(current + step, 95);
+      });
+    }, 450);
+
+    return () => window.clearInterval(interval);
+  }, [isLoading]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -241,14 +259,14 @@ export const CakeVisualiserModal = ({
               {isLoading && (
                 <div className='flex flex-col items-center justify-center py-12'>
                   <div className='w-16 h-16 border-4 border-[#923a3a]/20 border-t-[#923a3a] rounded-full animate-spin mb-4' />
+                  <p className="font-['Epilogue'] font-bold text-[#923a3a] text-2xl tabular-nums">
+                    {loadingProgress}%
+                  </p>
                   <p className="font-['Epilogue'] font-semibold text-gray-700 text-lg">
                     Generating your cake preview…
                   </p>
                   <p className='text-sm text-gray-500 mt-2 max-w-[240px] text-center'>
                     Our AI is baking your custom visualization.
-                  </p>
-                  <p className='text-xs text-gray-400 mt-2 max-w-[220px] text-center'>
-                    It takes ~15 to 30 secs to visualise a cake.
                   </p>
                 </div>
               )}

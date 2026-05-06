@@ -11,6 +11,7 @@ import { DateWheelPicker } from '@/components/common/DateWheelPicker';
 import { outletApi } from '@/lib/services/api/outlet.api';
 import { reviewApi } from '@/lib/services/api/review.api';
 import { authApi } from '@/lib/services/api/auth.api';
+import { normalizeToE164IndianPhone } from '@/lib/utils/phone';
 import type {
   CreateReviewDto,
   SubmitReviewWithOtpDto,
@@ -25,13 +26,6 @@ const TARGET_REVIEW_QUESTION = 'overall experience at the store';
 
 const normalizeText = (value: string) =>
   value.toLowerCase().replace(/\s+/g, ' ').trim();
-
-function normalizeToE164IndianPhone(value: unknown): string | null {
-  const digits = String(value ?? '').replace(/\D/g, '');
-  if (digits.length === 10) return `+91${digits}`;
-  if (digits.length === 12 && digits.startsWith('91')) return `+${digits}`;
-  return null;
-}
 
 function getApiErrorInfo(error: unknown): {
   status?: number;
