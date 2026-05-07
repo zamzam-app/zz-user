@@ -5,6 +5,9 @@ import { Input, message } from 'antd';
 import { User, Phone } from 'lucide-react';
 import Button from '@/components/common/Button';
 import { buildWhatsAppUrl, openWhatsAppUrl } from '@/lib/utils/whatsapp';
+import { OtpStep } from '@/components/review/OtpStep';
+import { authApi } from '@/lib/services/api/auth.api';
+import { normalizeToE164IndianPhone } from '@/lib/utils/phone';
 
 const QUOTE_USER_DETAILS_STORAGE_KEY = 'quoteUserDetails';
 
@@ -67,9 +70,30 @@ function getInitialFormState(): {
   };
 }
 
+function getApiErrorInfo(error: unknown): {
+  status?: number;
+  message?: string;
+} {
+  if (error == null || typeof error !== 'object') return {};
+  return {
+    status:
+      'status' in error ? (error as { status?: number }).status : undefined,
+    message:
+      'message' in error
+        ? String((error as { message?: string }).message)
+        : undefined,
+  };
+}
+
 export const QuoteModal = ({ isOpen, onClose, onConfirm }: QuoteModalProps) => {
   const [form, setForm] = useState(getInitialFormState);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [otpModalOpen, setOtpModalOpen] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [isRequestingOtp, setIsRequestingOtp] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [isResendingOtp, setIsResendingOtp] = useState(false);
+
   const { name, phone } = form;
   const setName = useCallback(
     (value: string) => setForm((f) => ({ ...f, name: value })),
@@ -98,25 +122,115 @@ export const QuoteModal = ({ isOpen, onClose, onConfirm }: QuoteModalProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isSubmitting) return;
+    if (isSubmitting || isRequestingOtp) return;
     if (!validate()) return;
-    const details = {
-      name: name.trim(),
-      phone: phone.trim(),
-    };
-    saveStoredQuoteDetails(details);
+
+    const phoneNumber = normalizeToE164IndianPhone(phone);
+    if (!phoneNumber) {
+      message.error('Please enter a valid 10-digit phone number');
+      return;
+    }
+
+    setIsRequestingOtp(true);
+    try {
+      await authApi.requestOtp({
+        phoneNumber,
+      });
+      setOtpModalOpen(true);
+    } catch (err) {
+      const { status, message: apiMessage } = getApiErrorInfo(err);
+      if (status === 400) {
+        message.error(
+          'Invalid phone number. Please enter a valid number in +91 format.'
+        );
+      } else if (status === 500) {
+        message.error('Unable to send OTP right now. Please try again.');
+      } else {
+        message.error(apiMessage ?? 'Failed to send OTP. Please try again.');
+      }
+    } finally {
+      setIsRequestingOtp(false);
+    }
+  };
+
+  const handleOtpVerify = async () => {
+    if (!otp || otp.length !== 6) {
+      message.error('Please enter the 6-digit verification code');
+      return;
+    }
+
+    const phoneNumber = normalizeToE164IndianPhone(phone);
+    if (!phoneNumber) {
+      message.error('Invalid phone number.');
+      return;
+    }
+
+    setIsVerifyingOtp(true);
     setIsSubmitting(true);
     try {
+      // 1. Verify OTP
+      await authApi.verifyOtp({
+        phoneNumber,
+        otp,
+        name: name.trim(),
+      });
+
+      // 2. Proceed with confirmation
+      const details = {
+        name: name.trim(),
+        phone: phone.trim(),
+      };
+      saveStoredQuoteDetails(details);
+
       const messageText = await onConfirm(details);
       const whatsappUrl = buildWhatsAppUrl('917204094741', messageText);
+
+      setOtpModalOpen(false);
+      setOtp('');
       openWhatsAppUrl(whatsappUrl, undefined, false);
       handleClose();
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : 'Failed to submit quote request';
-      message.error(errorMessage);
+      const { status, message: apiMessage } = getApiErrorInfo(err);
+      if (status === 400) {
+        message.error('Invalid phone number. Please request OTP again.');
+      } else if (status === 401) {
+        message.error('Invalid OTP. Please try again.');
+      } else {
+        message.error(
+          apiMessage ?? 'Failed to submit quote. Please try again.'
+        );
+      }
     } finally {
+      setIsVerifyingOtp(false);
       setIsSubmitting(false);
+    }
+  };
+
+  const handleOtpResend = async () => {
+    if (isResendingOtp || isRequestingOtp) return;
+    const phoneNumber = normalizeToE164IndianPhone(phone);
+    if (!phoneNumber) {
+      message.error('Invalid phone number. Please go back and re-enter it.');
+      return;
+    }
+
+    setIsResendingOtp(true);
+    try {
+      await authApi.requestOtp({ phoneNumber });
+      message.success('OTP resent successfully.');
+    } catch (err) {
+      const { status, message: apiMessage } = getApiErrorInfo(err);
+      if (status === 400) {
+        message.error(
+          'Invalid phone number. Please enter a valid number in +91 format.'
+        );
+      } else if (status === 500) {
+        message.error('Unable to resend OTP right now. Please try again.');
+      } else {
+        message.error(apiMessage ?? 'Failed to resend OTP. Please try again.');
+      }
+    } finally {
+      setIsResendingOtp(false);
     }
   };
 
@@ -197,6 +311,21 @@ export const QuoteModal = ({ isOpen, onClose, onConfirm }: QuoteModalProps) => {
           </form>
         </div>
       </div>
+
+      <OtpStep
+        open={otpModalOpen}
+        onClose={() => {
+          setOtpModalOpen(false);
+          setOtp('');
+        }}
+        otp={otp}
+        onOtpChange={(value) => setOtp(value.replace(/\D/g, '').slice(0, 6))}
+        phoneNumber={phone}
+        onVerify={handleOtpVerify}
+        onResend={handleOtpResend}
+        verifyLoading={isVerifyingOtp}
+        resendLoading={isResendingOtp}
+      />
     </div>
   );
 };
