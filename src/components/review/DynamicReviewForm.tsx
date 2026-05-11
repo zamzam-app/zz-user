@@ -95,8 +95,8 @@ export function DynamicReviewForm({
     [questions]
   );
 
+  // iOS Safari can keep the latest text/autofill value uncommitted until blur.
   const handleSubmitClick = useCallback(() => {
-    // iOS Safari can keep the latest text/autofill value uncommitted until blur.
     (document.activeElement as HTMLElement | null)?.blur();
     requestAnimationFrame(() => form.submit());
   }, [form]);
@@ -109,29 +109,7 @@ export function DynamicReviewForm({
     [onComplaintSubmit]
   );
 
-  const reviewPreviewItems =
-    previousReviews !== undefined
-      ? previousReviews
-      : [
-          {
-            name: 'Ananya',
-            rating: 5,
-            text: 'Fresh bakes and quick service. Loved the soft sponge!',
-            date: '2 days ago',
-          },
-          {
-            name: 'Rohit',
-            rating: 4.5,
-            text: 'Clean outlet, friendly staff. The pastries were spot on.',
-            date: 'Last week',
-          },
-          {
-            name: 'Meera',
-            rating: 5,
-            text: 'Great taste and consistent quality every visit.',
-            date: '3 weeks ago',
-          },
-        ];
+  const reviewPreviewItems = previousReviews ?? [];
 
   return (
     <div className='pt-4 pb-[calc(7rem+env(safe-area-inset-bottom))]'>
