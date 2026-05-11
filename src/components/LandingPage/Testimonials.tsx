@@ -5,8 +5,10 @@ import Image from 'next/image';
 import { StarFilled } from '@ant-design/icons';
 
 import zamzam1 from '../../../public/__mocks__/reviews/r1.webp';
-import zamzam3 from '../../../public/__mocks__/reviews/r2.webp';
-import zamzamCustomerFood from '../../../public/__mocks__/reviews/r3.webp';
+import zamzam2 from '../../../public/__mocks__/reviews/r2.webp';
+import zamzam3 from '../../../public/__mocks__/reviews/r3.webp';
+import zamzam4 from '../../../public/__mocks__/reviews/r4.png';
+import zamzam5 from '../../../public/__mocks__/reviews/r5.png';
 
 type TestimonialCard = {
   name: string;
@@ -120,6 +122,26 @@ const Testimonials = () => {
 
   const testimonials: TestimonialCard[] = [
     {
+      name: 'lekha chandran',
+      date: '6 months ago',
+      rating: 5,
+      image: zamzam4,
+      imageAlt: 'Cozy ambience inside Zam Zam Bun Cafe',
+      text: `I was never a big fan of Zam Zam Palayam, and even though I was born and brought up here, I had tried it only once. But when Zam Zam YMR opened, I reluctantly tried their veg kurma and idiyappam once, and I must say, that’s the best kurma I’ve ever had in all of Trivandrum. Slowly, I started trying their other dishes too, and about 95% of them are really good and delicious.
+I had never visited the place before because I assumed the seating capacity would be the same as the original outlet. But last week, I finally went there with my friends. To my surprise, there was ample space for dining. However, it’s certainly not a hangout place, coz the restaurant is quite popular, as you can tell from the constant crowd.
+First they served us passion fruit welcome drinks. Then I ordered fried rice and paneer Kolhapuri, which I had previously tried from there via Swiggy, and as expected, it was simply great. One of my friends had their chicken biryani and loved it. She also tried my veg dishes, as is usual with us, and she loved those too. Another friend ordered chicken peri peri alfam mandi, she liked the alfam but wasn’t too impressed with the rice. Still, she too enjoyed my veg dishes.
+Then we explored their numerous dessert options. I ordered a karikkin shake, while another friend went for their milk cake. The milk cake wasn’t quite up to the hype, but the karikkin shake was really, really good.
+The best part of dining at the restaurant, compared to ordering online, is the portion size and value for money. Even after ordering so many items (and a few others too), the total bill was well within the expected range.`,
+    },
+    {
+      name: 'Kaveri A S',
+      date: '5 months ago',
+      rating: 5,
+      image: zamzam5,
+      imageAlt: 'Cozy ambience inside Zam Zam Bun Cafe',
+      text: `It’s a very good restaurant. They have a lot of different menu items. We ordered mandhi, peri peri shawarma, and brownie with ice cream… Everything was very tasty.`,
+    },
+    {
       name: 'Anoop Kumar',
       date: '3 months ago',
       rating: 5,
@@ -131,7 +153,7 @@ const Testimonials = () => {
       name: 'Steffy Sunyy',
       date: '3 months ago',
       rating: 4,
-      image: zamzamCustomerFood,
+      image: zamzam3,
       imageAlt:
         'Customer photo of fresh buns and snack display at Zam Zam Bun Cafe',
       text: `Such a lovely and cozy café with amazing food and vibes 😍
@@ -150,7 +172,7 @@ The Nutella cookie bun 🤎 and pistachio bun 💚 are super soft, fresh, and ab
       name: 'Aswathy G',
       date: '3 months ago',
       rating: 5,
-      image: zamzam3,
+      image: zamzam2,
       imageAlt: 'Cozy ambience inside Zam Zam Bun Cafe',
       text: `This place has always been a favorite—no debates, no doubts. And the strawberry-blueberry smoothie? A loyal constant, ordered every single time`,
     },
