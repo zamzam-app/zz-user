@@ -64,6 +64,7 @@ export function OtpStep({
               onChange={onOtpChange}
               size='large'
               disabled={actionsDisabled}
+              inputMode='numeric'
             />
           </div>
           <Button

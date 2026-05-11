@@ -218,6 +218,7 @@ export function DynamicReviewForm({
                 <span className='text-[#4A6D5F] font-medium mr-1'>+91</span>
               }
               maxLength={10}
+              inputMode='numeric'
               className='w-full rounded-xl px-4 py-4 h-12 text-base
                          border-none! 
                          border-transparent!

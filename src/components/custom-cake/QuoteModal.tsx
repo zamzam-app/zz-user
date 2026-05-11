@@ -295,6 +295,7 @@ export const QuoteModal = ({ isOpen, onClose, onConfirm }: QuoteModalProps) => {
                 onChange={(e) => setPhone(e.target.value)}
                 className='rounded-lg h-12'
                 type='tel'
+                inputMode='numeric'
               />
             </div>
 
