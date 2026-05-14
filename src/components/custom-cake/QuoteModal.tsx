@@ -154,8 +154,8 @@ export const QuoteModal = ({ isOpen, onClose, onConfirm }: QuoteModalProps) => {
   };
 
   const handleOtpVerify = async () => {
-    if (!otp || otp.length !== 6) {
-      message.error('Please enter the 6-digit verification code');
+    if (!otp || otp.length !== 4) {
+      message.error('Please enter the 4-digit verification code');
       return;
     }
 
@@ -320,7 +320,7 @@ export const QuoteModal = ({ isOpen, onClose, onConfirm }: QuoteModalProps) => {
           setOtp('');
         }}
         otp={otp}
-        onOtpChange={(value) => setOtp(value.replace(/\D/g, '').slice(0, 6))}
+        onOtpChange={(value) => setOtp(value.replace(/\D/g, '').slice(0, 4))}
         phoneNumber={phone}
         onVerify={handleOtpVerify}
         onResend={handleOtpResend}
