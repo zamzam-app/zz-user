@@ -13,6 +13,7 @@ export type OtpStepProps = {
   onResend: () => void;
   verifyLoading: boolean;
   resendLoading: boolean;
+  theme?: 'burgundy' | 'green';
 };
 
 export function OtpStep({
@@ -25,8 +26,19 @@ export function OtpStep({
   onResend,
   verifyLoading,
   resendLoading,
+  theme = 'burgundy',
 }: OtpStepProps) {
   const actionsDisabled = verifyLoading || resendLoading;
+  const isGreenTheme = theme === 'green';
+  const inputGroupClassName = isGreenTheme
+    ? 'otp-input-group otp-input-group--green flex justify-center mb-4'
+    : 'otp-input-group otp-input-group--burgundy flex justify-center mb-4';
+  const verifyButtonClassName = isGreenTheme
+    ? 'font-[Epilogue]! font-medium bg-[#3DCA84]! hover:bg-[#2fb172]! text-white! h-11 text-base mb-2 border-none!'
+    : 'font-[Epilogue]! font-medium bg-[#923a3a]! hover:bg-[#7d2f2f]! text-white! h-11 text-base mb-2 border-none!';
+  const resendButtonClassName = isGreenTheme
+    ? 'font-[Epilogue]! text-[#3DCA84]! hover:text-[#2fb172]! text-sm'
+    : 'font-[Epilogue]! text-[#923a3a]! hover:text-[#7d2f2f]! text-sm';
 
   if (!open) return null;
 
@@ -55,11 +67,11 @@ export function OtpStep({
             Verification
           </h2>
           <p className='font-[Epilogue]! text-gray-500 text-sm mb-3'>
-            Enter the 6-digit code sent to +91 {phoneNumber}
+            Enter the 4-digit code sent to +91 {phoneNumber}
           </p>
-          <div className='otp-input-group flex justify-center mb-4'>
+          <div className={inputGroupClassName}>
             <Input.OTP
-              length={6}
+              length={4}
               value={otp}
               onChange={onOtpChange}
               size='large'
@@ -73,8 +85,8 @@ export function OtpStep({
             size='large'
             onClick={onVerify}
             loading={verifyLoading}
-            disabled={resendLoading || otp.length !== 6}
-            className='font-[Epilogue]! font-medium bg-[#923a3a]! hover:bg-[#7d2f2f]! text-white! h-11 text-base mb-2 border-none!'
+            disabled={resendLoading || otp.length !== 4}
+            className={verifyButtonClassName}
           >
             Verify
           </Button>
@@ -83,7 +95,7 @@ export function OtpStep({
             onClick={onResend}
             loading={resendLoading}
             disabled={actionsDisabled}
-            className='font-[Epilogue]! text-[#923a3a]! hover:text-[#7d2f2f]! text-sm'
+            className={resendButtonClassName}
           >
             Resend Code
           </Button>
