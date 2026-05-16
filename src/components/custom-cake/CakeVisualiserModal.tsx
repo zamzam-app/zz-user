@@ -7,7 +7,7 @@ import {
 import Image from 'next/image';
 import { useImageUpload } from '@/lib/hooks/useImageUpload';
 import { loadStoredCakeUserDetails } from '@/components/cake/CakeUserDetailsModal';
-import { buildWhatsAppUrl } from '@/lib/utils/whatsapp';
+import { buildWhatsAppUrl, getWhatsAppPhoneNumber } from '@/lib/utils/whatsapp';
 
 interface CakeVisualiserModalProps {
   isOpen: boolean;
@@ -222,7 +222,7 @@ export const CakeVisualiserModal = ({
         `• Additional requests: ${additionalRequests.trim() || 'None'}\n\n` +
         (imageToShare ? `Generated preview: ${imageToShare}\n` : '');
 
-      const whatsappUrl = buildWhatsAppUrl('917204094741', message);
+      const whatsappUrl = buildWhatsAppUrl(getWhatsAppPhoneNumber(), message);
       window.location.href = whatsappUrl;
     } catch (e) {
       console.error(e);

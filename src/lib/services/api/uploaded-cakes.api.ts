@@ -2,19 +2,21 @@ import { withoutToken } from './axios.config';
 import { uploadedCakesEndpoints } from './endpoints';
 
 export interface CreateUploadedCakePayload {
-  name: string;
+  prompt: string;
+  imageUrl: string;
   phone: string;
-  referenceImageUrl: string;
-  description: string;
+  dob?: string;
+  gender?: string;
 }
 
 export interface UploadedCakeResponse {
   _id: string;
   userId: string;
-  name: string;
+  prompt: string;
+  imageUrl: string;
   phone: string;
-  referenceImageUrl: string;
-  description: string;
+  dob?: string;
+  gender?: string;
   isActive: boolean;
   isDeleted: boolean;
   createdAt: string;
