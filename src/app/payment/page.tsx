@@ -50,10 +50,7 @@ function PaymentContent() {
         }
         text += `Total Paid: $${totalPrice}\n------------------\nAddress: ${form.getFieldValue('address')}`;
 
-        const whatsappUrl = buildWhatsAppUrl(
-          getWhatsAppPhoneNumber(),
-          text
-        );
+        const whatsappUrl = buildWhatsAppUrl(getWhatsAppPhoneNumber(), text);
         openWhatsAppUrl(whatsappUrl);
       }, 2000);
     } catch {

@@ -120,10 +120,11 @@ export default function CreateCakePage() {
     const description = uploadNotes.trim() || 'No additional request provided';
 
     await uploadedCakesApi.create({
-      prompt: description,
-      imageUrl: uploadedImageUrl,
-      phone: details.phone,
+      name: details.name.trim(),
+      phoneNumber: details.phone,
       dob: details.dob,
+      description,
+      imageUrl: uploadedImageUrl,
     });
 
     let message = `Hi! I would like to request a quote for a custom cake.\n\n`;
