@@ -2,7 +2,11 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { useImageUpload } from '@/lib/hooks/useImageUpload';
-import { buildWhatsAppUrl, openWhatsAppUrl } from '@/lib/utils/whatsapp';
+import {
+  buildWhatsAppUrl,
+  getWhatsAppPhoneNumber,
+  openWhatsAppUrl,
+} from '@/lib/utils/whatsapp';
 import { uploadedCakesApi } from '@/lib/services/api/uploaded-cakes.api';
 import {
   DECORATIONS_LIST,
@@ -96,7 +100,7 @@ export default function CreateCakePage() {
       message = `without changing any changes in the existing image(especially preserve ZamZam's branding chips on top of the cake) except the customers request generate a product ready photo`;
     }
 
-    const whatsappUrl = buildWhatsAppUrl('917204094741', message);
+    const whatsappUrl = buildWhatsAppUrl(getWhatsAppPhoneNumber(), message);
     openWhatsAppUrl(whatsappUrl);
   };
 
@@ -107,6 +111,7 @@ export default function CreateCakePage() {
   const handleQuoteConfirm = async (details: {
     name: string;
     phone: string;
+    dob: string;
   }) => {
     if (!uploadedImageUrl) {
       throw new Error('Please upload a reference image before getting a quote');
@@ -115,15 +120,17 @@ export default function CreateCakePage() {
     const description = uploadNotes.trim() || 'No additional request provided';
 
     await uploadedCakesApi.create({
-      name: details.name,
-      phone: details.phone,
-      referenceImageUrl: uploadedImageUrl,
+      name: details.name.trim(),
+      phoneNumber: details.phone,
+      dob: details.dob,
       description,
+      imageUrl: uploadedImageUrl,
     });
 
     let message = `Hi! I would like to request a quote for a custom cake.\n\n`;
     message += `*Name:* ${details.name}\n`;
-    message += `*Phone:* ${details.phone}\n\n`;
+    message += `*Phone:* ${details.phone}\n`;
+    message += `*Date of birth:* ${details.dob}\n\n`;
     if (description) {
       message += `*My requests:* ${description}\n\n`;
     }
