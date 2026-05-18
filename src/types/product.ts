@@ -1,8 +1,20 @@
+export interface ProductPricingRow {
+  quantityValue: number;
+  quantityUnit: 'kg';
+  amount: number;
+  currency: 'INR';
+}
+
 export interface Product {
   _id: string;
   name: string;
   description: string;
-  price: number;
+  /**
+   * @deprecated Legacy property. Use `pricing` instead.
+   * This is kept as a temporary optional fallback during the migration phase.
+   */
+  price?: number;
+  pricing: ProductPricingRow[];
   category: string;
   categoryList?: string[];
   images: string[];

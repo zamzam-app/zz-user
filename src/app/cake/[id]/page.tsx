@@ -47,12 +47,17 @@ export default function CustomizeCakePage() {
         setLoading(true);
         setError(false);
         const res = await productApi.getById(id as string);
-        const product =
-          res.data?.[0] ??
-          (res && '_id' in res && 'name' in res
-            ? (res as unknown as Product)
-            : null);
-        if (product?._id) {
+
+        let product: Product | null = null;
+        if (res) {
+          if (Array.isArray(res.data) && res.data.length > 0) {
+            product = res.data[0];
+          } else if (typeof res === 'object' && '_id' in res && 'name' in res) {
+            product = res as unknown as Product;
+          }
+        }
+
+        if (product?._id && product.name) {
           setCake(product);
         } else {
           setError(true);
