@@ -1,3 +1,8 @@
+const DEFAULT_WHATSAPP_PHONE = '917204094741';
+
+export const getWhatsAppPhoneNumber = () =>
+  process.env.NEXT_PUBLIC_WHATSAPP_PHONE_NUMBER || DEFAULT_WHATSAPP_PHONE;
+
 export const buildWhatsAppUrl = (phone: string, text: string) => {
   const normalizedPhone = phone.replace(/[^\d]/g, '');
   return `https://wa.me/${normalizedPhone}?text=${encodeURIComponent(text)}`;

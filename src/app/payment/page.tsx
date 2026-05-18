@@ -10,7 +10,11 @@ import {
   ChevronLeft,
   ShoppingBag,
 } from 'lucide-react';
-import { buildWhatsAppUrl, openWhatsAppUrl } from '@/lib/utils/whatsapp';
+import {
+  buildWhatsAppUrl,
+  getWhatsAppPhoneNumber,
+  openWhatsAppUrl,
+} from '@/lib/utils/whatsapp';
 
 function PaymentContent() {
   const router = useRouter();
@@ -46,7 +50,7 @@ function PaymentContent() {
         }
         text += `Total Paid: $${totalPrice}\n------------------\nAddress: ${form.getFieldValue('address')}`;
 
-        const whatsappUrl = buildWhatsAppUrl('919999999999', text);
+        const whatsappUrl = buildWhatsAppUrl(getWhatsAppPhoneNumber(), text);
         openWhatsAppUrl(whatsappUrl);
       }, 2000);
     } catch {
