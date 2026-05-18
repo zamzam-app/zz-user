@@ -10,6 +10,7 @@ import { productApi } from '../../lib/services/api/product.api';
 import { categoryApi } from '../../lib/services/api/category.api';
 import { Product } from '../../types/product';
 import { Category } from '../../types/category';
+import { getProductPriceLabel } from '../../lib/utils/product';
 
 export default function LibraryPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -172,7 +173,7 @@ export default function LibraryPage() {
               <CakeItem
                 image={cake.images?.[0]}
                 name={cake.name}
-                price={`₹${cake.price}`}
+                price={getProductPriceLabel(cake)}
               />
             </Link>
           ))

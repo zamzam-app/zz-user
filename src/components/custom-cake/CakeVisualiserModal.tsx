@@ -46,7 +46,6 @@ export const CakeVisualiserModal = ({
   const [error, setError] = useState<string | null>(null);
   const [isQuoting, setIsQuoting] = useState(false);
 
-  const { upload } = useImageUpload('cake-visualiser');
   const { upload: uploadToCustomCakes } = useImageUpload('custom-cakes');
 
   const buildCustomCakePrompt = useCallback((): string => {
