@@ -2,9 +2,16 @@
 
 import { useState, useCallback } from 'react';
 import { Input, message } from 'antd';
+import type { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import { User, Phone } from 'lucide-react';
 import Button from '@/components/common/Button';
-import { buildWhatsAppUrl, openWhatsAppUrl } from '@/lib/utils/whatsapp';
+import { DateWheelPicker } from '@/components/common/DateWheelPicker';
+import {
+  buildWhatsAppUrl,
+  getWhatsAppPhoneNumber,
+  openWhatsAppUrl,
+} from '@/lib/utils/whatsapp';
 import { OtpStep } from '@/components/review/OtpStep';
 import { authApi } from '@/lib/services/api/auth.api';
 import { normalizeToE164IndianPhone } from '@/lib/utils/phone';
@@ -14,6 +21,7 @@ const QUOTE_USER_DETAILS_STORAGE_KEY = 'quoteUserDetails';
 export interface StoredQuoteUserDetails {
   name: string;
   phone: string;
+  dob: string | null;
 }
 
 export function loadStoredQuoteUserDetails(): Partial<StoredQuoteUserDetails> {
@@ -51,7 +59,11 @@ function clearStoredQuoteDetails() {
 interface QuoteModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (details: StoredQuoteUserDetails) => Promise<string>;
+  onConfirm: (details: {
+    name: string;
+    phone: string;
+    dob: string;
+  }) => Promise<string>;
 }
 
 function isValidPhone(value: string): boolean {
@@ -59,14 +71,30 @@ function isValidPhone(value: string): boolean {
   return digits.length === 10 && /^[6-9]\d{9}$/.test(digits);
 }
 
+function isValidPastDate(d: Dayjs | null): boolean {
+  if (!d || !d.isValid()) return false;
+  const today = dayjs().startOf('day');
+  return d.isBefore(today);
+}
+
+function toDobIso(dob: Dayjs | null): string | undefined {
+  if (!dob?.isValid()) return undefined;
+  return dob.format('YYYY-MM-DD');
+}
+
 function getInitialFormState(): {
   name: string;
   phone: string;
+  dob: Dayjs | null;
 } {
   const stored = loadStoredQuoteUserDetails();
   return {
     name: stored.name ?? '',
     phone: stored.phone ?? '',
+    dob:
+      stored.dob && dayjs(stored.dob).isValid()
+        ? dayjs(stored.dob)
+        : dayjs().startOf('day'),
   };
 }
 
@@ -94,13 +122,17 @@ export const QuoteModal = ({ isOpen, onClose, onConfirm }: QuoteModalProps) => {
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [isResendingOtp, setIsResendingOtp] = useState(false);
 
-  const { name, phone } = form;
+  const { name, phone, dob } = form;
   const setName = useCallback(
     (value: string) => setForm((f) => ({ ...f, name: value })),
     []
   );
   const setPhone = useCallback(
     (value: string) => setForm((f) => ({ ...f, phone: value })),
+    []
+  );
+  const setDob = useCallback(
+    (value: Dayjs | null) => setForm((f) => ({ ...f, dob: value })),
     []
   );
 
@@ -117,8 +149,12 @@ export const QuoteModal = ({ isOpen, onClose, onConfirm }: QuoteModalProps) => {
       message.error('Enter a valid 10-digit mobile number');
       return false;
     }
+    if (!dob?.isValid() || !isValidPastDate(dob)) {
+      message.error('Enter a valid date of birth');
+      return false;
+    }
     return true;
-  }, [name, phone]);
+  }, [dob, name, phone]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -154,14 +190,19 @@ export const QuoteModal = ({ isOpen, onClose, onConfirm }: QuoteModalProps) => {
   };
 
   const handleOtpVerify = async () => {
-    if (!otp || otp.length !== 6) {
-      message.error('Please enter the 6-digit verification code');
+    if (!otp || otp.length !== 4) {
+      message.error('Please enter the 4-digit verification code');
       return;
     }
 
     const phoneNumber = normalizeToE164IndianPhone(phone);
     if (!phoneNumber) {
       message.error('Invalid phone number.');
+      return;
+    }
+    const dobIso = toDobIso(dob);
+    if (!dobIso) {
+      message.error('Invalid date of birth.');
       return;
     }
 
@@ -173,17 +214,25 @@ export const QuoteModal = ({ isOpen, onClose, onConfirm }: QuoteModalProps) => {
         phoneNumber,
         otp,
         name: name.trim(),
+        dob: dobIso,
       });
 
       // 2. Proceed with confirmation
       const details = {
         name: name.trim(),
         phone: phone.trim(),
+        dob: dobIso,
       };
-      saveStoredQuoteDetails(details);
+      saveStoredQuoteDetails({
+        ...details,
+        dob: dob?.isValid() ? dob.toISOString() : null,
+      });
 
       const messageText = await onConfirm(details);
-      const whatsappUrl = buildWhatsAppUrl('917204094741', messageText);
+      const whatsappUrl = buildWhatsAppUrl(
+        getWhatsAppPhoneNumber(),
+        messageText
+      );
 
       setOtpModalOpen(false);
       setOtp('');
@@ -235,7 +284,7 @@ export const QuoteModal = ({ isOpen, onClose, onConfirm }: QuoteModalProps) => {
   };
 
   const handleClose = () => {
-    setForm({ name: '', phone: '' });
+    setForm({ name: '', phone: '', dob: dayjs().startOf('day') });
     clearStoredQuoteDetails();
     onClose();
   };
@@ -299,6 +348,17 @@ export const QuoteModal = ({ isOpen, onClose, onConfirm }: QuoteModalProps) => {
               />
             </div>
 
+            <div>
+              <label className='block text-sm font-medium text-gray-700 mb-2'>
+                Date of Birth
+              </label>
+              <DateWheelPicker
+                id='quote-user-dob'
+                value={dob}
+                onChange={(date) => setDob(date)}
+              />
+            </div>
+
             <div className='pt-4'>
               <Button
                 fullWidth
@@ -320,7 +380,7 @@ export const QuoteModal = ({ isOpen, onClose, onConfirm }: QuoteModalProps) => {
           setOtp('');
         }}
         otp={otp}
-        onOtpChange={(value) => setOtp(value.replace(/\D/g, '').slice(0, 6))}
+        onOtpChange={(value) => setOtp(value.replace(/\D/g, '').slice(0, 4))}
         phoneNumber={phone}
         onVerify={handleOtpVerify}
         onResend={handleOtpResend}

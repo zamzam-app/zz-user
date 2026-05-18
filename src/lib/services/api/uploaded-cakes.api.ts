@@ -3,8 +3,9 @@ import { uploadedCakesEndpoints } from './endpoints';
 
 export interface CreateUploadedCakePayload {
   name: string;
-  phone: string;
-  referenceImageUrl: string;
+  phoneNumber: string;
+  dob: string;
+  imageUrl: string;
   description: string;
 }
 
@@ -12,8 +13,9 @@ export interface UploadedCakeResponse {
   _id: string;
   userId: string;
   name: string;
-  phone: string;
-  referenceImageUrl: string;
+  phoneNumber: string;
+  dob: string;
+  imageUrl: string;
   description: string;
   isActive: boolean;
   isDeleted: boolean;

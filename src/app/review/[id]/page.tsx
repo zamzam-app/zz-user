@@ -2,8 +2,9 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { App, Form } from 'antd';
+import dayjs from 'dayjs';
 import { useParams, useSearchParams } from 'next/navigation';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { DynamicReviewForm } from '@/components/review/DynamicReviewForm';
 import { OtpStep } from '@/components/review/OtpStep';
 import { SuccessStep } from '@/components/review/SuccessStep';
@@ -99,6 +100,10 @@ export default function ReviewFormPage() {
   > | null>(null);
   const [complaintReason, setComplaintReason] = useState<string | null>(null);
 
+  useEffect(() => {
+    form.setFieldValue('dob', dayjs().startOf('day'));
+  }, [form]);
+
   const {
     data: outletData,
     isLoading,
@@ -151,6 +156,18 @@ export default function ReviewFormPage() {
           : [];
 
     return rawList
+      .slice()
+      .sort((a, b) => {
+        const aTime = Date.parse(
+          String((a as { createdAt?: string }).createdAt ?? '')
+        );
+        const bTime = Date.parse(
+          String((b as { createdAt?: string }).createdAt ?? '')
+        );
+        const normalizedATime = Number.isFinite(aTime) ? aTime : 0;
+        const normalizedBTime = Number.isFinite(bTime) ? bTime : 0;
+        return normalizedBTime - normalizedATime;
+      })
       .map((review) => {
         const responses =
           (review as { userResponses?: unknown[] }).userResponses ??
@@ -240,8 +257,8 @@ export default function ReviewFormPage() {
   );
 
   const handleOtpVerify = useCallback(async () => {
-    if (!otp || otp.length !== 6) {
-      message.error('Please enter the 6-digit verification code');
+    if (!otp || otp.length !== 4) {
+      message.error('Please enter the 4-digit verification code');
       return;
     }
     if (!pendingValues || !formData) {
@@ -458,12 +475,13 @@ export default function ReviewFormPage() {
             setOtp('');
           }}
           otp={otp}
-          onOtpChange={(value) => setOtp(value.replace(/\D/g, '').slice(0, 6))}
+          onOtpChange={(value) => setOtp(value.replace(/\D/g, '').slice(0, 4))}
           phoneNumber={String(pendingValues?.phone ?? '')}
           onVerify={handleOtpVerify}
           onResend={handleOtpResend}
           verifyLoading={submitting}
           resendLoading={resendingOtp}
+          theme='green'
         />
       </div>
     </div>
