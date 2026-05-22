@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import BakeryImg from '../../../public/__mocks__/BakeryImage.png';
 import Button from '../common/Button';
+import CountUpText from './CountUpText';
 
 const HeroSection = () => {
   const router = useRouter();
@@ -32,8 +33,8 @@ const HeroSection = () => {
           Join the
         </p>
 
-        <h2 className="my-2 font-['Epilogue'] text-7xl md:text-9xl font-extrabold text-white tracking-tighter leading-none">
-          1,234
+        <h2 className="my-2 font-['Epilogue'] text-7xl md:text-9xl font-extrabold text-white tracking-tighter leading-none tabular-nums">
+          <CountUpText to={1234} />
         </h2>
 
         <p className="max-w-70 md:max-w-2xl font-['Epilogue'] text-xl md:text-4xl font-semibold leading-tight text-white mt-2">
