@@ -46,5 +46,5 @@ export function getProductPriceLabel(
   if (minPrice === null) {
     return 'Price unavailable';
   }
-  return `Starts at ₹${minPrice} / kg`;
+  return `Starts at ₹${minPrice}`;
 }
