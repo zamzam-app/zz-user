@@ -99,6 +99,7 @@ export default function ReviewFormPage() {
     unknown
   > | null>(null);
   const [complaintReason, setComplaintReason] = useState<string | null>(null);
+  const [wasComplaint, setWasComplaint] = useState(false);
 
   useEffect(() => {
     form.setFieldValue('dob', dayjs().startOf('day'));
@@ -308,12 +309,14 @@ export default function ReviewFormPage() {
         }),
       };
       const res = await reviewApi.submitWithOtp(payload);
+      const currentWasComplaint = !!complaintReason?.trim();
       setComplaintReason(null);
       setSubmittedRating(res.overallRating);
       setOtpModalOpen(false);
       setOtp('');
       setPendingValues(null);
       setShowSuccess(true);
+      setWasComplaint(currentWasComplaint);
     } catch (err) {
       const { status, message: apiMessage } = getApiErrorInfo(err);
       if (status === 400) {
@@ -431,7 +434,7 @@ export default function ReviewFormPage() {
     return (
       <div className='min-h-screen bg-white'>
         <div className='max-w-md mx-auto h-full min-h-screen'>
-          <SuccessStep rating={submittedRating} />
+          <SuccessStep rating={submittedRating} isComplaint={wasComplaint} />
         </div>
       </div>
     );
