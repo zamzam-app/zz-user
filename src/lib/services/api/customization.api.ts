@@ -12,7 +12,7 @@ export const customizationApi = {
     if (types && types.length > 0) {
       url += `?type=${types.join(',')}`;
     }
-    
+
     return request<CustomizationListResponse>({
       method: 'GET',
       url,
