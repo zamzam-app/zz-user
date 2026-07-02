@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import Image from 'next/image';
+import { CloseOutlined } from '@ant-design/icons';
 import { Product } from '@/types/product';
 
 interface CakeDetailSheetProps {
@@ -16,6 +18,16 @@ export function CakeDetailSheet({
   onAddClick,
   priceLabel,
 }: CakeDetailSheetProps) {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen || !cake) return null;
 
   const imageUrl = cake.images?.[0];
@@ -31,11 +43,15 @@ export function CakeDetailSheet({
         className='relative w-full bg-white rounded-t-3xl overflow-hidden shadow-2xl max-h-[85vh] flex flex-col'
         onClick={(e) => e.stopPropagation()}
       >
-        <div className='shrink-0 pt-3 pb-2 px-5'>
-          <div
-            className='mx-auto w-10 h-1 rounded-full bg-gray-300'
-            aria-hidden
-          />
+        <div className='shrink-0 pt-3 pb-2 px-5 relative flex justify-center'>
+          <div className='w-10 h-1 rounded-full bg-gray-300' aria-hidden />
+          <button
+            onClick={onClose}
+            aria-label='Close details'
+            className='absolute right-5 top-2 p-2 rounded-full bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors'
+          >
+            <CloseOutlined />
+          </button>
         </div>
 
         <div className='p-6 overflow-y-auto flex-1 min-h-0 space-y-6'>

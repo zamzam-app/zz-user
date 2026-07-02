@@ -140,10 +140,10 @@ export function CakeCustomizationSheet({
   };
 
   // Check if required fields are filled (assuming weight and flavor are required as per prompt)
-  const isFormValid =
-    selectedFlavor !== '' && cake.pricing && cake.pricing.length > 0
-      ? selectedWeightIndex >= 0
-      : true;
+  const hasPricing = cake.pricing && cake.pricing.length > 0;
+  const isWeightSelected = hasPricing ? selectedWeightIndex >= 0 : true;
+  const isFlavorSelected = selectedFlavor !== '';
+  const isFormValid = isWeightSelected && isFlavorSelected;
 
   return (
     <>
@@ -475,6 +475,11 @@ export function CakeCustomizationSheet({
         additionalRequests={additionalRequests}
         cakeText={cakeText}
         baseImageUrl={imageUrl}
+        basePrice={basePrice}
+        shapePrice={shapePrice}
+        flavorPrice={flavorPrice}
+        decorationsPrice={decorationsPrice}
+        totalPrice={totalPrice}
       />
     </>
   );

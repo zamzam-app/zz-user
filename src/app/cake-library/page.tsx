@@ -173,11 +173,20 @@ export default function LibraryPage() {
           filteredCakes.map((cake) => (
             <div
               key={cake._id}
+              role='button'
+              tabIndex={0}
               onClick={() => {
                 setSelectedCake(cake);
                 setIsDetailSheetOpen(true);
               }}
-              className='text-black! no-underline hover:text-black!'
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setSelectedCake(cake);
+                  setIsDetailSheetOpen(true);
+                }
+              }}
+              className='text-black! no-underline hover:text-black! cursor-pointer'
             >
               <CakeItem
                 image={cake.images?.[0]}
