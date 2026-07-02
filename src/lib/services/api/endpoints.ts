@@ -31,3 +31,7 @@ export const UPLOAD = {
 export const uploadedCakesEndpoints = {
   create: '/uploaded-cakes',
 };
+
+export const customizationEndpoints = {
+  list: '/cake-customization',
+};

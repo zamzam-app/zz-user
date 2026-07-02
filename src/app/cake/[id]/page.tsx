@@ -9,23 +9,25 @@ import { productApi } from '@/lib/services/api/product.api';
 import { Product } from '@/types/product';
 import { CakeVisualiserModal } from '@/components/custom-cake/CakeVisualiserModal';
 import { CakeUserDetailsModal } from '@/components/cake/CakeUserDetailsModal';
+import { customizationApi } from '@/lib/services/api/customization.api';
+import { CakeCustomizationOption } from '@/types/customization';
 import {
   buildWhatsAppUrl,
   getWhatsAppPhoneNumber,
   openWhatsAppUrl,
 } from '@/lib/utils/whatsapp';
 
-const DEFAULT_OPTIONS = {
-  shapes: ['Round', 'Square', 'Heart'],
-  flavors: ['Vanilla', 'Chocolate', 'Strawberry'],
-  decorations: ['Edible Glitter', 'Fresh Flowers', 'Sprinkles'],
-};
-
 export default function CustomizeCakePage() {
   const { id } = useParams<{ id: string }>();
   const [cake, setCake] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+
+  const [optionsData, setOptionsData] = useState<{
+    shapes: CakeCustomizationOption[];
+    flavors: CakeCustomizationOption[];
+    decorations: CakeCustomizationOption[];
+  }>({ shapes: [], flavors: [], decorations: [] });
 
   const [selectedShape, setSelectedShape] = useState('');
   const [selectedFlavor, setSelectedFlavor] = useState('');
@@ -42,11 +44,14 @@ export default function CustomizeCakePage() {
       return;
     }
 
-    const fetchProduct = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
         setError(false);
-        const res = await productApi.getById(id as string);
+        const [res, optionsRes] = await Promise.all([
+          productApi.getById(id as string),
+          customizationApi.getAll(['shape', 'flavor', 'decoration']).catch(() => null)
+        ]);
 
         let product: Product | null = null;
         if (res) {
@@ -62,6 +67,14 @@ export default function CustomizeCakePage() {
         } else {
           setError(true);
         }
+
+        if (optionsRes?.data) {
+          setOptionsData({
+            shapes: optionsRes.data.filter((o) => o.type === 'shape'),
+            flavors: optionsRes.data.filter((o) => o.type === 'flavor'),
+            decorations: optionsRes.data.filter((o) => o.type === 'decoration'),
+          });
+        }
       } catch {
         setError(true);
         setCake(null);
@@ -70,7 +83,7 @@ export default function CustomizeCakePage() {
       }
     };
 
-    fetchProduct();
+    fetchData();
   }, [id]);
 
   const toggleDecoration = (item: string) => {
@@ -120,7 +133,21 @@ export default function CustomizeCakePage() {
   }
 
   const imageUrl = cake.images?.[0];
-  const options = DEFAULT_OPTIONS;
+
+  // Base price calculation
+  const basePrice = cake?.price || (cake?.pricing?.[0]?.amount ?? 0);
+  const selectedShapeOption = optionsData.shapes.find(s => s.name === selectedShape);
+  const shapePrice = selectedShapeOption?.price || 0;
+  
+  const selectedFlavorOption = optionsData.flavors.find(f => f.name === selectedFlavor);
+  const flavorPrice = selectedFlavorOption?.price || 0;
+  
+  const decorationsPrice = selectedDecorations.reduce((total, decName) => {
+    const decOption = optionsData.decorations.find(d => d.name === decName);
+    return total + (decOption?.price || 0);
+  }, 0);
+  
+  const totalPrice = basePrice + shapePrice + flavorPrice + decorationsPrice;
 
   const hasCustomizations =
     selectedShape !== '' ||
@@ -183,19 +210,25 @@ export default function CustomizeCakePage() {
           <label className="block font-['Epilogue'] font-bold text-[#0D141C]">
             Shape
           </label>
-          <div className='flex gap-2'>
-            {options.shapes.map((shape) => (
-              <button
-                key={shape}
-                onClick={() => setSelectedShape(shape)}
-                className={`px-5 py-2 rounded-xl font-['Epilogue'] text-sm font-medium border transition-all ${
-                  selectedShape === shape
-                    ? 'bg-[#923a3a] text-white! border-[#751414]'
-                    : 'bg-[#FDFCFB] text-black border-[#E8EDF2]'
-                }`}
-              >
-                {shape}
-              </button>
+          <div className='flex flex-wrap gap-4'>
+            {optionsData.shapes.map((shapeOpt) => (
+              <div key={shapeOpt._id || shapeOpt.name} className="flex items-center gap-2">
+                <button
+                  onClick={() => setSelectedShape(shapeOpt.name)}
+                  className={`px-5 py-2 rounded-xl font-['Epilogue'] text-sm font-medium border transition-all ${
+                    selectedShape === shapeOpt.name
+                      ? 'bg-[#923a3a] text-white! border-[#751414]'
+                      : 'bg-[#FDFCFB] text-black border-[#E8EDF2]'
+                  }`}
+                >
+                  {shapeOpt.name}
+                </button>
+                {shapeOpt.price > 0 && (
+                  <span className="text-sm text-gray-500 font-['Epilogue'] font-medium">
+                    + ₹{shapeOpt.price}
+                  </span>
+                )}
+              </div>
             ))}
           </div>
         </div>
@@ -205,19 +238,25 @@ export default function CustomizeCakePage() {
           <label className="block font-['Epilogue'] font-bold text-[#0D141C]">
             Flavor
           </label>
-          <div className='flex gap-2'>
-            {options.flavors.map((flavor) => (
-              <button
-                key={flavor}
-                onClick={() => setSelectedFlavor(flavor)}
-                className={`px-5 py-2 rounded-xl font-['Epilogue'] text-sm font-medium border transition-all ${
-                  selectedFlavor === flavor
-                    ? 'bg-[#923a3a] text-white! border-[#751414]'
-                    : 'bg-[#FDFCFB] text-black border-[#E8EDF2]'
-                }`}
-              >
-                {flavor}
-              </button>
+          <div className='flex flex-wrap gap-4'>
+            {optionsData.flavors.map((flavorOpt) => (
+              <div key={flavorOpt._id || flavorOpt.name} className="flex items-center gap-2">
+                <button
+                  onClick={() => setSelectedFlavor(flavorOpt.name)}
+                  className={`px-5 py-2 rounded-xl font-['Epilogue'] text-sm font-medium border transition-all ${
+                    selectedFlavor === flavorOpt.name
+                      ? 'bg-[#923a3a] text-white! border-[#751414]'
+                      : 'bg-[#FDFCFB] text-black border-[#E8EDF2]'
+                  }`}
+                >
+                  {flavorOpt.name}
+                </button>
+                {flavorOpt.price > 0 && (
+                  <span className="text-sm text-gray-500 font-['Epilogue'] font-medium">
+                    + ₹{flavorOpt.price}
+                  </span>
+                )}
+              </div>
             ))}
           </div>
         </div>
@@ -229,20 +268,27 @@ export default function CustomizeCakePage() {
           </label>
 
           <div className='space-y-3'>
-            {options.decorations.map((decoration) => (
+            {optionsData.decorations.map((decorationOpt) => (
               <label
-                key={decoration}
-                className='flex items-center gap-3 cursor-pointer'
+                key={decorationOpt._id || decorationOpt.name}
+                className='flex items-center justify-between cursor-pointer group'
               >
-                <input
-                  type='checkbox'
-                  checked={selectedDecorations.includes(decoration)}
-                  onChange={() => toggleDecoration(decoration)}
-                  className='w-5 h-5 accent-[#923a3a] rounded border-gray-300'
-                />
-                <span className="font-['Epilogue'] text-sm font-medium text-[#0D141C]">
-                  {decoration}
-                </span>
+                <div className='flex items-center gap-3'>
+                  <input
+                    type='checkbox'
+                    checked={selectedDecorations.includes(decorationOpt.name)}
+                    onChange={() => toggleDecoration(decorationOpt.name)}
+                    className='w-5 h-5 accent-[#923a3a] rounded border-gray-300'
+                  />
+                  <span className="font-['Epilogue'] text-sm font-medium text-[#0D141C]">
+                    {decorationOpt.name}
+                  </span>
+                </div>
+                {decorationOpt.price > 0 && (
+                  <span className="font-['Epilogue'] text-sm text-gray-500">
+                    + ₹{decorationOpt.price}
+                  </span>
+                )}
               </label>
             ))}
           </div>
@@ -269,7 +315,7 @@ export default function CustomizeCakePage() {
           onClick={handleGetQuote}
           className="w-full md:w-1/3 bg-[#fdfcfb] text-[#923a3a] border border-[#923a3a] py-4 rounded-2xl font-['Epilogue'] font-bold text-lg active:scale-[0.98] transition-transform shadow-sm flex items-center justify-center"
         >
-          <span className='ml-10'>Order on</span>
+          <span className='ml-4'>Order on</span>
           <Image
             src='/zz-logo.png'
             alt='Zam Zam Logo'
@@ -277,6 +323,7 @@ export default function CustomizeCakePage() {
             height={60}
             className='-ml-3 object-contain'
           />
+          {totalPrice > 0 && <span className="ml-1">• ₹{totalPrice}</span>}
         </button>
         <button
           onClick={() => setIsUserDetailsOpen(true)}
