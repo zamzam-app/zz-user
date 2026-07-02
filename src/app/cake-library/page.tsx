@@ -5,6 +5,8 @@ import { ArrowLeftOutlined, SearchOutlined } from '@ant-design/icons';
 import Image from 'next/image';
 import Link from 'next/link';
 import Button from '@/components/common/Button';
+import { CakeDetailSheet } from '@/components/library/CakeDetailSheet';
+import { CakeCustomizationSheet } from '@/components/library/CakeCustomizationSheet';
 
 import { productApi } from '../../lib/services/api/product.api';
 import { categoryApi } from '../../lib/services/api/category.api';
@@ -19,6 +21,10 @@ export default function LibraryPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedCake, setSelectedCake] = useState<Product | null>(null);
+  const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
+  const [isCustomizationSheetOpen, setIsCustomizationSheetOpen] =
+    useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -165,23 +171,35 @@ export default function LibraryPage() {
           </p>
         ) : (
           filteredCakes.map((cake) => (
-            <Link
-              href={`/cake/${cake._id}`}
+            <div
               key={cake._id}
-              className='text-black! no-underline hover:text-black!'
+              role='button'
+              tabIndex={0}
+              onClick={() => {
+                setSelectedCake(cake);
+                setIsDetailSheetOpen(true);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setSelectedCake(cake);
+                  setIsDetailSheetOpen(true);
+                }
+              }}
+              className='text-black! no-underline hover:text-black! cursor-pointer'
             >
               <CakeItem
                 image={cake.images?.[0]}
                 name={cake.name}
                 price={getProductPriceLabel(cake)}
               />
-            </Link>
+            </div>
           ))
         )}
       </div>
 
       {/* Bottom Fixed Button */}
-      <div className='fixed bottom-0 left-0 right-0 p-6 z-50'>
+      <div className='fixed bottom-0 left-0 right-0 p-6 z-40'>
         {isLoading ? (
           <div className='h-12 w-full rounded-2xl shimmer' />
         ) : (
@@ -190,6 +208,20 @@ export default function LibraryPage() {
           </Button>
         )}
       </div>
+
+      <CakeDetailSheet
+        isOpen={isDetailSheetOpen}
+        onClose={() => setIsDetailSheetOpen(false)}
+        cake={selectedCake}
+        onAddClick={() => setIsCustomizationSheetOpen(true)}
+        priceLabel={selectedCake ? getProductPriceLabel(selectedCake) : ''}
+      />
+
+      <CakeCustomizationSheet
+        isOpen={isCustomizationSheetOpen}
+        onClose={() => setIsCustomizationSheetOpen(false)}
+        cake={selectedCake}
+      />
     </div>
   );
 }

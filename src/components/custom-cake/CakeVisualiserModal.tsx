@@ -19,6 +19,11 @@ interface CakeVisualiserModalProps {
   additionalRequests: string;
   cakeText: string;
   baseImageUrl?: string;
+  basePrice?: number;
+  shapePrice?: number;
+  flavorPrice?: number;
+  decorationsPrice?: number;
+  totalPrice?: number;
 }
 
 export const CakeVisualiserModal = ({
@@ -31,6 +36,11 @@ export const CakeVisualiserModal = ({
   additionalRequests,
   cakeText,
   baseImageUrl,
+  basePrice,
+  shapePrice,
+  flavorPrice,
+  decorationsPrice,
+  totalPrice,
 }: CakeVisualiserModalProps) => {
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [imageMime, setImageMime] = useState<string>('image/png');
@@ -340,34 +350,70 @@ export const CakeVisualiserModal = ({
                 Your Custom Recipe
               </h4>
               <ul className='space-y-2 text-sm'>
-                <li className='flex items-start'>
-                  <span className='w-24 text-gray-500 flex-none'>
-                    Base Cake:
-                  </span>
-                  <span className='font-medium text-gray-900'>{cakeName}</span>
+                <li className='flex items-start justify-between'>
+                  <div className='flex items-start flex-1'>
+                    <span className='w-24 text-gray-500 flex-none'>
+                      Base Cake:
+                    </span>
+                    <span className='font-medium text-gray-900 pr-2'>
+                      {cakeName}
+                    </span>
+                  </div>
+                  {basePrice !== undefined && basePrice > 0 && (
+                    <span className='text-gray-500 font-medium flex-none'>
+                      ₹{basePrice}
+                    </span>
+                  )}
                 </li>
                 {shape && (
-                  <li className='flex items-start'>
-                    <span className='w-24 text-gray-500 flex-none'>Shape:</span>
-                    <span className='font-medium text-gray-900'>{shape}</span>
+                  <li className='flex items-start justify-between'>
+                    <div className='flex items-start flex-1'>
+                      <span className='w-24 text-gray-500 flex-none'>
+                        Shape:
+                      </span>
+                      <span className='font-medium text-gray-900 pr-2'>
+                        {shape}
+                      </span>
+                    </div>
+                    {shapePrice !== undefined && shapePrice > 0 && (
+                      <span className='text-gray-500 font-medium flex-none'>
+                        ₹{shapePrice}
+                      </span>
+                    )}
                   </li>
                 )}
                 {flavor && (
-                  <li className='flex items-start'>
-                    <span className='w-24 text-gray-500 flex-none'>
-                      Flavor:
-                    </span>
-                    <span className='font-medium text-gray-900'>{flavor}</span>
+                  <li className='flex items-start justify-between'>
+                    <div className='flex items-start flex-1'>
+                      <span className='w-24 text-gray-500 flex-none'>
+                        Flavor:
+                      </span>
+                      <span className='font-medium text-gray-900 pr-2'>
+                        {flavor}
+                      </span>
+                    </div>
+                    {flavorPrice !== undefined && flavorPrice > 0 && (
+                      <span className='text-gray-500 font-medium flex-none'>
+                        ₹{flavorPrice}
+                      </span>
+                    )}
                   </li>
                 )}
                 {decorations.length > 0 && (
-                  <li className='flex items-start'>
-                    <span className='w-24 text-gray-500 flex-none'>
-                      Decorations:
-                    </span>
-                    <span className='font-medium text-gray-900'>
-                      {decorations.join(', ')}
-                    </span>
+                  <li className='flex items-start justify-between'>
+                    <div className='flex items-start flex-1'>
+                      <span className='w-24 text-gray-500 flex-none'>
+                        Decorations:
+                      </span>
+                      <span className='font-medium text-gray-900 pr-2'>
+                        {decorations.join(', ')}
+                      </span>
+                    </div>
+                    {decorationsPrice !== undefined && decorationsPrice > 0 && (
+                      <span className='text-gray-500 font-medium flex-none'>
+                        ₹{decorationsPrice}
+                      </span>
+                    )}
                   </li>
                 )}
                 {cakeText && (
@@ -391,6 +437,22 @@ export const CakeVisualiserModal = ({
                   </li>
                 )}
               </ul>
+
+              {totalPrice !== undefined && totalPrice > 0 && (
+                <div className='mt-4 pt-3 border-t border-gray-200'>
+                  <div className='flex justify-between items-center mb-1'>
+                    <span className='font-bold text-gray-900 text-base'>
+                      Total
+                    </span>
+                    <span className='font-bold text-[#923a3a] text-lg'>
+                      ₹{totalPrice}
+                    </span>
+                  </div>
+                  <p className='text-xs text-gray-500 italic mt-1'>
+                    * Additional charges may apply for special requests.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
