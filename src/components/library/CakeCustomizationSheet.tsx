@@ -139,11 +139,10 @@ export function CakeCustomizationSheet({
     );
   };
 
-  // Check if required fields are filled (assuming weight and flavor are required as per prompt)
+  // Check if required fields are filled (assuming weight is required)
   const hasPricing = cake.pricing && cake.pricing.length > 0;
   const isWeightSelected = hasPricing ? selectedWeightIndex >= 0 : true;
-  const isFlavorSelected = selectedFlavor !== '';
-  const isFormValid = isWeightSelected && isFlavorSelected;
+  const isFormValid = isWeightSelected;
 
   return (
     <>
@@ -193,7 +192,7 @@ export function CakeCustomizationSheet({
                     <span className='text-red-500 text-sm'>*</span>
                   </span>
                   <span className='text-xs font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded'>
-                    REQUIRED
+                    Required
                   </span>
                 </h4>
                 <div className='space-y-0 bg-white rounded-2xl border border-gray-200 overflow-hidden'>
@@ -239,12 +238,9 @@ export function CakeCustomizationSheet({
             {!isLoadingOptions && optionsData.flavors.length > 0 && (
               <div className='space-y-4'>
                 <h4 className="font-['Epilogue'] font-bold text-[#0D141C] text-lg flex justify-between">
-                  <span>
-                    Choose Flavour{' '}
-                    <span className='text-red-500 text-sm'>*</span>
-                  </span>
-                  <span className='text-xs font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded'>
-                    REQUIRED
+                  <span>Choose Flavour</span>
+                  <span className='text-xs font-normal text-gray-400'>
+                    Optional
                   </span>
                 </h4>
                 <div className='space-y-0 bg-white rounded-2xl border border-gray-200 overflow-hidden'>
@@ -261,6 +257,13 @@ export function CakeCustomizationSheet({
                             name='cake-flavor'
                             checked={isSelected}
                             onChange={() => setSelectedFlavor(flavorOpt.name)}
+                            onClick={(e) => {
+                              // Allow deselection for optional fields
+                              if (isSelected) {
+                                e.preventDefault();
+                                setSelectedFlavor('');
+                              }
+                            }}
                             className='w-5 h-5 accent-[#923a3a]'
                           />
                           <span
@@ -287,7 +290,7 @@ export function CakeCustomizationSheet({
                 <h4 className="font-['Epilogue'] font-bold text-[#0D141C] text-lg flex justify-between">
                   <span>Cake Shape</span>
                   <span className='text-xs font-normal text-gray-400'>
-                    OPTIONAL
+                    Optional
                   </span>
                 </h4>
                 <div className='space-y-0 bg-white rounded-2xl border border-gray-200 overflow-hidden'>
@@ -337,7 +340,7 @@ export function CakeCustomizationSheet({
                 <h4 className="font-['Epilogue'] font-bold text-[#0D141C] text-lg flex justify-between">
                   <span>Decorations</span>
                   <span className='text-xs font-normal text-gray-400'>
-                    OPTIONAL
+                    Optional
                   </span>
                 </h4>
                 <div className='space-y-0 bg-white rounded-2xl border border-gray-200 overflow-hidden'>
