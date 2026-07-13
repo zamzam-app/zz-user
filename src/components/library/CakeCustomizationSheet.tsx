@@ -257,6 +257,13 @@ export function CakeCustomizationSheet({
                             name='cake-flavor'
                             checked={isSelected}
                             onChange={() => setSelectedFlavor(flavorOpt.name)}
+                            onClick={(e) => {
+                              // Allow deselection for optional fields
+                              if (isSelected) {
+                                e.preventDefault();
+                                setSelectedFlavor('');
+                              }
+                            }}
                             className='w-5 h-5 accent-[#923a3a]'
                           />
                           <span
