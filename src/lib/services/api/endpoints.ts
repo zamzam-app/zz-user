@@ -14,7 +14,7 @@ export const outletEndpoints = {
 };
 
 export const reviewEndpoints = {
-  list: '/review',
+  list: '/review/public',
   create: '/review',
   submitWithOtp: '/review/submit-with-otp',
   ratingSummary: '/review/ratings-summary',
@@ -25,7 +25,7 @@ export const productEndpoints = {
 };
 
 export const UPLOAD = {
-  SIGNATURE: '/upload/signature',
+  SIGNATURE: '/upload/public-signature',
 };
 
 export const uploadedCakesEndpoints = {

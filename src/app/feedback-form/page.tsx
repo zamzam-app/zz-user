@@ -22,7 +22,7 @@ export default function FeedbackPage() {
     isError: reviewsError,
   } = useQuery({
     queryKey: ['reviews', { limit: 5, page: 1 }],
-    queryFn: () => reviewApi.getAll({ limit: 5, page: 1, isDeleted: false }),
+    queryFn: () => reviewApi.getAll({ limit: 5 }),
   });
 
   const reviews: IReview[] = reviewList?.data ?? [];
