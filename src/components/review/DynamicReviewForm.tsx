@@ -322,6 +322,12 @@ export function DynamicReviewForm({
                         q.title?.toLowerCase().includes('overall rating')
                       )
                   ).length;
+            // The overall star rating is always mandatory, whatever the form's
+            // own "required" setting says; the backend enforces the same rule.
+            const isMandatoryOverallStar =
+              question.type === 'rating' &&
+              /^overall\b/i.test((question.title ?? '').trim());
+            const isRequired = question.isRequired || isMandatoryOverallStar;
             const labelText =
               questionNumber != null
                 ? `${questionNumber}. ${question.title}`
@@ -335,7 +341,7 @@ export function DynamicReviewForm({
                     <div>
                       <span className="font-['Epilogue'] text-gray-800 font-semibold">
                         {labelText}
-                        {question.isRequired && (
+                        {isRequired && (
                           <span className='text-red-500 ml-0.5'>*</span>
                         )}
                       </span>
@@ -350,12 +356,22 @@ export function DynamicReviewForm({
                     </div>
                   }
                   rules={
-                    question.isRequired
+                    isRequired
                       ? [
                           {
                             required: true,
                             message: `Please answer: ${question.title}`,
                           },
+                          ...(question.type === 'rating'
+                            ? [
+                                {
+                                  // One star is the lowest rating there is.
+                                  type: 'number' as const,
+                                  min: 1,
+                                  message: `Please give at least 1 star: ${question.title}`,
+                                },
+                              ]
+                            : []),
                         ]
                       : undefined
                   }
@@ -364,7 +380,7 @@ export function DynamicReviewForm({
                     <RateField
                       count={question.maxRatings ?? 5}
                       allowHalf={question.starStep === 0.5}
-                      allowClear={!question.isRequired}
+                      allowClear={!isRequired}
                     />
                   )}
 

@@ -5,7 +5,102 @@ const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GE
 const PLACEHOLDER_IMAGE =
   'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=800';
 
+// Only fetch base images from our own Cloudinary host, over HTTPS.
+const ALLOWED_IMAGE_HOSTS = ['res.cloudinary.com'];
+const MAX_BASE_IMAGE_BYTES = 10 * 1024 * 1024; // 10 MB
+const BASE_IMAGE_TIMEOUT_MS = 10_000;
+
+function isAllowedImageUrl(value: unknown): value is string {
+  if (typeof value !== 'string') return false;
+  try {
+    const url = new URL(value);
+    return (
+      url.protocol === 'https:' &&
+      !url.username &&
+      !url.password &&
+      !url.port &&
+      ALLOWED_IMAGE_HOSTS.includes(url.hostname)
+    );
+  } catch {
+    return false;
+  }
+}
+
+async function fetchImageAsBase64(
+  imageUrl: string
+): Promise<{ base64: string; mimeType: string }> {
+  // redirect: 'error' stops an allowed host from bouncing us to an internal one.
+  const res = await fetch(imageUrl, {
+    redirect: 'error',
+    signal: AbortSignal.timeout(BASE_IMAGE_TIMEOUT_MS),
+  });
+  if (!res.ok) throw new Error('Failed to fetch base image');
+
+  const mimeType = res.headers.get('content-type') || '';
+  if (!mimeType.startsWith('image/'))
+    throw new Error('Base image is not an image');
+  const declared = Number(res.headers.get('content-length'));
+  if (Number.isFinite(declared) && declared > MAX_BASE_IMAGE_BYTES) {
+    throw new Error('Base image is too large');
+  }
+
+  // Read as a stream so the cap holds even without a Content-Length header.
+  const reader = res.body?.getReader();
+  if (!reader) throw new Error('Empty image response');
+  const chunks: Uint8Array[] = [];
+  let received = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    received += value.byteLength;
+    if (received > MAX_BASE_IMAGE_BYTES) {
+      await reader.cancel();
+      throw new Error('Base image is too large');
+    }
+    chunks.push(value);
+  }
+  return { base64: Buffer.concat(chunks).toString('base64'), mimeType };
+}
+
+// Basic per-IP limit on image generations. In-memory, so it is per server
+// instance (weak on serverless); put a shared limiter (e.g. Redis) in front for
+// a hard guarantee.
+const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const hits = new Map<string, number[]>();
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const recent = (hits.get(ip) ?? []).filter(
+    (t) => now - t < RATE_LIMIT_WINDOW_MS
+  );
+  if (recent.length >= RATE_LIMIT_MAX) {
+    hits.set(ip, recent);
+    return true;
+  }
+  recent.push(now);
+  hits.set(ip, recent);
+  if (hits.size > 5000) {
+    for (const [key, times] of hits) {
+      if (times.every((t) => now - t >= RATE_LIMIT_WINDOW_MS)) hits.delete(key);
+    }
+  }
+  return false;
+}
+
 export async function POST(req: NextRequest) {
+  const ip =
+    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  if (isRateLimited(ip)) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'Too many requests. Please try again shortly.',
+      },
+      { status: 429 }
+    );
+  }
+
   const apiKey = process.env.GEMINI_API_KEY;
 
   if (!apiKey) {
@@ -48,11 +143,13 @@ export async function POST(req: NextRequest) {
 
     // If base image provided, fetch it and include as inlineData
     if (baseImageUrl) {
-      const imageRes = await fetch(baseImageUrl);
-      if (!imageRes.ok) throw new Error('Failed to fetch base image');
-      const buffer = await imageRes.arrayBuffer();
-      const base64 = Buffer.from(buffer).toString('base64');
-      const mimeType = imageRes.headers.get('content-type') || 'image/jpeg';
+      if (!isAllowedImageUrl(baseImageUrl)) {
+        return NextResponse.json(
+          { success: false, message: 'baseImageUrl host is not allowed' },
+          { status: 400 }
+        );
+      }
+      const { base64, mimeType } = await fetchImageAsBase64(baseImageUrl);
 
       parts.push({
         inlineData: { mimeType, data: base64 },

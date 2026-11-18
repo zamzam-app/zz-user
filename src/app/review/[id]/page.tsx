@@ -139,7 +139,6 @@ export default function ReviewFormPage() {
       reviewApi.getAll({
         outletId: outletData?._id,
         limit: 6,
-        page: 1,
       }),
     enabled: !!outletData?._id,
   });
